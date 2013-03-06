@@ -1,0 +1,28 @@
+{
+  "name": "bugger",
+  "version": "0.1.1",
+  "description": "Debug everything",
+  "main": "bugger.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha -R spec --recursive --compilers coffee:coffee-script spec"
+  },
+  "bin": {
+    "bugger": "bin/bugger.js"
+  },
+  "repository": "",
+  "keywords": [
+    "debug",
+    "inspector",
+    "chrome"
+  ],
+  "author": "Jan Krems <jan.krems@groupon.com>",
+  "license": "proprietary",
+  "dependencies": {
+    "coffee-script": "~1.6.1",
+    "send": "~0.1.0",
+    "socket.io": "~0.9.13"
+  },
+  "publishConfig": {
+    "registry": "http://registry.npm.local:5984/"
+  }
+}
