@@ -5,47 +5,64 @@ send = require('send')
 Session = require './session'
 urlLib = require 'url'
 path = require 'path'
+fs = require 'fs'
 
-sessions = {}
+session = null
 config = {}
 connectionTimeout = null
 
 serveStaticFiles = (req, res) ->
-  re = /^\/debug/
-  if re.test req.url
-    config.debugPort = getDebuggerPort req.url, config.debugPort
-    req.url = req.url.replace re, '/'
+  re = /^\/_sourcemap\/(\d+)$/
 
-  send(req, urlLib.parse(req.url).pathname).root(path.join __dirname, '..', 'public').pipe(res)
+  if (smMatch = req.url.match(re))?
+    res.setHeader 'Content-Type', 'application/json'
+    sourceMap = getSession().getSourceMap(smMatch[1])
+    sourceMap.sourcesContent ?= []
 
-getDebuggerPort = (url, defaultPort) ->
-  parseInt((/\?port=(\d+)/.exec(url) || [null, defaultPort])[1], 10);
+    # sourcesContent for sources
+    sourceMap.sources.forEach (source, idx) ->
+      unless sourceMap.sourcesContent[idx]
+        sourceMap.sourcesContent[idx] =
+          try
+            fs.readFileSync(source).toString()
+          catch err
+            ''
+    return res.end JSON.stringify getSession().getSourceMap(smMatch[1])
+  else
+    publicDirectory =
+      if req.url in [ '/InspectorBackendCommands.js', '/InspectorBackend.js', '/Overrides.js' ]
+        __dirname
+      else
+        path.join __dirname, '..', 'public'
 
-getSession = (debuggerPort) ->
-  session = sessions[debuggerPort]
+    # Rewrite backend to stubbed one
+    req.url = req.url.replace '/InspectorBackend.js', '/InspectorBackendStub.js'
+
+    send(req, urlLib.parse(req.url).pathname).root(publicDirectory).pipe(res)
+
+getSession = ->
   unless session
-    session = Session.create debuggerPort, config
-    sessions[debuggerPort] = session
+    session = Session.create config.debugConnection, config
     session.on 'ws_closed', ->
       connectionTimeout = setTimeout( ->
         session.close()
       , 3000)
 
     session.on 'close', ->
-      sessions[debuggerPort] = null
+      session = null
 
     session.attach()
   session
 
 handleWebSocketConnection = (socket) ->
   clearTimeout(connectionTimeout)
-  getSession(config.debugPort).join(socket)
+  getSession().join(socket)
 
 handleServerListening = ->
   console.log(
     'visit http://' + (config.webHost || '0.0.0.0') + ':' +
     config.webPort +
-    '/debug?port=' + config.debugPort + ' to start debugging')
+    '/inspector.html to start debugging')
 
 class DebugServer extends EventEmitter
   start: (options) ->

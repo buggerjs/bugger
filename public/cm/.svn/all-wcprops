@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repository/webkit/!svn/ver/138410/trunk/Source/WebCore/inspector/front-end/cm
+END
+codemirror.js
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/repository/webkit/!svn/ver/138410/trunk/Source/WebCore/inspector/front-end/cm/codemirror.js
+END
+javascript.js
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/repository/webkit/!svn/ver/138410/trunk/Source/WebCore/inspector/front-end/cm/javascript.js
+END
+LICENSE
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repository/webkit/!svn/ver/125184/trunk/Source/WebCore/inspector/front-end/cm/LICENSE
+END
+css.js
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repository/webkit/!svn/ver/138410/trunk/Source/WebCore/inspector/front-end/cm/css.js
+END
+cmdevtools.css
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/repository/webkit/!svn/ver/133460/trunk/Source/WebCore/inspector/front-end/cm/cmdevtools.css
+END
+htmlmixed.js
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/repository/webkit/!svn/ver/138410/trunk/Source/WebCore/inspector/front-end/cm/htmlmixed.js
+END
+xml.js
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repository/webkit/!svn/ver/138410/trunk/Source/WebCore/inspector/front-end/cm/xml.js
+END
+codemirror.css
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/repository/webkit/!svn/ver/138410/trunk/Source/WebCore/inspector/front-end/cm/codemirror.css
+END

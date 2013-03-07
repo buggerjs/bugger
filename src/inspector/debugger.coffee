@@ -8,11 +8,11 @@ makeMessage = ->
   headers: null
   contentLength: 0
 
-exports.attachDebugger = (port) ->
-  connected = false
+exports.attachDebugger = (debugConnection) ->
+  connected = debugConnection.writable
   debugBuffer = ''
   msg = false
-  conn = Net.connect port
+  conn = debugConnection
   conn.setEncoding 'utf8'
 
   parse = ->
@@ -52,6 +52,8 @@ exports.attachDebugger = (port) ->
       value: (data) ->
         if connected
           conn.write "Content-Length: #{data.length}\r\n\r\n#{data}"
+        else
+          console.log '[debug] Not connected'
 
     request:
       value: (command, params, callback) ->
@@ -70,25 +72,28 @@ exports.attachDebugger = (port) ->
         @send JSON.stringify msg
 
     close:
-      value: -> conn.end()
+      value: ->
+        console.trace 'debugger#close was called'
+        conn.end()
 
     connected:
       get: -> connected
   )
 
-  conn.on('connect', ->
+  conn.on 'connect', ->
     connected = true
     debugr.emit 'connect'
-  ).on('data', (data) ->
+
+  conn.on 'data', (data) ->
     debugBuffer += data
     parse()
-  ).on('error', (e) ->
-    debugr.emit 'error', e
-  ).on('end', ->
-    debugr.close()
-  ).on('close', ->
+
+  conn.on 'error', (e) -> debugr.emit 'error', e
+
+  conn.on 'end', -> debugr.close()
+
+  conn.on 'close', ->
     connected = false
     debugr.emit 'close'
-  )
 
   debugr

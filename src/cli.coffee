@@ -18,6 +18,9 @@ run = ->
     .options('debug-port',
       default: 5858
       describe: 'Debug port used by node' )
+    .options('chrome',
+      boolean: true
+      describe: 'Open Chrome with the correct url' )
     .options('debug-brk',
       describe: 'Break on first line of script',
       boolean: true,
@@ -52,20 +55,22 @@ run = ->
 
   try
     # Start child processes that will handle the debugging server and chrome
-    chrome = forkChrome(argv['web-host'], argv['web-port'], debugPort)
-    chrome.on 'exit', process.exit
-    scriptProcess = forkScript(entryScript, debugPort, argv['debug-brk'], argv._)
-    scriptProcess.on 'exit', process.exit
-    debugServer = (new DebugServer()).start {
-      webHost: argv['web-host']
-      webPort: argv['web-port']
-      debugPort: argv['debug-port']
-    }
+    if argv.chrome
+      chrome = forkChrome(argv['web-host'], argv['web-port'], debugPort)
+      chrome.on 'exit', process.exit
+    forkScript entryScript, debugPort, argv['debug-brk'], argv._, ({ entryScriptProc, debugConnection }) ->
+      entryScriptProc.on 'exit', process.exit
 
-    process.on 'exit', ->
-      try chrome.kill()
-      try scriptProcess.kill()
-      try debugServer.close()
+      debugServer = (new DebugServer()).start {
+        webHost: argv['web-host']
+        webPort: argv['web-port']
+        debugConnection: debugConnection
+      }
+
+      process.on 'exit', ->
+        try chrome.kill() if argv.chrome
+        try entryScriptProc.kill()
+        try debugServer.close()
   catch err
     throw err
 

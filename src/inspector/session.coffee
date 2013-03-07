@@ -1,18 +1,155 @@
 events = require 'events'
 debugr = require './debugger'
 
-exports.create = (debuggerPort, config) ->
+exports.create = (debugConnection, config) ->
   debug = null
   conn = null
   # map from sourceID:lineNumber to breakpoint
   breakpoints = {}
   # map from sourceID to filename
   sourceIDs = {}
+  sourceUrls = {}
+  sourceMaps = {}
   # milliseconds to wait for a lookup
   LOOKUP_TIMEOUT = 2500
   # node function wrapper
   FUNC_WRAP = /^\(function \(exports, require, module, __filename, __dirname\) \{ ([\s\S]*)\n\}\);$/
-  cpuProfileCount = 0
+  cpuProfileCount = 0  
+
+  agents =
+    Debugger:
+      enable: (cb) ->
+        console.log 'Debbuger#enable'
+        cb(null, true)
+
+      disable: (cb) ->
+        console.log 'Debbuger#disable'
+        cb(null, true)
+
+      setPauseOnExceptions: ({state}, cb) ->
+        console.log 'Debugger#setPauseOnExceptions', arguments[0]
+        cb(null, true)
+
+      setBreakpointsActive: ({active}, cb) ->
+        console.log 'Debugger#setBreakpointsActive', arguments[0]
+        cb(null, true)
+
+      removeBreakpoint: ({breakpointId}, cb) ->
+        debug.request 'clearbreakpoint', { arguments: { breakpoint: breakpointId } }, (msg) ->
+          for id of breakpoints
+            if breakpoints[id] is breakpointId
+              delete breakpoints[id]
+              break
+          cb null
+
+      setBreakpointByUrl: ({ lineNumber, url, columnNumber, condition }, cb) ->
+        enabled = true; sourceID = sourceUrls[url]
+        if bp = breakpoints[sourceID + ':' + lineNumber]
+          args = { arguments: { breakpoint: bp.breakpointId, enabled, condition } }
+          debug.request 'changebreakpoint', args,
+            (msg) ->
+              bp.enabled = enabled
+              bp.condition = condition
+              cb null, bp.breakpointId, bp.locations
+        else
+          args = { type: 'scriptId', target: sourceID, line: lineNumber - 1, enabled, condition }
+          debug.request 'setbreakpoint', { arguments: args }, (msg) ->
+            if msg.success
+              b = msg.body
+              bp = breakpoints[b.script_id + ':' + (b.line + 1)] = {
+                sourceID: b.script_id
+                url: sourceIDs[b.script_id].url
+                line: b.line + 1
+                breakpointId: b.breakpoint.toString()
+                locations: b.actual_locations.map (l) ->
+                  scriptId: l.script_id.toString()
+                  lineNumber: l.line
+                  columnNumber: l.column
+                enabled, condition }
+
+              cb null, bp.breakpointId, bp.locations
+
+      pause: (cb) ->
+        console.log 'Debugger#pause'
+        debug.request 'suspend', {}, (msg) ->
+          breakEvent()
+
+      resume: (cb) ->
+        console.log 'Debugger#resume'
+        debug.request 'continue', {}, (msg) ->
+          cb(null, true)
+
+      stepOver: (cb) ->
+        debug.request 'continue', { arguments: {stepaction: 'next'} }, (msg) ->
+          cb(null, true)
+        # sendEvent('resumedScript');
+
+      stepInto: ->
+        debug.request 'continue', { arguments: {stepaction: 'in'} }, (msg) ->
+          cb(null, true)
+        # sendEvent('resumedScript');
+
+      stepOutOfFunction: ->
+        debug.request 'continue', { arguments: {stepaction: 'out'} }, (msg) ->
+          cb(null, true)
+        # sendEvent('resumedScript');
+
+      getScriptSource: ({scriptId}, cb) ->
+        args =
+          arguments:
+            includeSource: true,
+            types: 4,
+            ids: [scriptId]
+        debug.request 'scripts', args, (msg) ->
+          cb null, msg.body[0].source
+
+    Console:
+      enable: (cb) ->
+        console.log 'Console#enable'
+        cb(null, true)
+
+    Runtime:
+      getProperties: ({objectId, ownProperties}, cb) ->
+        [frame, scope, ref] = objectId.split ':'
+
+        if ref is 'backtrace'
+          debug.request 'scope', { arguments: { number: scope, frameNumber: frame, inlineRefs: true } }, (msg) ->
+            if msg.success
+              refs = {}
+              if msg.refs and Array.isArray msg.refs
+                msg.refs.forEach (r) ->
+                  refs[r.handle] = r
+
+              cb null, msg.body.object.properties.map (p) ->
+                r = refs[p.value.ref]
+                { name: p.name, value: refToObject r }
+        else
+          handle = parseInt ref, 10
+          timeout = setTimeout( ->
+            cb null, [{ name: 'sorry', value: wrapperObject( 'string', 'lookup timed out', false, 0, 0, 0) }]
+            seq = 0
+          , LOOKUP_TIMEOUT)
+          debug.request 'lookup', { arguments: { handles: [handle], includeSource: false } }, (msg) ->
+            clearTimeout(timeout);
+            # TODO break out commonality with above
+            if msg.success
+              refs = {}
+              props = []
+              if msg.refs && Array.isArray(msg.refs)
+                obj = msg.body[handle]
+                objProps = obj.properties
+                proto = obj.protoObject
+                refs[r.handle] = r for r in msg.refs
+
+                props = objProps.map (p) ->
+                  r = refs[p.ref]
+                  { name: String(p.name), value: refToObject(r) }
+
+                if proto
+                  props.push
+                    name: '__proto__',
+                    value: refToObject refs[proto.ref]
+              cb(null, props)
 
   wrapperObject = (type, description, hasChildren, frame, scope, ref) ->
     type: type
@@ -45,37 +182,30 @@ exports.create = (debuggerPort, config) ->
     
     wrapperObject ref.type, desc, kids, 0, 0, ref.handle
 
-  callFrames = (bt) ->
+  mapCallFrames = (bt) ->
     if bt.body.totalFrames > 0
       bt.body.frames.map (frame) ->
-        type: 'function',
-        functionName: frame.func.inferredName,
-        sourceID: frame.func.scriptId,
-        line: frame.line + 1,
-        id: frame.index,
-        worldId: 1,
-        scopeChain: frame.scopes.map (scope) ->
-          c = switch scope.type
-            when 1
-              isLocal: true;
-              thisObject: wrapperObject('object', frame.receiver.className, true, frame.index, scope.index, frame.receiver.ref)
-            when 2
-              isWithBlock: true
-            when 3
-              isClosure: true
-            when 4
-              isElement: true
-            else {}
-          c.objectId = frame.index + ':' + scope.index + ':backtrace';
-          return c;
-
-    return [{
-      type: 'program',
-      sourceID: 'internal',
-      line: 0,
-      id: 0,
-      worldId: 1,
-      scopeChain: []}]
+        console.log frame
+        return {
+          id: frame.index
+          functionName: frame.func.inferredName
+          type: 'function'
+          worldId: 1
+          location:
+            scriptId: frame.func.scriptId.toString()
+            lineNumber: frame.line + 1
+            columnNumber: frame.column
+          scopeChain: frame.scopes.map (scope) ->
+            object: wrapperObject('object', frame.receiver.className, true, frame.index, scope.index, frame.receiver.ref)
+            objectId: frame.index + ':' + scope.index + ':backtrace'
+            type: switch scope.type
+              when 1 then 'local'
+              when 2 then 'with'
+              when 3 then 'closure'
+              when 4 then 'global'
+        }
+    else
+      [{ type: 'program', location: { scriptId: 'internal' }, line: 0, id: 0, worldId: 1, scopeChain: [] }]
 
   evaluate = (expr, frame, andThen) ->
     args =
@@ -92,35 +222,36 @@ exports.create = (debuggerPort, config) ->
 
   sendBacktrace = ->
     debug.request 'backtrace', { arguments: { inlineRefs: true } }, (msg) ->
-      sendEvent 'pausedScript', { details: { callFrames: callFrames(msg) } }
+      callFrames = mapCallFrames(msg)
+      dispatchEvent 'Debugger.paused', details: callFrames
 
   breakEvent = (obj) ->
-    data = args = {}
-    source = sourceIDs[obj.body.script.id]
+    scriptId = if obj? then obj.body.script.id else null
+    source = sourceIDs[scriptId] if scriptId?
 
-    if source
+    unless source?
       args =
         arguments:
           includeSource: true
           types: 4
-          ids: [obj.body.script.id]
+          ids: if scriptId? then [obj.body.script.id] else undefined
 
       debug.request 'scripts', args, parsedScripts
-    else if source.hidden
+    else if source?.hidden
       debug.request 'continue', { arguments: { stepaction: 'out' } }
-      return;
+      return
     sendBacktrace()
 
   parsedScripts = (msg) ->
     scripts = msg.body.map (s) ->
-      sourceID: String(s.id)
+      scriptId: String(s.id)
       url: s.name
       data: s.source
-      firstLine: s.lineOffset
-      scriptWorldType: 0
+      startLine: s.lineOffset
       path: String(s.name).split('/')
+      isContentScript: false
 
-    scripts.sort (a, b) -> a.path.length - b.path.length;
+    scripts.sort (a, b) -> a.path.length - b.path.length
 
     paths = []
     shorten = (s) ->
@@ -134,13 +265,25 @@ exports.create = (debuggerPort, config) ->
 
     scripts.forEach (s) ->
       hidden = config.hidden and config.hidden.some( (r) -> r.test(s.url) )
+
+      sourceMapMatch = s.data.match /\s\/\/@ sourceMappingURL=data:application\/json;base64,(.*)/
+      s.sourceMapURL = null
+
+      if sourceMapMatch
+        s.sourceMapURL = "/_sourcemap/#{s.scriptId}"
+        sourceMaps[s.scriptId.toString()] = JSON.parse (new Buffer(sourceMapMatch[1], 'base64')).toString('utf8')
+
       item = { hidden: hidden, path: s.url }
-      s.url = shorten s.path if s.path.length > 1
+      s.url = s.path.join('/') # shorten s.path if s.path.length > 1
       item.url = s.url
-      sourceIDs[s.sourceID] = item
+
+      sourceIDs[s.scriptId] = item
+      sourceUrls[item.url] = s.scriptId
       delete s.path
       unless hidden
-        sendEvent 'parsedScriptSource', s
+        # "scriptId","url","startLine","startColumn","endLine","endColumn","isContentScript","sourceMapURL","hasSourceURL"
+        dispatchEvent 'Debugger.scriptParsed', s
+        # sendEvent 'parsedScriptSource', s
 
   sendProfileHeader = (title, uid, type) ->
     sendEvent 'addProfileHeader',
@@ -157,24 +300,25 @@ exports.create = (debuggerPort, config) ->
         data: data
       )
 
+  dispatchEvent = (method, params={}) ->
+    if conn
+      conn.send(JSON.stringify {method, params})
+    else
+      console.log 'Could not send: ', method, params
+
   sendResponse = (seq, success, data={}) ->
     if conn
       conn.send(JSON.stringify
-        seq: seq
-        success: success
-        data: data
+        id: seq
+        error: null
+        result: data
       )
 
-  sendPing = ->
-    if conn
-      conn.send 'ping'
-      setTimeout sendPing, 30000
-
   browserConnected = -> # TODO find a better name
-    sendEvent 'debuggerWasEnabled'
-    sendPing()
     args = { arguments: { includeSource: true, types: 4 } }
+    console.log '[debug.request] scripts', args
     debug.request 'scripts', args, (msg) ->
+      console.log '[debug.response] scripts'
       parsedScripts msg
       debug.request 'listbreakpoints', {}, (msg) ->
         msg.body.breakpoints.forEach (bp) ->
@@ -194,9 +338,12 @@ exports.create = (debuggerPort, config) ->
           sendBacktrace()
 
   return Object.create(events.EventEmitter.prototype,
+    getSourceMap:
+      value: (id) -> sourceMaps[id]
+
     attach:
       value: ->
-        debug = debugr.attachDebugger debuggerPort
+        debug = debugr.attachDebugger debugConnection
         debug.on 'break', breakEvent
         debug.on 'close', =>
           # TODO determine proper close behavior
@@ -215,7 +362,7 @@ exports.create = (debuggerPort, config) ->
           sendEvent 'showPanel', { name: 'console' }
           err = e.toString()
           if err.match /ECONNREFUSED/
-            err += '\nIs node running with --debug port ' + debuggerPort + '?'
+            err += '\nIs node running with --debug?'
 
           data =
             messageObj:
@@ -745,7 +892,25 @@ exports.create = (debuggerPort, config) ->
     handleRequest: {
       value: (data) ->
         msg = JSON.parse(data)
-        command = this[msg.command]
+
+        if msg.method
+          [agentName, functionName] = msg.method.split('.')
+          console.log "[agents.handleRequest] #{agentName}##{functionName}"
+
+          args = []
+          if msg.params
+            args.push msg.params
+
+          if (msg.id > 0)
+            args.push (error, data...) ->
+              sendResponse msg.id, error, data
+
+          agent = agents[agentName]
+          handlerFn = agent[functionName]
+
+          handlerFn.apply(agent, args)
+        else
+          console.log 'Unknown message from frontend:', msg
 
         if typeof command is 'function'
           args = Object.keys(msg.arguments).map( (x) -> msg.arguments[x]; );

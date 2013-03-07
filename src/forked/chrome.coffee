@@ -24,7 +24,7 @@ findChrome = ->
 module.exports = (host, port, debugPort) ->
   chromeProfilePath = path.join __dirname, '..', 'ChromeProfile'
   args = [
-    "--app=http://#{host}:#{port}/debug?port=#{debugPort}",
+    "--app=http://#{host}:#{port}/inspector.html?port=#{debugPort}",
     "--user-data-dir=#{chromeProfilePath}" ]
 
   chromePath = findChrome()
