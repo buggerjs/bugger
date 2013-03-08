@@ -12,7 +12,7 @@ unless module.parent
     console.log 'Waited a second, noone connected to this debugging session.'
     console.log 'Maybe trying again is enough..?'
     throw new Error 'Script failed to start'
-  , 1000 )
+  1000)
 
   # Make sure the parent process attached to our debug port before we continue
   process.once 'SIGUSR2', ->
@@ -48,4 +48,4 @@ module.exports = (entryScript, debugPort, debugBrk, argv_, cb) ->
       # Tell the forked process that we have connected.
       process.kill entryScriptProc.pid, 'SIGUSR2'
       cb { entryScriptProc, debugConnection }
-  , 100)
+  100)

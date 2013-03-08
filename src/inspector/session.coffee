@@ -13,7 +13,7 @@ exports.create = (debugConnection, config) ->
   # milliseconds to wait for a lookup
   LOOKUP_TIMEOUT = 2500
   # node function wrapper
-  FUNC_WRAP = /^\(function \(exports, require, module, __filename, __dirname\) \{ ([\s\S]*)\n\}\);$/
+  FUNC_WRAP = /^\(function \(exports, require, module, __filename, __dirname\) \{ ([\s\S]*)\n\}\)$/
   cpuProfileCount = 0  
 
   agents =
@@ -43,29 +43,31 @@ exports.create = (debugConnection, config) ->
           cb null
 
       setBreakpointByUrl: ({ lineNumber, url, columnNumber, condition }, cb) ->
+        console.log 'setBreakpointByUrl', arguments
         enabled = true; sourceID = sourceUrls[url]
         if bp = breakpoints[sourceID + ':' + lineNumber]
           args = { arguments: { breakpoint: bp.breakpointId, enabled, condition } }
-          debug.request 'changebreakpoint', args,
-            (msg) ->
-              bp.enabled = enabled
-              bp.condition = condition
-              cb null, bp.breakpointId, bp.locations
+          debug.request 'changebreakpoint', args, (msg) ->
+            bp.enabled = enabled
+            bp.condition = condition
+            cb null, bp.breakpointId, bp.locations
         else
-          args = { type: 'scriptId', target: sourceID, line: lineNumber - 1, enabled, condition }
+          args = { type: 'scriptId', target: sourceID, line: lineNumber, enabled, condition }
           debug.request 'setbreakpoint', { arguments: args }, (msg) ->
             if msg.success
               b = msg.body
-              bp = breakpoints[b.script_id + ':' + (b.line + 1)] = {
+              bp = breakpoints[b.script_id + ':' + b.line] = {
                 sourceID: b.script_id
                 url: sourceIDs[b.script_id].url
-                line: b.line + 1
+                line: b.line
                 breakpointId: b.breakpoint.toString()
                 locations: b.actual_locations.map (l) ->
                   scriptId: l.script_id.toString()
-                  lineNumber: l.line
+                  lineNumber: l.line # lineNumber is zero-indexed; l.line is zero-indexed
                   columnNumber: l.column
-                enabled, condition }
+                enabled: enabled
+                condition: condition
+              }
 
               cb null, bp.breakpointId, bp.locations
 
@@ -82,17 +84,17 @@ exports.create = (debugConnection, config) ->
       stepOver: (cb) ->
         debug.request 'continue', { arguments: {stepaction: 'next'} }, (msg) ->
           cb(null, true)
-        # sendEvent('resumedScript');
+        # sendEvent('resumedScript')
 
       stepInto: ->
         debug.request 'continue', { arguments: {stepaction: 'in'} }, (msg) ->
           cb(null, true)
-        # sendEvent('resumedScript');
+        # sendEvent('resumedScript')
 
       stepOutOfFunction: ->
         debug.request 'continue', { arguments: {stepaction: 'out'} }, (msg) ->
           cb(null, true)
-        # sendEvent('resumedScript');
+        # sendEvent('resumedScript')
 
       getScriptSource: ({scriptId}, cb) ->
         args =
@@ -128,9 +130,9 @@ exports.create = (debugConnection, config) ->
           timeout = setTimeout( ->
             cb null, [{ name: 'sorry', value: wrapperObject( 'string', 'lookup timed out', false, 0, 0, 0) }]
             seq = 0
-          , LOOKUP_TIMEOUT)
+          LOOKUP_TIMEOUT)
           debug.request 'lookup', { arguments: { handles: [handle], includeSource: false } }, (msg) ->
-            clearTimeout(timeout);
+            clearTimeout(timeout)
             # TODO break out commonality with above
             if msg.success
               refs = {}
@@ -184,8 +186,10 @@ exports.create = (debugConnection, config) ->
 
   mapCallFrames = (bt) ->
     if bt.body.totalFrames > 0
+      console.log bt.body.frames.map (frame, idx) ->
+        "[frame #{idx}] #{frame.func.scriptId.toString()} @ #{frame.line};#{frame.column} (#{frame.func.inferredName})"
+
       bt.body.frames.map (frame) ->
-        console.log frame
         return {
           id: frame.index
           functionName: frame.func.inferredName
@@ -193,7 +197,7 @@ exports.create = (debugConnection, config) ->
           worldId: 1
           location:
             scriptId: frame.func.scriptId.toString()
-            lineNumber: frame.line + 1
+            lineNumber: frame.line # frame.line is zero-indexed
             columnNumber: frame.column
           scopeChain: frame.scopes.map (scope) ->
             object: wrapperObject('object', frame.receiver.className, true, frame.index, scope.index, frame.receiver.ref)
@@ -326,18 +330,18 @@ exports.create = (debugConnection, config) ->
             data =
               sourceID: bp.script_id
               url: sourceIDs[bp.script_id].url
-              line: bp.line + 1
+              line: bp.line
               enabled: bp.active
               condition: bp.condition
               number: bp.number
 
-            breakpoints[bp.script_id + ':' + (bp.line + 1)] = data
+            breakpoints[bp.script_id + ':' + (bp.line)] = data
             sendEvent 'restoredBreakpoint', data
 
         unless msg.running
           sendBacktrace()
 
-  return Object.create(events.EventEmitter.prototype,
+  return Object.create(events.EventEmitter.prototype, {
     getSourceMap:
       value: (id) -> sourceMaps[id]
 
@@ -409,29 +413,22 @@ exports.create = (debugConnection, config) ->
 
                 props = msg.body.object.properties.map (p) ->
                   r = refs[p.value.ref]
-                  return {
-                    name: p.name
-                    value: refToObject r }
+                  return { name: p.name, value: refToObject r }
 
                 sendResponse(seq, true, result: props)
           else
             handle = parseInt ref, 10
             timeout = setTimeout( ->
-              sendResponse(
-                  seq,
-                  true,
-                  { result: [{
-                    name: 'sorry',
-                    value: wrapperObject(
-                        'string',
-                        'lookup timed out',
-                        false,
-                        0, 0, 0)
-                  }]});
+              sendResponse(seq, true, {
+                result: [{
+                  name: 'sorry',
+                  value: wrapperObject('string', 'lookup timed out', false, 0, 0, 0)
+                }]
+              })
               seq = 0
-            , LOOKUP_TIMEOUT)
+            LOOKUP_TIMEOUT)
             debug.request 'lookup', { arguments: { handles: [handle], includeSource: false } }, (msg) ->
-              clearTimeout(timeout);
+              clearTimeout(timeout)
               # TODO break out commonality with above
               if msg.success && seq != 0
                 refs = {}
@@ -441,7 +438,7 @@ exports.create = (debugConnection, config) ->
                   objProps = obj.properties
                   proto = obj.protoObject
                   msg.refs.forEach (r) ->
-                    refs[r.handle] = r;
+                    refs[r.handle] = r
 
                   props = objProps.map (p) ->
                     r = refs[p.ref]
@@ -450,10 +447,11 @@ exports.create = (debugConnection, config) ->
                       value: refToObject(r)
                     }
 
-                  if (proto)
+                  if proto
                     props.push({
                       name: '__proto__',
-                      value: refToObject(refs[proto.ref])})
+                      value: refToObject(refs[proto.ref])
+                    })
                 sendResponse(seq, true, { result: props })
 
         else if (methodName is 'getCompletions')
@@ -542,124 +540,62 @@ exports.create = (debugConnection, config) ->
       value: -> sendEvent('consoleMessagesCleared')
 
     # Debug
-    setBreakpoint:
-      value: (sourceID, lineNumber, enabled, condition, seq) ->
-        bp = breakpoints[sourceID + ':' + lineNumber]
-        handleResponse = (msg) ->
-          if (msg.success)
-            b = msg.body;
-            breakpoints[b.script_id + ':' + (b.line + 1)] = {
-              sourceID: b.script_id,
-              url: sourceIDs[b.script_id].url,
-              line: b.line + 1,
-              enabled: enabled,
-              condition: condition,
-              number: b.breakpoint
-            };
-            b.breakpoint;
-            data = { success: true, actualLineNumber: b.line + 1 };
-            sendResponse(seq, true, data);
-
-        if (bp)
-          debug.request(
-              'changebreakpoint',
-              { arguments: {
-                breakpoint: bp.number,
-                enabled: enabled,
-                condition: condition
-              }},
-              (msg) ->
-                bp.enabled = enabled;
-                bp.condition = condition;
-                data = { success: true, actualLineNumber: lineNumber };
-                sendResponse(seq, true, data);
-              );
-        else
-          debug.request(
-              'setbreakpoint',
-              { arguments: {
-                type: 'scriptId',
-                target: sourceID,
-                line: lineNumber - 1,
-                enabled: enabled,
-                condition: condition
-              }},
-              handleResponse);
-
-    removeBreakpoint: {
-      value: (sourceID, lineNumber) ->
-        id = sourceID + ':' + lineNumber;
-        debug.request(
-            'clearbreakpoint',
-            { arguments: { breakpoint: breakpoints[id].number }},
-            (msg) ->
-              delete breakpoints[id] if (msg.success)
-        );
-    }
     activateBreakpoints: {
       value: ->
-        Object.keys(breakpoints).forEach(
-            (key) ->
-              bp = breakpoints[key];
-              debug.request(
-                  'changebreakpoint',
-                  { arguments: {
-                    breakpoint: bp.number,
-                    condition: bp.condition,
-                    enabled: true
-                  }},
-                  (msg) ->
-                    if (msg.success)
-                      bp.enabled = true;
-                      sendEvent('restoredBreakpoint', bp);
-              );
-        );
+        Object.keys(breakpoints).forEach (key) ->
+          bp = breakpoints[key];
+          debug.request 'changebreakpoint', {
+            arguments: {
+              breakpoint: bp.number,
+              condition: bp.condition,
+              enabled: true
+            }
+          }, (msg) ->
+            if (msg.success)
+              bp.enabled = true;
+              sendEvent('restoredBreakpoint', bp)
     },
     deactivateBreakpoints: {
       value: (injectedScriptId, objectGroup) ->
-        Object.keys(breakpoints).forEach(
-            (key) ->
-              bp = breakpoints[key];
-              debug.request(
-                  'changebreakpoint',
-                  { arguments: {
-                    breakpoint: bp.number,
-                    condition: bp.condition,
-                    enabled: false
-                  }},
-                  (msg) ->
-                    if (msg.success)
-                      bp.enabled = false;
-                      sendEvent('restoredBreakpoint', bp);
-              );
-        );
+        Object.keys(breakpoints).forEach (key) ->
+          bp = breakpoints[key];
+          debug.request 'changebreakpoint', {
+            arguments: {
+              breakpoint: bp.number,
+              condition: bp.condition,
+              enabled: false
+            }
+          }, (msg) ->
+            if (msg.success)
+              bp.enabled = false;
+              sendEvent('restoredBreakpoint', bp)
     },
     pause: {
       value: ->
         debug.request('suspend', {}, (msg) ->
           if (!msg.running)
-            sendBacktrace();
-        );
+            sendBacktrace()
+        )
     },
     resume: {
       value: ->
-        debug.request('continue');
-        sendEvent('resumedScript');
+        debug.request('continue')
+        sendEvent('resumedScript')
     },
     stepOverStatement: {
       value: ->
-        debug.request('continue', { arguments: {stepaction: 'next'}});
-        sendEvent('resumedScript');
+        debug.request('continue', { arguments: {stepaction: 'next'}})
+        sendEvent('resumedScript')
     },
     stepIntoStatement: {
       value: ->
-        debug.request('continue', { arguments: {stepaction: 'in'}});
-        sendEvent('resumedScript');
+        debug.request('continue', { arguments: {stepaction: 'in'}})
+        sendEvent('resumedScript')
     },
     stepOutOfFunction: {
       value: ->
-        debug.request('continue', { arguments: {stepaction: 'out'}});
-        sendEvent('resumedScript');
+        debug.request('continue', { arguments: {stepaction: 'out'}})
+        sendEvent('resumedScript')
     },
     setPauseOnExceptionsState: {
       value: (state, seq) ->
@@ -667,16 +603,17 @@ exports.create = (debugConnection, config) ->
           arguments: {
             flags: [{
               name: 'breakOnCaughtException',
-              value: state is 1}]
+              value: state is 1
+            }]
           }
-        };
+        }
         debug.request('flags', params, (msg) ->
           value = 0;
           if msg.success
             if msg.body.flags.some( (x) -> x.name is 'breakOnCaughtException' && x.value )
               value = 1
-            sendResponse(seq, true, {pauseOnExceptionState: value});
-        );
+            sendResponse(seq, true, {pauseOnExceptionState: value})
+        )
     },
     editScriptSource: {
       value: (sourceID, newContent, seq) ->
@@ -684,43 +621,26 @@ exports.create = (debugConnection, config) ->
           script_id: sourceID,
           preview_only: false,
           new_source: newContent
-        };
-        debug.request(
-            'changelive',
-            {arguments: args},
-            (msg) ->
-              sendResponse(
-                  seq,
-                  true,
-                  {
-                    success: msg.success,
-                    newBodyOrErrorMessage: msg.message || newContent
-                  });
-              # TODO: new callframes?
-              if (msg.success && config.saveLiveEdit)
-                fs = require('fs')
-                match = FUNC_WRAP.exec(newContent)
-                newSource = null
-                if (match && sourceIDs[sourceID] && sourceIDs[sourceID].path)
-                  newSource = match[1];
-                  fs.writeFile(sourceIDs[sourceID].path, newSource, (e) ->
-                    if (e)
-                      err = e.toString()
-                      data = {
-                        messageObj: {
-                          source: 3,
-                          type: 0,
-                          level: 3,
-                          line: 0,
-                          url: '',
-                          groupLevel: 7,
-                          repeatCount: 1,
-                          message: err
-                        }
-                      };
-                      sendEvent('addConsoleMessage', data);
-                  );
-            );
+        }
+        debug.request 'changelive', {arguments: args}, (msg) ->
+          sendResponse seq, true, {
+            success: msg.success,
+            newBodyOrErrorMessage: msg.message || newContent
+          }
+          # TODO: new callframes?
+          if msg.success && config.saveLiveEdit
+            fs = require('fs')
+            match = FUNC_WRAP.exec(newContent)
+            newSource = null
+            if (match && sourceIDs[sourceID] && sourceIDs[sourceID].path)
+              newSource = match[1]
+              fs.writeFile sourceIDs[sourceID].path, newSource, (e) ->
+                return null unless e
+                err = e.toString()
+                data = {
+                  messageObj: { source: 3, type: 0, level: 3, line: 0, url: '', groupLevel: 7, repeatCount: 1, message: err }
+                }
+                sendEvent('addConsoleMessage', data)
     },
     getScriptSource: {
       value: (sourceID, seq) ->
@@ -729,10 +649,12 @@ exports.create = (debugConnection, config) ->
           arguments: {
             includeSource: true,
             types: 4,
-            ids: [sourceID] }};
+            ids: [sourceID]
+          }
+        }
         debug.request('scripts', args, (msg) ->
-          sendResponse(seq, msg.success, { scriptSource: msg.body[0].source });
-        );
+          sendResponse(seq, msg.success, { scriptSource: msg.body[0].source })
+        )
     },
     # Profiler
     startProfiling: {
@@ -743,91 +665,71 @@ exports.create = (debugConnection, config) ->
          * correct context. Using as a 'refresh' in the mean time
          * Remove this hack once we can trigger a profile in the proper context
         ###
-        sendEvent('setRecordingProfile', { isProfiling: false });
-        this.getProfileHeaders();
+        sendEvent('setRecordingProfile', { isProfiling: false })
+        this.getProfileHeaders()
     },
     stopProfiling: {
       value: ->
-        evaluate(
-            'process.profiler.stopProfiling("org.webkit.profiles.user-initiated.' +
-            cpuProfileCount + '")',
-            null,
-            (msg) ->
-              sendEvent('setRecordingProfile', { isProfiling: false });
-              if (msg.success)
-                refs = {};
-                profile = {};
-                if (msg.refs && Array.isArray(msg.refs))
-                  obj = msg.body;
-                  objProps = obj.properties;
-                  msg.refs.forEach( (r) ->
-                    refs[r.handle] = r;
-                  );
-                  objProps.forEach( (p) ->
-                    profile[String(p.name)] =
-                        refToObject(refs[p.ref]).description;
-                  );
-                sendProfileHeader(parseInt(profile.uid, 10), 'CPU');
-            );
+        expr = 'process.profiler.stopProfiling("org.webkit.profiles.user-initiated.' + cpuProfileCount + '")'
+        evaluate expr, null, (msg) ->
+          sendEvent 'setRecordingProfile', { isProfiling: false }
+          if msg.success
+            refs = {}
+            profile = {}
+            if msg.refs && Array.isArray(msg.refs)
+              obj = msg.body
+              objProps = obj.properties
+              msg.refs.forEach (r) ->
+                refs[r.handle] = r
+
+              objProps.forEach (p) ->
+                profile[String(p.name)] = refToObject(refs[p.ref]).description
+
+            sendProfileHeader parseInt(profile.uid, 10), 'CPU'
     },
     getProfileHeaders: {
       value: ->
-        evaluate('process.profiler.profileCount()', null, (msg1) ->
+        evaluate 'process.profiler.profileCount()', null, (msg1) ->
           if (msg1.success)
             for i in [0..msg1.body.value]
-              evaluate(
-                  'process.profiler.getProfile(' + i + ')',
-                  null,
-                  (msg) ->
-                    if (msg.success)
-                      refs = {};
-                      profile = {};
-                      if (msg.refs && Array.isArray(msg.refs))
-                        obj = msg.body;
-                        objProps = obj.properties;
-                        msg.refs.forEach( (r) ->
-                          refs[r.handle] = r;
-                        );
-                        objProps.forEach( (p) ->
-                          profile[String(p.name)] =
-                              refToObject(refs[p.ref]).description;
-                        );
-                      sendProfileHeader(
-                          profile.title,
-                          parseInt(profile.uid, 10),
-                          'CPU');
-                  );
-        );
-        evaluate('process.profiler.snapshotCount()', null, (msg1) ->
+              evaluate 'process.profiler.getProfile(' + i + ')', null, (msg) ->
+                if (msg.success)
+                  refs = {};
+                  profile = {};
+                  if (msg.refs && Array.isArray(msg.refs))
+                    obj = msg.body;
+                    objProps = obj.properties;
+                    msg.refs.forEach (r) ->
+                      refs[r.handle] = r
+
+                    objProps.forEach (p) ->
+                      profile[String(p.name)] = refToObject(refs[p.ref]).description
+
+                  sendProfileHeader profile.title, parseInt(profile.uid, 10), 'CPU'
+
+        evaluate 'process.profiler.snapshotCount()', null, (msg1) ->
           if (msg1.success)
             for i in [0..msg1.body.value]
-              evaluate(
-                  'process.profiler.getSnapshot(' + i + ')',
-                  null,
-                  (msg) ->
-                    if (msg.success)
-                      refs = {}
-                      profile = {}
-                      if (msg.refs && Array.isArray(msg.refs))
-                        obj = msg.body;
-                        objProps = obj.properties;
-                        msg.refs.forEach( (r) ->
-                          refs[r.handle] = r;
-                        );
-                        objProps.forEach( (p) ->
-                          profile[String(p.name)] =
-                              refToObject(refs[p.ref]).description;
-                        );
+              evaluate 'process.profiler.getSnapshot(' + i + ')', null, (msg) ->
+                if (msg.success)
+                  refs = {}
+                  profile = {}
+                  if (msg.refs && Array.isArray(msg.refs))
+                    obj = msg.body
+                    objProps = obj.properties
+                    msg.refs.forEach (r) ->
+                      refs[r.handle] = r
 
-                      title =
-                        if profile.title is 'undefined'
-                          'org.webkit.profiles.user-initiated.' + profile.ui
-                        else
-                          profile.title
+                    objProps.forEach (p) ->
+                      profile[String(p.name)] = refToObject(refs[p.ref]).description
 
-                      sendProfileHeader(title, parseInt(profile.uid, 10), 'HEAP')
-                  );
-        );
+                  title =
+                    if profile.title is 'undefined'
+                      'org.webkit.profiles.user-initiated.' + profile.ui
+                    else
+                      profile.title
+
+                  sendProfileHeader(title, parseInt(profile.uid, 10), 'HEAP')
     },
     getProfile: {
       value: (type, uid, seq) ->
@@ -845,8 +747,8 @@ exports.create = (debugConnection, config) ->
               typeId: type,
               head: JSON.parse(msg.body.value)
             }
-          });
-        );
+          })
+        )
     },
     removeProfile: {
       value: (type, uid) ->
@@ -856,38 +758,33 @@ exports.create = (debugConnection, config) ->
     },
     takeHeapSnapshot: {
       value: ->
-        evaluate('process.profiler.takeSnapshot()', null, (msg) ->
+        evaluate 'process.profiler.takeSnapshot()', null, (msg) ->
           if (msg.success)
-            refs = {};
-            profile = {};
+            refs = {}
+            profile = {}
             if (msg.refs && Array.isArray(msg.refs))
-              obj = msg.body;
-              objProps = obj.properties;
-              msg.refs.forEach( (r) ->
-                refs[r.handle] = r;
-              );
-              objProps.forEach( (p) ->
-                profile[String(p.name)] = refToObject(refs[p.ref]).description;
-              );
+              obj = msg.body
+              objProps = obj.properties
+              msg.refs.forEach (r) ->
+                refs[r.handle] = r
 
-            sendProfileHeader(
-                'org.webkit.profiles.user-initiated.' + profile.uid,
-                parseInt(profile.uid, 10),
-                'HEAP');
-        );
+              objProps.forEach (p) ->
+                profile[String(p.name)] = refToObject(refs[p.ref]).description
+
+            sendProfileHeader 'org.webkit.profiles.user-initiated.' + profile.uid, parseInt(profile.uid, 10), 'HEAP'
     },
     join: {
       value: (ws_connection) ->
         conn = ws_connection;
-        conn.on('message', (data) =>
-          @handleRequest(data);
-        );
-        conn.on('disconnect', =>
+        conn.on 'message', (data) =>
+          @handleRequest data
+
+        conn.on 'disconnect', =>
           # TODO what to do here? set timeout to close debugger connection
-          @emit('ws_closed');
-          conn = null;
-        );
-        browserConnected();
+          @emit('ws_closed')
+          conn = null
+
+        browserConnected()
     },
     handleRequest: {
       value: (data) ->
@@ -913,9 +810,9 @@ exports.create = (debugConnection, config) ->
           console.log 'Unknown message from frontend:', msg
 
         if typeof command is 'function'
-          args = Object.keys(msg.arguments).map( (x) -> msg.arguments[x]; );
-          if (msg.seq > 0)
-            args.push(msg.seq);
-          command.apply(this, args);
+          args = Object.keys(msg.arguments).map (x) -> msg.arguments[x]
+          if msg.seq > 0
+            args.push msg.seq
+          command.apply this, args
     }
-  );
+  })

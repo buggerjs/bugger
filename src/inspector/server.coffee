@@ -24,7 +24,7 @@ serveStaticFiles = (req, res) ->
       unless sourceMap.sourcesContent[idx]
         sourceMap.sourcesContent[idx] =
           try
-            fs.readFileSync(source).toString()
+            fs.readFileSync(source).toString() # .substr(1)
           catch err
             ''
     return res.end JSON.stringify getSession().getSourceMap(smMatch[1])
@@ -46,7 +46,7 @@ getSession = ->
     session.on 'ws_closed', ->
       connectionTimeout = setTimeout( ->
         session.close()
-      , 3000)
+      3000)
 
     session.on 'close', ->
       session = null
@@ -62,7 +62,8 @@ handleServerListening = ->
   console.log(
     'visit http://' + (config.webHost || '0.0.0.0') + ':' +
     config.webPort +
-    '/inspector.html to start debugging')
+    '/inspector.html to start debugging'
+  )
 
 class DebugServer extends EventEmitter
   start: (options) ->

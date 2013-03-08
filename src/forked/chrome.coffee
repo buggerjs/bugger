@@ -13,7 +13,8 @@ findChrome = ->
     when 'win32'
       [ path.join(process.env['LocalAppData'], 'Google', 'Chrome', 'Application', 'chrome.exe')
       , path.join(process.env["ProgramFiles"], "Google", "Chrome", "Application", "chrome.exe")
-      , path.join(process.env["ProgramFiles(x86)"], "Google", "Chrome", "Application", "chrome.exe") ]
+      , path.join(process.env["ProgramFiles(x86)"], "Google", "Chrome", "Application", "chrome.exe")
+      ]
     when 'darwin'
       [ path.join("/", "Applications", "Google Chrome.app", "Contents", "MacOS", "Google Chrome") ]
     else
@@ -25,7 +26,8 @@ module.exports = (host, port, debugPort) ->
   chromeProfilePath = path.join __dirname, '..', 'ChromeProfile'
   args = [
     "--app=http://#{host}:#{port}/inspector.html?port=#{debugPort}",
-    "--user-data-dir=#{chromeProfilePath}" ]
+    "--user-data-dir=#{chromeProfilePath}"
+  ]
 
   chromePath = findChrome()
 

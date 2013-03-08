@@ -47,7 +47,7 @@ exports.attachDebugger = (debugConnection) ->
         debugBuffer = debugBuffer.slice offset + 4
         parse()
 
-  debugr = Object.create(EventEmitter.prototype,
+  debugr = Object.create(EventEmitter.prototype, {
     send:
       value: (data) ->
         if connected
@@ -78,7 +78,7 @@ exports.attachDebugger = (debugConnection) ->
 
     connected:
       get: -> connected
-  )
+  })
 
   conn.on 'connect', ->
     connected = true

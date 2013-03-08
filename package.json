@@ -18,9 +18,9 @@
   "author": "Jan Krems <jan.krems@groupon.com>",
   "license": "proprietary",
   "dependencies": {
-    "coffee-script": "~1.6.1",
     "send": "~0.1.0",
-    "socket.io": "~0.9.13"
+    "socket.io": "~0.9.13",
+    "coffee-script-redux": "~2.0.0-beta4"
   },
   "publishConfig": {
     "registry": "http://registry.npm.local:5984/"

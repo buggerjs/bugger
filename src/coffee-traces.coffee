@@ -1,6 +1,6 @@
 
 fs = require 'fs'
-coffee = require 'coffee-script'
+coffee = require 'coffee-script-redux'
 
 _sourceMaps = {}
 
@@ -119,25 +119,33 @@ formatSourcePosition = (frame, getSourceMapping) ->
     fileLocation
 
 compileFile = (filename) ->
-  raw = fs.readFileSync filename, 'utf8'
-  stripped = if raw.charCodeAt(0) is 0xFEFF then raw.substring 1 else raw
-  compiled = coffee.compile stripped,
-    filename: filename
-    sourceMap: on
-    header: off
-    bare: on
+  input = fs.readFileSync filename, 'utf8'
 
-  {js, v3SourceMap, sourceMap} = compiled
+  coffeeOptions = optimise: off, bare: on, raw: yes
+  csAST = coffee.parse input, coffeeOptions
+  jsAST = coffee.compile csAST, coffeeOptions
+  {code, map} = coffee.jsWithSourceMap jsAST, filename, coffeeOptions
 
-  v3SourceMap = JSON.parse v3SourceMap
-  v3SourceMap.file = filename
-  v3SourceMap.sources = [ filename ]
+  console.log code
+  # console.log coffee.jsWithSourceMap jsAST, filename, coffeeOptions
 
-  _sourceMaps[filename] = sourceMap
+  # process.exit 0
 
-  js += "//@ sourceMappingURL=data:application/json;base64,"
-  js += new Buffer(JSON.stringify(v3SourceMap)).toString('base64')
-  js += "\n"
+  # {js, v3SourceMap, sourceMap} = coffee.compile stripped,
+  #   filename: filename
+  #   sourceMap: on
+  #   header: off
+  #   bare: on
+
+  # v3SourceMap = JSON.parse v3SourceMap
+  # v3SourceMap.file = filename
+  # v3SourceMap.sources = [ filename ]
+
+  _sourceMaps[filename] = map
+
+  code += "\n//@ sourceMappingURL=data:application/json;base64,"
+  code += new Buffer("#{map}").toString('base64')
+  code += "\n"
 
 compile = (module, filename) ->
   js = compileFile filename
