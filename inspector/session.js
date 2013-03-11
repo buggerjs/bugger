@@ -155,8 +155,31 @@ exports.create = function (debugConnection, config) {
       }
     },
     Runtime: {
+      evaluate2: function (options, cb) {
+        var args, cache$, doNotPauseOnExceptions, expression, includeCommandLineAPI, objectGroup, returnByValue;
+        console.log('Runtime#evaluate', options);
+        cache$ = options;
+        expression = cache$.expression;
+        objectGroup = cache$.objectGroup;
+        includeCommandLineAPI = cache$.includeCommandLineAPI;
+        doNotPauseOnExceptions = cache$.doNotPauseOnExceptions;
+        returnByValue = cache$.returnByValue;
+        args = {
+          expression: expression,
+          disable_break: doNotPauseOnExceptions,
+          global: true,
+          maxStringLength: 1e5
+        };
+        console.log('Runtime#evaluate - mapped', args);
+        return debug.request('evaluate', { 'arguments': args }, function () {
+          console.log('Runtime#evaluate - cb', args);
+          console.log('Options: ', options);
+          console.log('Returned: ', arguments);
+          return cb.apply(null, [].slice.call(arguments).concat());
+        });
+      },
       getProperties: function (param$, cb) {
-        var cache$, cache$1, frame, handle, objectId, ownProperties, ref, scope, timeout;
+        var cache$, cache$1, frame, handle, handles, objectId, ownProperties, ref, scope, timeout;
         {
           cache$ = param$;
           objectId = cache$.objectId;
@@ -201,9 +224,10 @@ exports.create = function (debugConnection, config) {
               }]);
             return seq = 0;
           }, LOOKUP_TIMEOUT);
+          handles = [handle];
           return debug.request('lookup', {
             'arguments': {
-              handles: [handle],
+              handles: handles,
               includeSource: false
             }
           }, function (msg) {
@@ -234,6 +258,8 @@ exports.create = function (debugConnection, config) {
                   });
               }
               return cb(null, props);
+            } else {
+              return console.log('[error] Runtime#getProperties', msg);
             }
           });
         }

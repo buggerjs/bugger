@@ -2,7 +2,7 @@
 {resolveModule} = require './bugger'
 {DebugServer} = require './inspector/server'
 forkChrome = require('./forked/chrome')
-forkScript = require('./forked/entry_script')
+{forkEntryScript} = require('./forked/entry_script')
 
 module.exports =
   run: ->
@@ -24,7 +24,7 @@ module.exports =
       chrome:
         boolean: true
         describe: 'Open Chrome with the correct url'
-      'debug-brk':
+      'brk':
         describe: 'Break on first line of script'
         boolean: true,
         default: true
@@ -62,7 +62,7 @@ module.exports =
       chrome = forkChrome(argv['web-host'], argv['web-port'], debugPort)
       chrome.on 'exit', process.exit
 
-    forkScript entryScript, debugPort, argv['debug-brk'], argv._, ({ entryScriptProc, debugConnection }) ->
+    forkEntryScript entryScript, debugPort, argv['brk'], argv._, ({ entryScriptProc, debugConnection }) ->
       entryScriptProc.on 'exit', process.exit
 
       debugServer = (new DebugServer()).start {

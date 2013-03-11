@@ -35,7 +35,7 @@ resolveModule = function (fileName) {
   }
 };
 requireScript = function (fileName, startPaused) {
-  var cache$, compile, compileAndBreak, mainModule;
+  var cache$, compile, compileAndBreak, mainModule, patchStackTrace;
   mainModule = require.main;
   mainModule.filename = process.argv[1] = fs.realpathSync(fileName);
   mainModule.moduleCache && (mainModule.moduleCache = {});
@@ -43,6 +43,7 @@ requireScript = function (fileName, startPaused) {
   cache$ = require('./coffee-traces');
   compileAndBreak = cache$.compileAndBreak;
   compile = cache$.compile;
+  patchStackTrace = cache$.patchStackTrace;
   compile = path.extname(fileName) === '.coffee' ? startPaused ? compileAndBreak : compile : function (module, filename) {
     var raw;
     raw = fs.readFileSync(filename, 'utf8');
@@ -50,6 +51,7 @@ requireScript = function (fileName, startPaused) {
       raw = "console.error('[bugger] Execution stopped at first line');debugger;\n" + raw;
     return module._compile(raw, filename);
   };
+  patchStackTrace();
   return compile(mainModule, fileName);
 };
 module.exports = {

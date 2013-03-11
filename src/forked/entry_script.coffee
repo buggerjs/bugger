@@ -1,51 +1,75 @@
 
-{requireScript} = require '../bugger'
-{spawn} = require 'child_process'
+MESSAGE_CHILD_READY = 'CHILD_READY'
+MESSAGE_CHILD_EXCEPTION = 'CHILD_EXCEPTION'
 
-net = require 'net'
+runningScriptName = null
 
-unless module.parent
-  debugBrk = process.argv[2] is 'true'
-  entryScript = process.argv[3]
+commands =
+  startScript: ({entryScript, debugBrk}) ->
+    {requireScript} = require '../bugger'
+    runningScriptName = entryScript
 
-  failedToStart = setTimeout( ->
-    console.log 'Waited a second, noone connected to this debugging session.'
-    console.log 'Maybe trying again is enough..?'
-    throw new Error 'Script failed to start'
-  1000)
-
-  # Make sure the parent process attached to our debug port before we continue
-  process.once 'SIGUSR2', ->
-    # Okay, everything's fine.
-    clearTimeout failedToStart
     # Require time! This may trigger a debug breakpoint, depending on debugBrk
-    requireScript entryScript, debugBrk
+    requireScript entryScript, (debugBrk is true)
 
-# The exact order of things is important here:
-# 1. Create a new child process
-# 2. The child process starts listening for debug sessions
-# 3. The parent process connects to the debug port of the child process
-# 4. The child process hits the first breakpoint
-#
-# ECONNREFUSED or breakpoints not working are the consequences of some of
-# those happen out of order.
-module.exports = (entryScript, debugPort, debugBrk, argv_, cb) ->
-  args = [
-    "--debug=#{debugPort}",
-    module.filename,
-    debugBrk.toString(),
-    entryScript
-  ].concat argv_.splice(1)
+  restartScript: ->
+    Module = require 'module'
+    Module._cache = {}
+    Module._sourceMaps = {}
 
-  entryScriptProc = spawn process.execPath, args
-  entryScriptProc.stdout.pipe(process.stdout)
-  entryScriptProc.stderr.pipe(process.stderr)
+    {requireScript} = require '../bugger'
+    # Always break on first line when we are restarting
+    requireScript runningScriptName, true
 
-  # Waiting 100 milliseconds is the best compromise between delayed startup
-  # and the child not-yet-listening for debug sessions.
-  setTimeout( ->
-    debugConnection = net.connect debugPort, ->
-      # Tell the forked process that we have connected.
-      process.kill entryScriptProc.pid, 'SIGUSR2'
-      cb { entryScriptProc, debugConnection }
-  100)
+# We are in a child process
+unless module.parent?
+  # get ourselves into debug mode
+  process.kill process.pid, 'SIGUSR1'
+
+  process.on 'message', (message) ->
+    if commands[message.code]?
+      commands[message.code](message)
+    else
+      console.error "[bugger] Unknown message from parent: #{message.code}", message
+
+  process.on 'uncaughtException', (error) ->
+    process.send {
+      code: 'uncaughtException'
+      error: {
+        name: error.name
+        message: error.message
+        stack: error.stack
+        code: error.code
+        meta: error.meta
+      }
+    }
+
+  process.send { code: 'childReady' }
+
+module.exports =
+  forkEntryScript: (entryScript, debugPort, debugBrk, argv_, cb) ->
+    {spawn, fork} = require 'child_process'
+    net = require 'net'
+
+    entryScriptProc = fork module.filename, argv_.splice(1), silent: false
+    startupFailedTimeout = setTimeout( ->
+      throw new Error 'Process for entry script failed to start'
+    1000)
+
+    backChannelHandlers =
+      childReady: ->
+        clearTimeout(startupFailedTimeout) if startupFailedTimeout
+        startupFailedTimeout = true
+
+        debugConnection = net.connect debugPort, ->
+          entryScriptProc.send { code: 'startScript', entryScript, debugBrk }
+          cb { entryScriptProc, debugConnection }
+
+      uncaughtException: ({error}) ->
+        console.log 'Uncaught exception in child:', error
+
+    entryScriptProc.on 'message', (message) ->
+      if backChannelHandlers[message.code]?
+        backChannelHandlers[message.code](message)
+      else
+        console.log "[bugger] Unknown message from child: #{message.code}", message

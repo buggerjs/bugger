@@ -111,6 +111,33 @@ exports.create = (debugConnection, config) ->
         cb(null, true)
 
     Runtime:
+      evaluate2: (options, cb) ->
+        console.log 'Runtime#evaluate', options
+        ###
+        { expression: 'this',
+          objectGroup: 'completion',
+          includeCommandLineAPI: true,
+          doNotPauseOnExceptions: true,
+          returnByValue: false }
+        ###
+        {expression, objectGroup, includeCommandLineAPI, doNotPauseOnExceptions, returnByValue} = options
+        args =
+          expression: expression
+          disable_break: doNotPauseOnExceptions
+          global: true
+          maxStringLength: 100000
+
+        # if frame?
+        #   args.frame = frame
+        #   args.global = false
+
+        console.log 'Runtime#evaluate - mapped', args
+        debug.request 'evaluate', { arguments: args }, ->
+          console.log 'Runtime#evaluate - cb', args
+          console.log 'Options: ', options
+          console.log 'Returned: ', arguments
+          cb(arguments...)
+
       getProperties: ({objectId, ownProperties}, cb) ->
         [frame, scope, ref] = objectId.split ':'
 
@@ -131,7 +158,8 @@ exports.create = (debugConnection, config) ->
             cb null, [{ name: 'sorry', value: wrapperObject( 'string', 'lookup timed out', false, 0, 0, 0) }]
             seq = 0
           LOOKUP_TIMEOUT)
-          debug.request 'lookup', { arguments: { handles: [handle], includeSource: false } }, (msg) ->
+          handles = [ handle ]
+          debug.request 'lookup', { arguments: { handles, includeSource: false } }, (msg) ->
             clearTimeout(timeout)
             # TODO break out commonality with above
             if msg.success
@@ -152,6 +180,8 @@ exports.create = (debugConnection, config) ->
                     name: '__proto__',
                     value: refToObject refs[proto.ref]
               cb(null, props)
+            else
+              console.log '[error] Runtime#getProperties', msg
 
   wrapperObject = (type, description, hasChildren, frame, scope, ref) ->
     type: type

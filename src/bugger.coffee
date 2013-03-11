@@ -2,6 +2,7 @@
 path = require 'path'
 fs = require 'fs'
 
+# Extension that will automatically be added to a filename if omitted
 knownExtensions = [ '.js', '.coffee' ]
 
 resolveModule = (fileName) ->
@@ -38,7 +39,7 @@ requireScript = (fileName, startPaused) ->
   # Assign paths for node_modules loading
   mainModule.paths = require('module')._nodeModulePaths path.dirname fs.realpathSync(fileName)
 
-  {compileAndBreak, compile} = require('./coffee-traces')
+  {compileAndBreak, compile, patchStackTrace} = require('./coffee-traces')
 
   compile = if path.extname(fileName) is '.coffee'
     if startPaused then compileAndBreak
@@ -50,6 +51,7 @@ requireScript = (fileName, startPaused) ->
         raw = "console.error('[bugger] Execution stopped at first line');debugger;\n" + raw
       module._compile raw, filename
 
+  do patchStackTrace
   compile mainModule, fileName
 
 module.exports = {resolveModule, requireScript}

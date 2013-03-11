@@ -20,7 +20,8 @@
   "dependencies": {
     "send": "~0.1.0",
     "socket.io": "~0.9.13",
-    "coffee-script-redux": "~2.0.0-beta4"
+    "coffee-script-redux": "~2.0.0-beta4",
+    "source-map": "~0.1.9"
   },
   "publishConfig": {
     "registry": "http://registry.npm.local:5984/"
