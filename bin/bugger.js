@@ -1,5 +1,5 @@
 #!/usr/bin/env node
 
 // load bugger
-var cli = require('../cli.js');
+var cli = require('../lib/cli.js');
 cli.run();

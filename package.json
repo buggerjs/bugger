@@ -2,7 +2,7 @@
   "name": "bugger",
   "version": "0.1.1",
   "description": "Debug everything",
-  "main": "bugger.js",
+  "main": "lib/bugger.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha -R spec --recursive --compilers coffee:coffee-script spec"
   },
