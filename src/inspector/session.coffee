@@ -86,12 +86,12 @@ exports.create = (debugConnection, config) ->
           cb(null, true)
         # sendEvent('resumedScript')
 
-      stepInto: ->
+      stepInto: (cb) ->
         debug.request 'continue', { arguments: {stepaction: 'in'} }, (msg) ->
           cb(null, true)
         # sendEvent('resumedScript')
 
-      stepOutOfFunction: ->
+      stepOutOfFunction: (cb) ->
         debug.request 'continue', { arguments: {stepaction: 'out'} }, (msg) ->
           cb(null, true)
         # sendEvent('resumedScript')
@@ -807,7 +807,7 @@ exports.create = (debugConnection, config) ->
       value: (ws_connection) ->
         conn = ws_connection;
         conn.on 'message', (data) =>
-          @handleRequest data
+          @handleRequest data.utf8Data
 
         conn.on 'disconnect', =>
           # TODO what to do here? set timeout to close debugger connection

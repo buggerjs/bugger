@@ -142,11 +142,13 @@ compile = (module, filename) ->
 
 compileAndBreak = (module, filename) ->
   js = compileFile filename
-  js = "console.error('[bugger] Execution stopped at first line');debugger;#{js}"
   module._compile js, filename
 
 if require.extensions
   for ext in ['.coffee']
+    # Make it forEach'able
     require.extensions[ext] = compile
+    # And seal it so native compilation doesn't overwrite it
+    Object.defineProperty require.extensions, ext, get: -> compile
 
 module.exports = {compile, compileAndBreak, patchStackTrace}

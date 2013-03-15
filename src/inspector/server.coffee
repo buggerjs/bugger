@@ -7,6 +7,9 @@ urlLib = require 'url'
 path = require 'path'
 fs = require 'fs'
 
+# websocketTransport = require 'socket.io/lib/transports/websocket/default'
+WebSocketServer = require('websocket').server
+
 session = null
 config = {}
 connectionTimeout = null
@@ -33,7 +36,7 @@ serveStaticFiles = (req, res) ->
       if req.url in [ '/InspectorBackendCommands.js', '/InspectorBackend.js', '/Overrides.js' ]
         __dirname
       else
-        path.join __dirname, '..', 'public'
+        path.join __dirname, '..', '..', 'public'
 
     # Rewrite backend to stubbed one
     req.url = req.url.replace '/InspectorBackend.js', '/InspectorBackendStub.js'
@@ -69,12 +72,19 @@ class DebugServer extends EventEmitter
   start: (options) ->
     config = options
     httpServer = Http.createServer serveStaticFiles
-    ws = io.listen httpServer
-    ws.configure ->
-      ws.set 'transports', ['websocket']
-      ws.set 'log level', 1
-    ws.sockets.on 'connection', handleWebSocketConnection
-    @wsServer = ws
+
+    wsServer = new WebSocketServer {
+      httpServer: httpServer,
+      autoAcceptConnections: true
+    }
+
+    wsServer.on 'connect', handleWebSocketConnection
+    # ws = io.listen httpServer
+    # ws.configure ->
+    #   ws.set 'transports', ['websocket']
+    #   ws.set 'log level', 1
+    # ws.sockets.on 'connection', handleWebSocketConnection
+    # @wsServer = ws
     httpServer.on 'listening', handleServerListening
     httpServer.listen config.webPort, config.webHost
     return this
