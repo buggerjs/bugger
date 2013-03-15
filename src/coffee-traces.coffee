@@ -142,6 +142,7 @@ compile = (module, filename) ->
 
 compileAndBreak = (module, filename) ->
   js = compileFile filename
+  js = "console.log('[bugger] Halting execution on first line.'); debugger; #{js}"
   module._compile js, filename
 
 if require.extensions
