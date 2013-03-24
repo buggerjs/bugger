@@ -1,0 +1,38 @@
+<!DOCTYPE html><html lang="en"><head><title>inspector/Overrides</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="inspector/Overrides"><meta name="groc-project-path" content="src/inspector/Overrides.coffee"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path">src/inspector/Overrides.coffee</div></div><div id="document"><div class="segment"></div><div class="segment"><div class="comments"><div class="wrapper"><p>debugger always enabled</p></div></div><div class="code"><div class="wrapper"><span class="nx">WebInspector</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">debuggerEnabled</span><span class="p">.</span><span class="nx">set</span> <span class="kc">true</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">dumpInspectorProtocolMessages = </span><span class="kc">true</span>
+
+<span class="nv">WebInspector.inspectedPageURL = </span><span class="nx">location</span><span class="p">.</span><span class="nx">origin</span>
+
+<span class="nv">preloadMessageBuffer = </span><span class="p">[]</span>
+<span class="nv">InspectorFrontendHost.sendMessageToBackend = </span><span class="nf">(message) -&gt;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&#39;Buffered&#39;</span><span class="p">,</span> <span class="nx">message</span>
+  <span class="nx">preloadMessageBuffer</span><span class="p">.</span><span class="nx">push</span> <span class="nx">message</span>
+
+<span class="nv">InspectorFrontendHost.loaded = </span><span class="o">-&gt;</span>
+  <span class="nx">InspectorFrontendAPI</span><span class="p">.</span><span class="nx">dispatchQueryParameters</span><span class="p">()</span>
+  <span class="nx">WebInspector</span><span class="p">.</span><span class="nx">_doLoadedDoneWithCapabilities</span><span class="p">()</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><pre><code>  for message in preloadMessageBuffer
+    ws.send message
+  preloadMessageBuffer.length = 0
+</code></pre></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Wire up websocket to talk to backend
+window.WebInspector.loaded = ->
+    InspectorBackend.loadFromJSONIfNeeded "../Inspector.json"
+    WebInspector.dockController = new WebInspector.DockController()</p></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><pre><code>if WebInspector.WorkerManager.isDedicatedWorkerFrontend()
+  # Do not create socket for the worker front-end.
+  return WebInspector.doLoadedDone()
+</code></pre></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><pre><code>ws = WebInspector.socket = io.connect "http://#{window.location.host}/", reconnect: false
+</code></pre></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><pre><code>ws.on 'message', (message) -&gt;
+  if message
+    InspectorBackend.dispatch(message)
+</code></pre></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><pre><code>ws.on('error', (error) -&gt; console.error(error) )
+</code></pre></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><pre><code>ws.on 'connect', -&gt;
+  for message in preloadMessageBuffer
+    ws.send message
+  preloadMessageBuffer.length = 0
+</code></pre></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><pre><code>  InspectorFrontendHost.sendMessageToBackend = ws.send.bind(ws)
+  WebInspector.doLoadedDone()
+</code></pre></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><pre><code># In case of loading as a web page with no bindings / harness, kick off initialization manually.
+if InspectorFrontendHost.isStub
+  InspectorFrontendAPI.dispatchQueryParameters()
+  WebInspector._doLoadedDoneWithCapabilities()
+</code></pre></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>window.InspectorFrontendHost.hiddenPanels = ->
+  "elements,resources,timeline,network,audits,profiles"</p></div></div></div></div></body></html>

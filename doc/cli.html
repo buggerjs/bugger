@@ -1,0 +1,46 @@
+<!DOCTYPE html><html lang="en"><head><title>cli</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="cli"><meta name="groc-project-path" content="src/cli.coffee"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path">src/cli.coffee</div></div><div id="document"><div class="segment"><div class="comments"><div class="wrapper"><h1 id="clicoffee">cli.coffee</h1>
+
+<p>Main entry point for the cli application</p></div></div><div class="code"><div class="wrapper"><span class="nv">forkChrome = </span><span class="nx">require</span> <span class="s">&#39;./forked/chrome&#39;</span>
+<span class="nv">forkEntryScript = </span><span class="nx">require</span> <span class="s">&#39;./forked/entry_script&#39;</span>
+
+<span class="nv">debugClient = </span><span class="nx">require</span> <span class="s">&#39;./debug-client&#39;</span>
+<span class="nv">inspectorServer = </span><span class="nx">require</span> <span class="s">&#39;./inspector/server&#39;</span>
+
+<span class="nv">Module = </span><span class="nx">require</span> <span class="s">&#39;module&#39;</span>
+
+<span class="nv">run = </span><span class="o">-&gt;</span>
+  <span class="nv">argv = </span><span class="nx">require</span> <span class="s">&#39;./argv&#39;</span>
+  <span class="p">{</span><span class="nx">chrome</span><span class="p">,</span> <span class="nx">brk</span><span class="p">,</span> <span class="nx">webhost</span><span class="p">,</span> <span class="nx">webport</span><span class="p">}</span> <span class="o">=</span> <span class="nx">argv</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Make sure node knows about the additional script parsers</p></div></div><div class="code"><div class="wrapper">  <span class="nx">require</span> <span class="s">&#39;./lang&#39;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Resolve the entry script to a full filename</p></div></div><div class="code"><div class="wrapper">  <span class="nv">entryScriptArg = </span><span class="nx">argv</span><span class="p">.</span><span class="nx">_</span><span class="p">.</span><span class="nx">shift</span><span class="p">()</span>
+  <span class="nv">entryScript =</span>
+    <span class="k">try</span>
+      <span class="nx">Module</span><span class="p">.</span><span class="nx">_resolveFilename</span> <span class="nx">entryScriptArg</span>
+    <span class="k">catch</span> <span class="nx">err</span>
+      <span class="k">throw</span> <span class="nx">err</span> <span class="k">if</span> <span class="nx">entryScriptArg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">is</span> <span class="s">&#39;/&#39;</span>
+      <span class="nx">Module</span><span class="p">.</span><span class="nx">_resolveFilename</span> <span class="s">&quot;./</span><span class="si">#{</span><span class="nx">entryScriptArg</span><span class="si">}</span><span class="s">&quot;</span>
+  <span class="nv">scriptArgs = </span><span class="nx">argv</span><span class="p">.</span><span class="nx">_</span> <span class="c1"># remaining parameters get passed through</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>We'll really try to make the child processes die whenever we die.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">_entryScriptProc = </span><span class="kc">null</span>
+  <span class="nv">_chromeProc = </span><span class="kc">null</span>
+
+  <span class="nx">process</span><span class="p">.</span><span class="kc">on</span> <span class="s">&#39;exit&#39;</span><span class="p">,</span> <span class="o">-&gt;</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&#39;[bugger] Cleanup on exit...&#39;</span>
+    <span class="k">try</span> <span class="nx">_entryScriptProc</span><span class="p">.</span><span class="nx">kill</span><span class="p">()</span> <span class="k">if</span> <span class="nx">_entryScriptProc</span><span class="o">?</span>
+    <span class="k">try</span> <span class="nx">_chromeProc</span><span class="p">.</span><span class="nx">kill</span><span class="p">()</span> <span class="k">if</span> <span class="nx">_chromeProc</span><span class="o">?</span>
+
+  <span class="nx">process</span><span class="p">.</span><span class="nx">once</span> <span class="s">&#39;uncaughtException&#39;</span><span class="p">,</span> <span class="nf">(e) -&gt;</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&#39;[bugger] Cleanup on exception...&#39;</span>
+    <span class="k">try</span> <span class="nx">_entryScriptProc</span><span class="p">.</span><span class="nx">kill</span><span class="p">()</span> <span class="k">if</span> <span class="nx">_entryScriptProc</span><span class="o">?</span>
+    <span class="k">try</span> <span class="nx">_chromeProc</span><span class="p">.</span><span class="nx">kill</span><span class="p">()</span> <span class="k">if</span> <span class="nx">_chromeProc</span><span class="o">?</span>
+    <span class="k">throw</span> <span class="nx">e</span>
+
+  <span class="nv">appUrl = </span><span class="s">&quot;http://</span><span class="si">#{</span><span class="nx">webhost</span><span class="si">}</span><span class="s">:</span><span class="si">#{</span><span class="nx">webport</span><span class="si">}</span><span class="s">/?hiddenPanels=elements,audits&amp;ws=</span><span class="si">#{</span><span class="nx">webhost</span><span class="si">}</span><span class="s">:</span><span class="si">#{</span><span class="nx">webport</span><span class="si">}</span><span class="s">/websocket&quot;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">appUrl</span>
+
+  <span class="k">if</span> <span class="nx">chrome</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Start chrome with the correct url opened and less UI</p></div></div><div class="code"><div class="wrapper">    <span class="nv">_chromeProc = </span><span class="nx">forkChrome</span> <span class="p">{</span> <span class="nx">webhost</span><span class="p">,</span> <span class="nx">webport</span><span class="p">,</span> <span class="nx">appUrl</span> <span class="p">}</span>
+    <span class="nx">_chromeProc</span><span class="p">.</span><span class="kc">on</span> <span class="s">&#39;exit&#39;</span><span class="p">,</span> <span class="o">-&gt;</span>
+      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&#39;[bugger] Chrome closed, exiting...&#39;</span>
+      <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span> <span class="mi">0</span>
+
+  <span class="nx">forkEntryScript</span> <span class="p">{</span><span class="nx">entryScript</span><span class="p">,</span> <span class="nx">scriptArgs</span><span class="p">,</span> <span class="nx">brk</span><span class="p">},</span> <span class="nf">({entryScriptProc, debugConnection}) -&gt;</span>
+    <span class="nv">_entryScriptProc = </span><span class="nx">entryScriptProc</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Create a proper debug client from the connection</p></div></div><div class="code"><div class="wrapper">    <span class="nx">debugClient</span><span class="p">.</span><span class="nx">init</span> <span class="p">{</span> <span class="nv">connection: </span><span class="nx">debugConnection</span> <span class="p">}</span>
+    <span class="nx">inspectorServer</span><span class="p">.</span><span class="nx">start</span> <span class="p">{</span> <span class="nx">webhost</span><span class="p">,</span> <span class="nx">webport</span><span class="p">,</span> <span class="nx">appUrl</span> <span class="p">}</span>
+
+<span class="nv">module.exports = </span><span class="p">{</span><span class="nx">run</span><span class="p">}</span></div></div></div></div></body></html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html><html lang="en"><head><title>inspector/server</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="inspector/server"><meta name="groc-project-path" content="src/inspector/server.coffee"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path">src/inspector/server.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">http = </span><span class="nx">require</span> <span class="s">&#39;http&#39;</span>
+<span class="nv">fs = </span><span class="nx">require</span> <span class="s">&#39;fs&#39;</span>
+<span class="nv">path = </span><span class="nx">require</span> <span class="s">&#39;path&#39;</span>
+<span class="nv">urlLib = </span><span class="nx">require</span> <span class="s">&#39;url&#39;</span>
+
+<span class="p">{</span><span class="nx">EventEmitter</span><span class="p">}</span> <span class="o">=</span> <span class="nx">require</span> <span class="s">&#39;events&#39;</span>
+<span class="nv">WebSocketServer = </span><span class="nx">require</span><span class="p">(</span><span class="s">&#39;websocket&#39;</span><span class="p">).</span><span class="nx">server</span>
+<span class="nv">send = </span><span class="nx">require</span> <span class="s">&#39;send&#39;</span>
+
+<span class="nv">servePatchedStaticFiles = </span><span class="nf">(req, res) -&gt;</span>
+  <span class="nv">publicDirectory =</span>
+    <span class="k">if</span> <span class="nx">req</span><span class="p">.</span><span class="nx">url</span> <span class="k">in</span> <span class="p">[</span> <span class="s">&#39;/InspectorBackendCommands.js&#39;</span><span class="p">,</span> <span class="s">&#39;/InspectorBackend.js&#39;</span><span class="p">,</span> <span class="s">&#39;/Overrides.js&#39;</span> <span class="p">]</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>these files are provided by us</p></div></div><div class="code"><div class="wrapper">      <span class="nx">__dirname</span>
+    <span class="k">else</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>everything else is taken from the original web inspector</p></div></div><div class="code"><div class="wrapper">      <span class="nx">path</span><span class="p">.</span><span class="nx">join</span> <span class="nx">__dirname</span><span class="p">,</span> <span class="s">&#39;..&#39;</span><span class="p">,</span> <span class="s">&#39;..&#39;</span><span class="p">,</span> <span class="s">&#39;public&#39;</span>
+
+  <span class="k">if</span> <span class="nx">req</span><span class="p">.</span><span class="nx">url</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s">&#39;/?&#39;</span><span class="p">)</span> <span class="o">is</span> <span class="mi">0</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>We inject an additional javascript into the header for custom overrides</p></div></div><div class="code"><div class="wrapper">    <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span> <span class="nx">publicDirectory</span> <span class="o">+</span> <span class="s">&#39;/inspector.html&#39;</span><span class="p">,</span> <span class="nf">(err, data) -&gt;</span>
+      <span class="nv">data = </span><span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">().</span><span class="nx">replace</span><span class="p">(</span><span class="s">&#39;&lt;/head&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;&lt;script type=&quot;text/javascript&quot; src=&quot;Overrides.js&quot;&gt;&lt;/script&gt;&lt;/head&gt;&#39;</span><span class="p">)</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">setHeader</span> <span class="s">&#39;Content-Type&#39;</span><span class="p">,</span> <span class="s">&#39;text/html&#39;</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">write</span> <span class="nx">data</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">()</span>
+  <span class="k">else</span>
+    <span class="nx">send</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">urlLib</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">url</span><span class="p">).</span><span class="nx">pathname</span><span class="p">).</span><span class="nx">root</span><span class="p">(</span><span class="nx">publicDirectory</span><span class="p">).</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span>
+
+<span class="nv">module.exports = </span><span class="nb">Object</span><span class="p">.</span><span class="nx">create</span> <span class="nx">EventEmitter</span><span class="p">.</span><span class="nx">prototype</span><span class="p">,</span> <span class="p">{</span>
+  <span class="nv">start:</span>
+    <span class="nv">value: </span><span class="nf">({webhost, webport, appUrl}) -&gt;</span>
+      <span class="nv">httpServer = </span><span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span> <span class="nx">servePatchedStaticFiles</span>
+
+      <span class="vi">@wsServer = </span><span class="k">new</span> <span class="nx">WebSocketServer</span> <span class="p">{</span>
+        <span class="nv">httpServer: </span><span class="nx">httpServer</span><span class="p">,</span>
+        <span class="nv">autoAcceptConnections: </span><span class="kc">true</span>
+      <span class="p">}</span>
+      <span class="nx">@wsServer</span><span class="p">.</span><span class="kc">on</span> <span class="s">&#39;connect&#39;</span><span class="p">,</span> <span class="nf">(wsConnection) -&gt;</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&#39;[bugger] New websocket connection&#39;</span>
+
+      <span class="nx">httpServer</span><span class="p">.</span><span class="kc">on</span> <span class="s">&#39;listening&#39;</span><span class="p">,</span> <span class="o">-&gt;</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;[bugger] Visit </span><span class="si">#{</span><span class="nx">appUrl</span><span class="si">}</span><span class="s"> to start debugging&quot;</span>
+
+      <span class="nx">httpServer</span><span class="p">.</span><span class="nx">listen</span> <span class="nx">webport</span><span class="p">,</span> <span class="nx">webhost</span>
+
+  <span class="nv">close:</span>
+    <span class="nv">value: </span><span class="o">-&gt;</span>
+      <span class="k">if</span> <span class="nx">@wsServer</span>
+        <span class="nx">@wsServer</span><span class="p">.</span><span class="nx">close</span><span class="p">()</span>
+        <span class="nx">@emit</span> <span class="s">&#39;close&#39;</span>
+<span class="p">}</span></div></div></div></div></body></html>

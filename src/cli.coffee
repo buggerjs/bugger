@@ -1,77 +1,61 @@
+# # cli.coffee
+# 
+# Main entry point for the cli application
 
-{resolveModule} = require './bugger'
-{DebugServer} = require './inspector/server'
-forkChrome = require('./forked/chrome')
-{forkEntryScript} = require('./forked/entry_script')
+forkChrome = require './forked/chrome'
+forkEntryScript = require './forked/entry_script'
 
-module.exports =
-  run: ->
-    argvParser = require('optimist')
-    .usage(
-      'bugger [OPTIONS] FILE_NAME'
-    ).options(
-      version:
-        alias: 'v'
-        describe: 'Just show version information'
-        boolean: true
-      help:
-        alias: 'h'
-        describe: 'Show this text'
-        boolean: true
-      'debug-port':
-        default: 5858
-        describe: 'Debug port used by node'
-      chrome:
-        boolean: true
-        describe: 'Open Chrome with the correct url'
-      'brk':
-        describe: 'Break on first line of script'
-        boolean: true,
-        default: true
-      'web-host':
-        default: '127.0.0.1'
-        describe: 'Web host used by node-inspector'
-      'web-port':
-        default: 8058
-        describe: 'Web port used by node-inspector'
-    )
+debugClient = require './debug-client'
+inspectorServer = require './inspector/server'
 
-    argv = argvParser.argv
+Module = require 'module'
 
-    if argv.version
-      console.log require('./package.json').version
+run = ->
+  argv = require './argv'
+  {chrome, brk, webhost, webport} = argv
+
+  # Make sure node knows about the additional script parsers
+  require './lang'
+
+  # Resolve the entry script to a full filename
+  entryScriptArg = argv._.shift()
+  entryScript =
+    try
+      Module._resolveFilename entryScriptArg
+    catch err
+      throw err if entryScriptArg[0] is '/'
+      Module._resolveFilename "./#{entryScriptArg}"
+  scriptArgs = argv._ # remaining parameters get passed through
+
+  # We'll really try to make the child processes die whenever we die.
+  _entryScriptProc = null
+  _chromeProc = null
+
+  process.on 'exit', ->
+    console.log '[bugger] Cleanup on exit...'
+    try _entryScriptProc.kill() if _entryScriptProc?
+    try _chromeProc.kill() if _chromeProc?
+
+  process.once 'uncaughtException', (e) ->
+    console.log '[bugger] Cleanup on exception...'
+    try _entryScriptProc.kill() if _entryScriptProc?
+    try _chromeProc.kill() if _chromeProc?
+    throw e
+
+  appUrl = "http://#{webhost}:#{webport}/?hiddenPanels=elements,audits&ws=#{webhost}:#{webport}/websocket"
+  console.log appUrl
+
+  if chrome
+    # Start chrome with the correct url opened and less UI
+    _chromeProc = forkChrome { webhost, webport, appUrl }
+    _chromeProc.on 'exit', ->
+      console.log '[bugger] Chrome closed, exiting...'
       process.exit 0
 
-    if argv.help
-      argvParser.showHelp()
-      process.exit 0
+  forkEntryScript {entryScript, scriptArgs, brk}, ({entryScriptProc, debugConnection}) ->
+    _entryScriptProc = entryScriptProc
+    # Create a proper debug client from the connection
+    debugClient.init { connection: debugConnection }
+    inspectorServer.start { webhost, webport, appUrl }
 
-    unless argv._.length
-      argvParser.showHelp()
-      process.exit 1
-
-    # Resolve to proper module.
-    entryScript = resolveModule argv._[0]
-    unless entryScript?
-      throw new Error('File not found: ' + argv._[0])
-
-    debugPort = argv['debug-port']
-
-    # Start child processes that will handle the debugging server and chrome
-    if argv.chrome
-      chrome = forkChrome(argv['web-host'], argv['web-port'], debugPort)
-      chrome.on 'exit', process.exit
-
-    forkEntryScript entryScript, debugPort, argv['brk'], argv._, ({ entryScriptProc, debugConnection }) ->
-      entryScriptProc.on 'exit', process.exit
-
-      debugServer = (new DebugServer()).start {
-        webHost: argv['web-host']
-        webPort: argv['web-port']
-        debugConnection: debugConnection
-      }
-
-      process.on 'exit', ->
-        try chrome.kill() if argv.chrome
-        try entryScriptProc.kill()
-        try debugServer.close()
+module.exports = {run}

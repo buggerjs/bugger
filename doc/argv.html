@@ -1,0 +1,40 @@
+<!DOCTYPE html><html lang="en"><head><title>argv</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="argv"><meta name="groc-project-path" content="src/argv.coffee"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path">src/argv.coffee</div></div><div id="document"><div class="segment"><div class="comments"><div class="wrapper"><p>We use optimist for parsing the CLI arguments</p></div></div><div class="code"><div class="wrapper"><span class="nv">argvParser = </span><span class="nx">require</span><span class="p">(</span><span class="s">&#39;optimist&#39;</span><span class="p">)</span>
+<span class="p">.</span><span class="nx">usage</span><span class="p">(</span>
+  <span class="s">&#39;bugger [OPTIONS] FILE_NAME&#39;</span>
+<span class="p">).</span><span class="nx">options</span><span class="p">(</span>
+  <span class="nv">version:</span>
+    <span class="nv">alias: </span><span class="s">&#39;v&#39;</span>
+    <span class="nv">describe: </span><span class="s">&#39;Just show version information&#39;</span>
+    <span class="nv">boolean: </span><span class="kc">true</span>
+  <span class="nv">help:</span>
+    <span class="nv">alias: </span><span class="s">&#39;h&#39;</span>
+    <span class="nv">describe: </span><span class="s">&#39;Show this text&#39;</span>
+    <span class="nv">boolean: </span><span class="kc">true</span>
+  <span class="nv">chrome:</span>
+    <span class="nv">boolean: </span><span class="kc">true</span>
+    <span class="nv">describe: </span><span class="s">&#39;Open Chrome with the correct url&#39;</span>
+  <span class="nv">brk:</span>
+    <span class="nv">describe: </span><span class="s">&#39;Break on first line of script&#39;</span>
+    <span class="nv">boolean: </span><span class="kc">true</span><span class="p">,</span>
+    <span class="nv">default: </span><span class="kc">true</span>
+  <span class="nv">webhost:</span>
+    <span class="nv">default: </span><span class="s">&#39;127.0.0.1&#39;</span>
+    <span class="nv">describe: </span><span class="s">&#39;Web host used by node-inspector&#39;</span>
+  <span class="nv">webport:</span>
+    <span class="nv">default: </span><span class="mi">8058</span>
+    <span class="nv">describe: </span><span class="s">&#39;Web port used by node-inspector&#39;</span>
+<span class="p">)</span>
+
+<span class="nv">argv = </span><span class="nx">argvParser</span><span class="p">.</span><span class="nx">argv</span>
+
+<span class="k">if</span> <span class="nx">argv</span><span class="p">.</span><span class="nx">version</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">require</span><span class="p">(</span><span class="s">&#39;../package.json&#39;</span><span class="p">).</span><span class="nx">version</span>
+  <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span> <span class="mi">0</span>
+
+<span class="k">if</span> <span class="nx">argv</span><span class="p">.</span><span class="nx">help</span>
+  <span class="nx">argvParser</span><span class="p">.</span><span class="nx">showHelp</span><span class="p">()</span>
+  <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span> <span class="mi">0</span>
+
+<span class="nx">unless</span> <span class="nx">argv</span><span class="p">.</span><span class="nx">_</span><span class="p">.</span><span class="nx">length</span>
+  <span class="nx">argvParser</span><span class="p">.</span><span class="nx">showHelp</span><span class="p">()</span>
+  <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span> <span class="mi">1</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Export the parsed arguments to the calling module</p></div></div><div class="code"><div class="wrapper"><span class="nv">module.exports = </span><span class="nx">argv</span></div></div></div></div></body></html>

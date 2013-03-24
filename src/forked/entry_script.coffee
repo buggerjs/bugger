@@ -1,25 +1,10 @@
 
-MESSAGE_CHILD_READY = 'CHILD_READY'
-MESSAGE_CHILD_EXCEPTION = 'CHILD_EXCEPTION'
-
-runningScriptName = null
-
 commands =
-  startScript: ({entryScript, debugBrk}) ->
-    {requireScript} = require '../bugger'
-    runningScriptName = entryScript
+  startScript: ({entryScript, brk}) ->
+    {requireScript} = require '../lang'
 
     # Require time! This may trigger a debug breakpoint, depending on debugBrk
-    requireScript entryScript, (debugBrk is true)
-
-  restartScript: ->
-    Module = require 'module'
-    Module._cache = {}
-    Module._sourceMaps = {}
-
-    {requireScript} = require '../bugger'
-    # Always break on first line when we are restarting
-    requireScript runningScriptName, true
+    requireScript entryScript, (brk is true)
 
 # We are in a child process
 unless module.parent?
@@ -46,30 +31,31 @@ unless module.parent?
 
   process.send { code: 'childReady' }
 
-module.exports =
-  forkEntryScript: (entryScript, debugPort, debugBrk, argv_, cb) ->
-    {spawn, fork} = require 'child_process'
-    net = require 'net'
+forkEntryScript = ({entryScript, scriptArgs, brk}, cb) ->
+  {spawn, fork} = require 'child_process'
+  net = require 'net'
 
-    entryScriptProc = fork module.filename, argv_.splice(1), silent: false
-    startupFailedTimeout = setTimeout( ->
-      throw new Error 'Process for entry script failed to start'
-    1000)
+  entryScriptProc = fork module.filename, scriptArgs, silent: false
+  startupFailedTimeout = setTimeout( ->
+    throw new Error 'Process for entry script failed to start'
+  1000)
 
-    backChannelHandlers =
-      childReady: ->
-        clearTimeout(startupFailedTimeout) if startupFailedTimeout
-        startupFailedTimeout = true
+  backChannelHandlers =
+    childReady: ->
+      clearTimeout(startupFailedTimeout) if startupFailedTimeout
+      startupFailedTimeout = true
 
-        debugConnection = net.connect debugPort, ->
-          entryScriptProc.send { code: 'startScript', entryScript, debugBrk }
-          cb { entryScriptProc, debugConnection }
+      debugConnection = net.connect 5858, ->
+        entryScriptProc.send { code: 'startScript', entryScript, brk }
+        cb { entryScriptProc, debugConnection }
 
-      uncaughtException: ({error}) ->
-        console.log 'Uncaught exception in child:', error
+    uncaughtException: ({error}) ->
+      console.log 'Uncaught exception in child:', error
 
-    entryScriptProc.on 'message', (message) ->
-      if backChannelHandlers[message.code]?
-        backChannelHandlers[message.code](message)
-      else
-        console.log "[bugger] Unknown message from child: #{message.code}", message
+  entryScriptProc.on 'message', (message) ->
+    if backChannelHandlers[message.code]?
+      backChannelHandlers[message.code](message)
+    else
+      console.log "[bugger] Unknown message from child: #{message.code}", message
+
+module.exports = forkEntryScript

@@ -22,10 +22,10 @@ findChrome = ->
 
   firstExistingPath paths
 
-module.exports = (host, port, debugPort) ->
+module.exports = ({ webhost, webport, appUrl }) ->
   chromeProfilePath = path.join __dirname, '..', 'ChromeProfile'
   args = [
-    "--app=http://#{host}:#{port}/inspector.html?port=#{debugPort}",
+    "--app=#{appUrl}",
     "--user-data-dir=#{chromeProfilePath}"
   ]
 
