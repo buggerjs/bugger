@@ -17,6 +17,11 @@ langExtensions.forEach (ext) ->
   # And seal it so native compilation doesn't overwrite it
   Object.defineProperty require.extensions, ext, get: -> compile
 
+prepareEvaluation = (lang, sourceStr) ->
+  if lang in ['js', 'javascript']
+    return sourceStr
+  return langModules[".#{lang}"].compileString sourceStr
+
 requireScript = (fileName, startPaused) ->
   # Set everything up so it looks like the script was started directly
   mainModule = require.main
@@ -42,4 +47,4 @@ requireScript = (fileName, startPaused) ->
   do patchStackTrace
   compile mainModule, fileName
 
-module.exports = {requireScript}
+module.exports = {requireScript, prepareEvaluation}

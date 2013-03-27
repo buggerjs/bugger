@@ -1,4 +1,6 @@
 
+{EventEmitter} = require 'events'
+
 commands =
   startScript: ({entryScript, brk}) ->
     {requireScript} = require '../lang'
@@ -31,31 +33,34 @@ unless module.parent?
 
   process.send { code: 'childReady' }
 
-forkEntryScript = ({entryScript, scriptArgs, brk}, cb) ->
-  {spawn, fork} = require 'child_process'
-  net = require 'net'
+class EntryScriptWrapper extends EventEmitter
+  forkEntryScript: ({entryScript, scriptArgs, brk}, cb) ->
+    {spawn, fork} = require 'child_process'
+    net = require 'net'
 
-  entryScriptProc = fork module.filename, scriptArgs, silent: false
-  startupFailedTimeout = setTimeout( ->
-    throw new Error 'Process for entry script failed to start'
-  1000)
+    entryScriptProc = fork module.filename, scriptArgs, { silent: true }
+    startupFailedTimeout = setTimeout( ->
+      throw new Error 'Process for entry script failed to start'
+    1000)
 
-  backChannelHandlers =
-    childReady: ->
-      clearTimeout(startupFailedTimeout) if startupFailedTimeout
-      startupFailedTimeout = true
+    module.exports.proc = entryScriptProc
 
-      debugConnection = net.connect 5858, ->
-        entryScriptProc.send { code: 'startScript', entryScript, brk }
-        cb { entryScriptProc, debugConnection }
+    backChannelHandlers =
+      childReady: ->
+        clearTimeout(startupFailedTimeout) if startupFailedTimeout
+        startupFailedTimeout = true
 
-    uncaughtException: ({error}) ->
-      console.log 'Uncaught exception in child:', error
+        debugConnection = net.connect 5858, ->
+          entryScriptProc.send { code: 'startScript', entryScript, brk }
+          cb { entryScriptProc, debugConnection }
 
-  entryScriptProc.on 'message', (message) ->
-    if backChannelHandlers[message.code]?
-      backChannelHandlers[message.code](message)
-    else
-      console.log "[bugger] Unknown message from child: #{message.code}", message
+      uncaughtException: ({error}) ->
+        console.log 'Uncaught exception in child:', error
 
-module.exports = forkEntryScript
+    entryScriptProc.on 'message', (message) ->
+      if backChannelHandlers[message.code]?
+        backChannelHandlers[message.code](message)
+      else
+        console.log "[bugger] Unknown message from child: #{message.code}", message
+
+module.exports = new EntryScriptWrapper()

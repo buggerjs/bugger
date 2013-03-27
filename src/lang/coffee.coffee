@@ -21,9 +21,14 @@ compile = (module, filename) ->
   js = compileFile filename
   module._compile js, filename
 
+compileString = (input) ->
+  csAst = coffee.parse input, raw: yes
+  jsAst = coffee.compile csAst
+  coffee.js jsAst, compact: yes
+
 compileAndBreak = (module, filename) ->
   js = compileFile filename
   js = "console.log('[bugger] Halting execution on first line.'); debugger; #{js}"
   module._compile js, filename
 
-module.exports = {compile, compileAndBreak}
+module.exports = {compile, compileAndBreak, compileString}

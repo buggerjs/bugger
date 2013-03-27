@@ -3,6 +3,8 @@ fs = require 'fs'
 debug = require '../debug-client'
 agents = require '../agents'
 
+entryScript = require '../forked/entry_script'
+
 wrapperObject = (type, description, hasChildren, frame, scope, ref) ->
   type: type
   description: description
@@ -17,6 +19,9 @@ class SocketChannel
 
     debug.on 'break', @onPauseOrBreakpoint
 
+    entryScript.proc.stdout.on 'data', (data) =>
+      @console data, 'log'
+
     @socketConnection.on 'message', (data) =>
       @handleRequest JSON.parse(data.utf8Data)
 
@@ -24,6 +29,10 @@ class SocketChannel
       @socketConnection = null
 
     @syncBrowser()
+
+  console: (message, mode = 'log') ->
+    cleanedMessage = message.toString().replace(/\x1B\[([\d;]+)m/g, '')
+    @dispatchEvent 'Console.messageAdded', messageObj: { text: cleanedMessage, level: mode }
 
   handleRequest: (msg) ->
     if msg.method
@@ -38,6 +47,8 @@ class SocketChannel
         args.push (error, data...) =>
           @sendResponse msg.id, error, data
       else args.push ->
+
+      args.push this
 
       agents.invoke agentName, functionName, args
     else

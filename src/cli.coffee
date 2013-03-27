@@ -3,7 +3,7 @@
 # Main entry point for the cli application
 
 forkChrome = require './forked/chrome'
-forkEntryScript = require './forked/entry_script'
+{forkEntryScript} = require './forked/entry_script'
 
 debugClient = require './debug-client'
 inspectorServer = require './inspector/server'

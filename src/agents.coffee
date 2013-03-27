@@ -1,10 +1,13 @@
 
 debug = require './debug-client'
 _ = require 'underscore'
+{prepareEvaluation} = require './lang'
 
 LOOKUP_TIMEOUT = 2500
 
 breakpoints = {}
+
+languageMode = 'coffee'
 
 throwErr = (cb, msg) ->
   cb null, { type: 'string', value: msg }, true
@@ -192,8 +195,20 @@ agents =
       cb(null, true)
 
   Runtime:
-    evaluate: (options, cb) ->
+    evaluate: (options, cb, channel) ->
       {expression, objectGroup, includeCommandLineAPI, doNotPauseOnExceptions, returnByValue} = options
+
+      commandMode = /^:(\w+)$/
+      if m = (expression.match commandMode)
+        cmd = m[1]
+        if cmd in ['js', 'coffee']
+          languageMode = cmd
+          return channel.console("Switched input language to #{cmd}", 'info')
+        else
+          return channel.console("Unknown command: #{m[1]}", 'error')
+
+      expression = prepareEvaluation languageMode, expression
+
       args =
         expression: expression
         disable_break: doNotPauseOnExceptions

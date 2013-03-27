@@ -1,7 +1,7 @@
 
 # debugger always enabled
 WebInspector.settings.debuggerEnabled.set true
-window.dumpInspectorProtocolMessages = true
+window.dumpInspectorProtocolMessages = false
 
 WebInspector.inspectedPageURL = location.origin
 
