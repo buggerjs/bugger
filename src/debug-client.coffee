@@ -10,6 +10,7 @@ class DebugClient extends EventEmitter
     @callbackHandler = require('./callback').create()
     @sourceIDs = {}
     @sourceUrls = {}
+    @sourceMaps = {}
 
     @_registerConnectionEvents(@connection)
 

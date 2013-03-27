@@ -1,5 +1,13 @@
 
+fs = require 'fs'
 debug = require '../debug-client'
+agents = require '../agents'
+
+wrapperObject = (type, description, hasChildren, frame, scope, ref) ->
+  type: type
+  description: description
+  hasChildren: hasChildren
+  objectId: "#{frame}:#{scope}:#{ref}"
 
 class SocketChannel
   constructor: ({ @socketConnection, @httpServer, @socketServer }) ->
@@ -7,13 +15,45 @@ class SocketChannel
 
     @hiddenFilePatterns = []
 
+    debug.on 'break', @onPauseOrBreakpoint
+
+    @socketConnection.on 'message', (data) =>
+      @handleRequest JSON.parse(data.utf8Data)
+
+    @socketConnection.on 'disconnect', =>
+      @socketConnection = null
+
     @syncBrowser()
+
+  handleRequest: (msg) ->
+    if msg.method
+      [agentName, functionName] = msg.method.split('.')
+      console.log "[agents.handleRequest] #{agentName}##{functionName}"
+
+      args = []
+      if msg.params
+        args.push msg.params
+
+      if (msg.id > 0)
+        args.push (error, data...) =>
+          @sendResponse msg.id, error, data
+      else args.push ->
+
+      agents.invoke agentName, functionName, args
+    else
+      console.log 'Unknown message from frontend:', msg
+
+  sendResponse: (seq, err, data={}) ->
+    if @socketConnection
+      @socketConnection.send(JSON.stringify id: seq, error: err, result: data)
+    else
+      console.log 'Could not send response: ', req, data
 
   dispatchEvent: (method, params={}) ->
     if @socketConnection
       @socketConnection.send(JSON.stringify {method, params})
     else
-      console.log 'Could not send: ', method, params
+      console.log 'Could not dispatch event: ', method, params
 
   syncBrowser: ->
     args = { arguments: { includeSource: true, types: 4 } }
@@ -38,6 +78,23 @@ class SocketChannel
 
         unless breakpointsResponse.running
           @sendBacktrace()
+
+  onPauseOrBreakpoint: (breakDesc) =>
+    scriptId = if breakDesc? then breakDesc.body.script.id else null
+    source = debug.sourceIDs[scriptId] if scriptId?
+
+    unless source?
+      args =
+        arguments:
+          includeSource: true
+          types: 4
+          ids: if scriptId? then [breakDesc.body.script.id] else undefined
+
+      debug.request 'scripts', args, @sendParsedScripts
+    else if source?.hidden
+      debug.request 'continue', { arguments: { stepaction: 'out' } }
+      return
+    @sendBacktrace()
 
   sendBacktrace: ->
     debug.request 'backtrace', { arguments: { inlineRefs: true } }, (backtraceResponse) =>
@@ -71,7 +128,7 @@ class SocketChannel
     else
       [{ type: 'program', location: { scriptId: 'internal' }, line: 0, id: 0, worldId: 1, scopeChain: [] }]
 
-  sendParsedScripts: (scriptsResponse) ->
+  sendParsedScripts: (scriptsResponse) =>
     scripts = scriptsResponse.body.map (s) ->
       scriptId: String(s.id)
       url: s.name
@@ -92,16 +149,12 @@ class SocketChannel
 
       return s.join '/'
 
-    scripts.forEach (s) ->
+    scripts.forEach (s) =>
       hidden = @hiddenFilePatterns and @hiddenFilePatterns.some( (r) -> r.test(s.url) )
 
       # TODO: better way for finding out if the script has a matching source map
       sourceMapMatch = s.data.match /\s\/\/@ sourceMappingURL=data:application\/json;base64,(.*)/
       s.sourceMapURL = null
-
-      if sourceMapMatch
-        s.sourceMapURL = "/_sourcemap/#{s.scriptId}"
-        sourceMaps[s.scriptId.toString()] = JSON.parse (new Buffer(sourceMapMatch[1], 'base64')).toString('utf8')
 
       item = { hidden: hidden, path: s.url }
       s.url = s.path.join('/') # shorten s.path if s.path.length > 1
@@ -109,6 +162,15 @@ class SocketChannel
 
       debug.sourceIDs[s.scriptId] = item
       debug.sourceUrls[item.url] = s.scriptId
+
+      if sourceMapMatch
+        s.sourceMapURL = "/_sourcemap/#{s.scriptId}"
+        sourceMapDesc = JSON.parse (new Buffer(sourceMapMatch[1], 'base64')).toString('utf8')
+        sourceMapDesc.sourcesContent = sourceMapDesc.sources.map (sourceFile) ->
+          fs.readFileSync(sourceFile, 'utf8').toString()
+
+        debug.sourceMaps[s.scriptId.toString()] = JSON.stringify sourceMapDesc
+
       delete s.path
       unless hidden
         # "scriptId","url","startLine","startColumn","endLine","endColumn","isContentScript","sourceMapURL","hasSourceURL"

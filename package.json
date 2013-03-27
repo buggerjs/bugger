@@ -22,7 +22,8 @@
     "coffee-script-redux": "~2.0.0-beta4",
     "source-map": "~0.1.9",
     "websocket": "~1.0.8",
-    "optimist": "~0.3.5"
+    "optimist": "~0.3.5",
+    "underscore": "~1.4.4"
   },
   "publishConfig": {
     "registry": "http://registry.npm.local:5984/"

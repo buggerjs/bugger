@@ -9,24 +9,33 @@ WebSocketServer = require('websocket').server
 send = require 'send'
 SocketChannel = require './socket_channel'
 
-servePatchedStaticFiles = (req, res) ->
-  publicDirectory =
-    if req.url in [ '/InspectorBackendCommands.js', '/InspectorBackend.js', '/Overrides.js' ]
-      # these files are provided by us
-      __dirname
-    else
-      # everything else is taken from the original web inspector
-      path.join __dirname, '..', '..', 'public'
+debug = require '../debug-client'
 
-  if req.url.indexOf('/?') is 0
-    # We inject an additional javascript into the header for custom overrides
-    fs.readFile publicDirectory + '/inspector.html', (err, data) ->
-      data = data.toString().replace('</head>', '<script type="text/javascript" src="Overrides.js"></script></head>')
-      res.setHeader 'Content-Type', 'text/html'
-      res.write data
-      res.end()
+servePatchedStaticFiles = (req, res) ->
+  sourceMapMatch = req.url.match /^\/_sourcemap\/(\d+)$/
+  if sourceMapMatch?
+    sourceMapId = sourceMapMatch[1]
+    res.setHeader 'Content-Type', 'application/json'
+    res.write debug.sourceMaps[sourceMapId] ? ''
+    res.end()
   else
-    send(req, urlLib.parse(req.url).pathname).root(publicDirectory).pipe(res)
+    publicDirectory =
+      if req.url in [ '/InspectorBackendCommands.js', '/InspectorBackend.js', '/Overrides.js' ]
+        # these files are provided by us
+        __dirname
+      else
+        # everything else is taken from the original web inspector
+        path.join __dirname, '..', '..', 'public'
+
+    if req.url.indexOf('/?') is 0
+      # We inject an additional javascript into the header for custom overrides
+      fs.readFile publicDirectory + '/inspector.html', (err, data) ->
+        data = data.toString().replace('</head>', '<script type="text/javascript" src="Overrides.js"></script></head>')
+        res.setHeader 'Content-Type', 'text/html'
+        res.write data
+        res.end()
+    else
+      send(req, urlLib.parse(req.url).pathname).root(publicDirectory).pipe(res)
 
 module.exports = Object.create EventEmitter.prototype, {
   start:
