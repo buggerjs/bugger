@@ -207,7 +207,10 @@ agents =
         else
           return channel.console("Unknown command: #{m[1]}", 'error')
 
-      expression = prepareEvaluation languageMode, expression
+      try
+        expression = prepareEvaluation languageMode, expression
+      catch parseError
+        return throwErr cb, parseError.toString()
 
       args =
         expression: expression
