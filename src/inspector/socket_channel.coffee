@@ -34,6 +34,11 @@ class SocketChannel
     cleanedMessage = message.toString().replace(/\x1B\[([\d;]+)m/g, '')
     @dispatchEvent 'Console.messageAdded', messageObj: { text: cleanedMessage, level: mode }
 
+  pushTimelineEvent: (type, record={}) ->
+    record.data ?= {}
+    record.type = type
+    @dispatchEvent 'Timeline.eventRecorded', { record }
+
   handleRequest: (msg) ->
     if msg.method
       [agentName, functionName] = msg.method.split('.')

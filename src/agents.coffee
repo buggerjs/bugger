@@ -89,7 +89,28 @@ testJSON = {}
 
 toJSONValue testJSON.obj, testJSON.refs
 ###
+
+timelineInterval = false
+
 agents =
+  Timeline:
+    start: ({maxCallStackDepth}, cb, channel) ->
+      console.log 'Timeline#start'
+      unless timelineInterval
+        timelineInterval = setInterval( ->
+          console.log 'Time event triggered'
+          channel.pushTimelineEvent 'UpdateMemoryUsage',
+            usedHeapSize: Math.floor(Math.random() * 10000)
+            startTime: (new Date()).getTime()
+        1000)
+      cb null, true
+
+    stop: (cb, channel) ->
+      console.log 'Timeline#stop'
+      if timelineInterval
+        clearInterval timelineInterval
+      cb null, true
+
   Debugger:
     enable: (cb) ->
       console.log 'Debbuger#enable'

@@ -20,6 +20,12 @@ class InspectorBackendStub
       a.ignore 'supportsFrameInstrumentation'
       a.ignore 'canMonitorMainThread'
       a.ignore 'setIncludeDomCounters'
+      a.delegate 'start', { maxCallStackDepth: { optional: true , type: "number" } }
+      a.delegate 'stop'
+
+      a.event 'started'
+      a.event 'stopped'
+      a.event 'eventRecorded', [ 'record' ]
 
     @agent 'Page', (a) ->
       a.ignore 'enable'
@@ -149,8 +155,6 @@ class InspectorBackendStub
     @_ignore('{"method": "CSS.setRuleSelector", "params": {"ruleId": {"optional": false, "type": "object"},"selector": {"optional": false, "type": "string"}}, "id": 0}')
     @_ignore('{"method": "CSS.addRule", "params": {"contextNodeId": {"optional": false, "type": "number"},"selector": {"optional": false, "type": "string"}}, "id": 0}')
     @_ignore('{"method": "CSS.getSupportedCSSProperties", "id": 0}')
-    @_ignore('{"method": "Timeline.start", "params": {"maxCallStackDepth": {"optional": true , "type": "number"}}, "id": 0}')
-    @_ignore('{"method": "Timeline.stop", "id": 0}')
     @_ignore('{"method": "DOMDebugger.setDOMBreakpoint", "params": {"nodeId": {"optional": false, "type": "number"},"type": {"optional": false, "type": "string"}}, "id": 0}')
     @_ignore('{"method": "DOMDebugger.removeDOMBreakpoint", "params": {"nodeId": {"optional": false, "type": "number"},"type": {"optional": false, "type": "string"}}, "id": 0}')
     @_ignore('{"method": "DOMDebugger.setEventListenerBreakpoint", "params": {"eventName": {"optional": false, "type": "string"}}, "id": 0}')
@@ -206,9 +210,6 @@ class InspectorBackendStub
     @_eventArgs["DOM.childNodeInserted"] = ["parentNodeId","previousNodeId","node"]
     @_eventArgs["DOM.childNodeRemoved"] = ["parentNodeId","nodeId"]
     @_eventArgs["DOM.searchResults"] = ["nodeIds"]
-    @_eventArgs["Timeline.started"] = []
-    @_eventArgs["Timeline.stopped"] = []
-    @_eventArgs["Timeline.eventRecorded"] = ["record"]
     @_eventArgs["Debugger.debuggerWasEnabled"] = []
     @_eventArgs["Debugger.debuggerWasDisabled"] = []
     @_eventArgs["Debugger.scriptParsed"] = ["scriptId","url","startLine","startColumn","endLine","endColumn","isContentScript","sourceMapURL","hasSourceURL"]
@@ -244,12 +245,24 @@ class InspectorBackendStub
   agent: (agentId, withContext) ->
     agentName = "#{agentId}Agent"
     _agent = window[agentName] ?= {}
+    self = @
     ctx =
       ignore: (functionName) ->
         _agent[functionName] = ->
         _agent[functionName].invoke = (args, callback) ->
           console.log "Invoked the ignored function: #{agentName}##{functionName}"
           callback()
+        return ctx
+
+      delegate: (functionName, params) ->
+        requestString = JSON.stringify { method: "#{agentId}.#{functionName}", params: params }
+        _agent[functionName] = self._sendMessageToBackend.bind self, requestString
+        _agent[functionName].invoke = self._invoke.bind self, requestString
+        return ctx
+
+      event: (eventName, eventArgs) ->
+        self._eventArgs["#{agentId}.#{eventName}"] = eventArgs
+        return ctx
 
     withContext ctx
 
@@ -287,7 +300,8 @@ class InspectorBackendStub
 
   _sendMessageToBackend: ->
       args = Array.prototype.slice.call(arguments)
-      request = JSON.parse(args.shift())
+      request = args.shift()
+      request = JSON.parse(request) if 'string' is typeof request
       callback =
         if (args.length && typeof args[args.length - 1] is "function")
           args.pop()
