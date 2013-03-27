@@ -3,6 +3,8 @@ debug = require './debug-client'
 _ = require 'underscore'
 {prepareEvaluation} = require './lang'
 
+entryScript = require './forked/entry_script'
+
 LOOKUP_TIMEOUT = 2500
 
 breakpoints = {}
@@ -95,20 +97,11 @@ timelineInterval = false
 agents =
   Timeline:
     start: ({maxCallStackDepth}, cb, channel) ->
-      console.log 'Timeline#start'
-      unless timelineInterval
-        timelineInterval = setInterval( ->
-          console.log 'Time event triggered'
-          channel.pushTimelineEvent 'UpdateMemoryUsage',
-            usedHeapSize: Math.floor(Math.random() * 10000)
-            startTime: (new Date()).getTime()
-        1000)
+      entryScript.proc.send { method: 'Timeline.start' }
       cb null, true
 
     stop: (cb, channel) ->
-      console.log 'Timeline#stop'
-      if timelineInterval
-        clearInterval timelineInterval
+      entryScript.proc.send { method: 'Timeline.stop' }
       cb null, true
 
   Debugger:

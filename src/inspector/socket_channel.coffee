@@ -2,6 +2,7 @@
 fs = require 'fs'
 debug = require '../debug-client'
 agents = require '../agents'
+_ = require 'underscore'
 
 entryScript = require '../forked/entry_script'
 
@@ -21,6 +22,9 @@ class SocketChannel
 
     entryScript.proc.stdout.on 'data', (data) =>
       @console data, 'log'
+
+    entryScript.on 'message', (message) =>
+      @dispatchEvent message.method, _.omit(message, 'method')
 
     @socketConnection.on 'message', (data) =>
       @handleRequest JSON.parse(data.utf8Data)
