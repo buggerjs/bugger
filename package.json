@@ -1,6 +1,6 @@
 {
   "name": "bugger",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Debug everything",
   "main": "lib/bugger.js",
   "scripts": {
@@ -10,6 +10,12 @@
     "bugger": "bin/bugger.js"
   },
   "repository": "",
+  "homepage": "https://github.com/jkrems/bugger",
+  "bugs": "https://github.com/jkrems/bugger/issues",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jkrems/bugger.git"
+  },
   "keywords": [
     "debug",
     "inspector",
