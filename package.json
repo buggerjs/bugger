@@ -25,9 +25,6 @@
     "optimist": "~0.3.5",
     "underscore": "~1.4.4"
   },
-  "publishConfig": {
-    "registry": "http://registry.npm.local:5984/"
-  },
   "devDependencies": {
     "wach": "~0.9.2",
     "groc": "~0.3.2"
