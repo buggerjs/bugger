@@ -12,6 +12,19 @@ languageMode = 'coffee'
 throwErr = (cb, msg) ->
   cb null, { type: 'string', value: msg }, true
 
+lastHandle = 0
+knownExpressions = {}
+knownExpressionsRev = {}
+
+expressionToHandle = (expression) ->
+  unless knownExpressions[expression]
+    knownExpressions[expression] = ++lastHandle
+    knownExpressionsRev[lastHandle.toString()] = expression
+  "_#{knownExpressions[expression]}"
+
+handleToExpression = (handle) ->
+  knownExpressionsRev[handle.substr(1)]
+
 refToObject = (ref) ->
   desc = ''
   name = null
@@ -210,6 +223,7 @@ agents =
       try
         expression = prepareEvaluation languageMode, expression
       catch parseError
+        console.log expression, parseError
         return throwErr cb, parseError.toString()
 
       args =
@@ -218,10 +232,12 @@ agents =
         global: true
         maxStringLength: 100000
 
+      console.log args
+
       debug.request 'evaluate', { arguments: args }, (result) ->
         if result.success
           # we need to return object ids that can be referenced by callFunctionOn
-          result.body.handle = expression
+          result.body.handle = expressionToHandle expression
           resolvedObj = refToObject(result.body)
           if returnByValue and not resolvedObj.value?
             resolvedObj.value = toJSONValue(result.body, result.refs)
@@ -238,7 +254,7 @@ agents =
       args = options.arguments
       [frame, scope, ref] = objectId.split ':'
       console.log 'Call on ', objectId, "returnByValue", returnByValue
-      expression = "(#{functionDeclaration}).apply(#{ref}, #{JSON.stringify(args)});"
+      expression = "(#{functionDeclaration}).apply(#{handleToExpression ref}, #{JSON.stringify(args)});"
       disable_break = true
       additional_context = [] # [ { name: 'obj', handle: parseInt(ref) } ]
       debug.request 'evaluate', { arguments: { expression, disable_break, additional_context, global: true } }, (result) ->
@@ -277,7 +293,7 @@ agents =
 
           functionDeclaration = getOwnProperties.toString()
 
-          expression = "(#{functionDeclaration}).apply(#{ref}, []);"
+          expression = "(#{functionDeclaration}).apply(#{handleToExpression ref}, []);"
           disable_break = true
           debug.request 'evaluate', { arguments: { expression, disable_break, global: true } }, (result) ->
             if result.success

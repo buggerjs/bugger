@@ -30,7 +30,7 @@ servePatchedStaticFiles = (req, res) ->
     if req.url.indexOf('/?') is 0
       # We inject an additional javascript into the header for custom overrides
       fs.readFile publicDirectory + '/inspector.html', (err, data) ->
-        data = data.toString().replace('</head>', '<script type="text/javascript" src="Overrides.js"></script></head>')
+        data = data.toString().replace('</head>', '<title>bugger</title><script type="text/javascript" src="Overrides.js"></script></head>')
         res.setHeader 'Content-Type', 'text/html'
         res.write data
         res.end()
