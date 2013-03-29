@@ -47,6 +47,11 @@ class InspectorBackendStub
     @agent 'Network', (a) ->
       a.ignore 'canClearBrowserCache'
       a.ignore 'canClearBrowserCookies'
+      a.delegate 'getResponseBody', { requestId: { optional: false, type: 'string' } }
+      a.event 'responseReceived', ['requestId', 'frameId', 'loaderId', 'timestamp', 'type', 'response']
+      a.event 'dataReceived', ["requestId","timestamp","dataLength","encodedDataLength"]
+      a.event 'loadingFinished', ["requestId","timestamp"]
+      a.event 'loadingFailed', ["requestId","timestamp","errorText","canceled"]
 
     @agent 'Worker', (a) ->
       a.ignore 'enable'
@@ -185,10 +190,6 @@ class InspectorBackendStub
     @_eventArgs["Console.messagesCleared"] = []
     @_eventArgs["Network.requestWillBeSent"] = ["requestId","frameId","loaderId","documentURL","request","timestamp","initiator","stackTrace","redirectResponse"]
     @_eventArgs["Network.resourceMarkedAsCached"] = ["requestId"]
-    @_eventArgs["Network.responseReceived"] = ["requestId","timestamp","type","response"]
-    @_eventArgs["Network.dataReceived"] = ["requestId","timestamp","dataLength","encodedDataLength"]
-    @_eventArgs["Network.loadingFinished"] = ["requestId","timestamp"]
-    @_eventArgs["Network.loadingFailed"] = ["requestId","timestamp","errorText","canceled"]
     @_eventArgs["Network.resourceLoadedFromMemoryCache"] = ["requestId","frameId","loaderId","documentURL","timestamp","initiator","resource"]
     @_eventArgs["Network.webSocketWillSendHandshakeRequest"] = ["requestId","timestamp","request"]
     @_eventArgs["Network.webSocketHandshakeResponseReceived"] = ["requestId","timestamp","response"]

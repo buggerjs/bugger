@@ -23,7 +23,7 @@ clean:
 lib:
 	@test -d lib || mkdir lib
 
-lib_dirs: lib/inspector lib/forked lib/lang
+lib_dirs: lib/inspector lib/forked lib/lang lib/probes
 
 lib/%.js: src/%.coffee
 	@echo "[coffee] "$<

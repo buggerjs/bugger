@@ -66,11 +66,6 @@ WebInspector.CSSMetadata = function(properties)
     this._values.sort();
 }
 
-/**
- * @type {!WebInspector.CSSMetadata}
- */
-WebInspector.CSSMetadata.cssPropertiesMetainfo = new WebInspector.CSSMetadata([]);
-
 WebInspector.CSSMetadata.isColorAwareProperty = function(propertyName)
 {
     return WebInspector.CSSMetadata._colorAwareProperties[propertyName] === true;
@@ -962,3 +957,8 @@ WebInspector.CSSMetadata.prototype = {
         return this._shorthands[longhand];
     }
 }
+
+/**
+ * @type {!WebInspector.CSSMetadata}
+ */
+WebInspector.CSSMetadata.cssPropertiesMetainfo = new WebInspector.CSSMetadata([]);

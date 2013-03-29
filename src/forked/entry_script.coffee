@@ -1,11 +1,17 @@
 
 {EventEmitter} = require 'events'
+_ = require 'underscore'
 
 timelineInterval = false
 
+_probeCallbacks = []
+
 commands =
-  startScript: ({entryScript, brk}) ->
+  startScript: ({entryScript, brk, probes}) ->
     {requireScript} = require '../lang'
+    {loadProbes} = require '../probes'
+
+    loadProbes(probes ? ['network'])
 
     # Require time! This may trigger a debug breakpoint, depending on debugBrk
     requireScript entryScript, (brk is true)
@@ -55,6 +61,11 @@ unless module.parent?
   process.send { method: 'childReady' }
 
 class EntryScriptWrapper extends EventEmitter
+  delegate: (method, params, cb) ->
+    callbackRef = _probeCallbacks.length
+    _probeCallbacks[callbackRef] = cb
+    module.exports.proc.send _.extend({method, callbackRef}, params)
+
   forkEntryScript: ({entryScript, scriptArgs, brk}, cb) ->
     {spawn, fork} = require 'child_process'
     net = require 'net'
@@ -74,6 +85,9 @@ class EntryScriptWrapper extends EventEmitter
         debugConnection = net.connect 5858, ->
           entryScriptProc.send { method: 'startScript', entryScript, brk }
           cb { entryScriptProc, debugConnection }
+
+      refCallback: ({callbackRef, args}) ->
+        _probeCallbacks[callbackRef].apply null, args
 
       uncaughtException: ({error}) ->
         console.log 'Uncaught exception in child:', error

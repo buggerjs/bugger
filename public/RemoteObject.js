@@ -528,6 +528,16 @@ WebInspector.LocalJSONObject.prototype = {
         callback(this._children());
     },
 
+    callFunctionJSON: function(functionDeclaration, args, callback)
+    {
+        callback(functionDeclaration.apply(this, (args || []).map(function(arg) { return arg.value; })));
+    },
+
+    callFunction: function(functionDeclaration, args, callback)
+    {
+        callback(functionDeclaration.apply(this, (args || []).map(function(arg) { return arg.value; })));
+    },
+
     /**
      * @return {Array.<WebInspector.RemoteObjectProperty>}
      */

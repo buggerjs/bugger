@@ -360,6 +360,9 @@ agents =
 module.exports =
   invoke: (agentName, functionName, args) ->
     agent = agents[agentName]
-    handlerFn = agent[functionName]
+    handlerFn = agent?[functionName]
 
-    handlerFn.apply(agent, args)
+    if handlerFn
+      handlerFn.apply(agent, args)
+    else
+      entryScript.delegate "#{agentName}.#{functionName}", args[0], args[1]
