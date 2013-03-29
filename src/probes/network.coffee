@@ -1,4 +1,5 @@
 
+http = require 'http'
 url = require 'url'
 
 _ = require 'underscore'
@@ -98,7 +99,7 @@ patchProtocol = (protocol) ->
           headers: removeArraysFromHeaders(cRes.headers)
           mimeType: mimeType
           status: cRes.statusCode
-          statusText: protocolLib.STATUS_CODES[cRes.statusCode]
+          statusText: http.STATUS_CODES[cRes.statusCode]
           url: documentURL
         }
         sendMessage 'Network.responseReceived', { requestId, loaderId, response, type }
