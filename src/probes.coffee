@@ -8,7 +8,6 @@ class Probe
     process.on 'message', (message) =>
       if message.method
         [agent, fnName] = message.method.split '.'
-        console.log message
         if agent is namespace and fnName?
           this[fnName](message, () ->
             if message.callbackRef?

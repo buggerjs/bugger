@@ -11,6 +11,7 @@ class DebugClient extends EventEmitter
     @sourceIDs = {}
     @sourceUrls = {}
     @sourceMaps = {}
+    @breakpoints = {}
 
     @_registerConnectionEvents(@connection)
 

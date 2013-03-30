@@ -7,9 +7,7 @@ entryScript = require './forked/entry_script'
 
 LOOKUP_TIMEOUT = 2500
 
-breakpoints = {}
-
-languageMode = 'coffee'
+languageMode = 'js'
 
 throwErr = (cb, msg) ->
   cb null, { type: 'string', value: msg }, true
@@ -127,15 +125,15 @@ agents =
 
     removeBreakpoint: ({breakpointId}, cb) ->
       debug.request 'clearbreakpoint', { arguments: { breakpoint: breakpointId } }, (msg) ->
-        for id of breakpoints
-          if breakpoints[id] is breakpointId
-            delete breakpoints[id]
+        for id of debug.breakpoints
+          if debug.breakpoints[id] is breakpointId
+            delete debug.breakpoints[id]
             break
         cb null
 
     setBreakpointByUrl: ({ lineNumber, url, columnNumber, condition }, cb) ->
       enabled = true; sourceID = debug.sourceUrls[url]
-      if bp = breakpoints[sourceID + ':' + lineNumber]
+      if bp = debug.breakpoints[sourceID + ':' + lineNumber]
         args = { arguments: { breakpoint: bp.breakpointId, enabled, condition } }
         debug.request 'changebreakpoint', args, (msg) ->
           bp.enabled = enabled
@@ -146,7 +144,7 @@ agents =
         debug.request 'setbreakpoint', { arguments: args }, (msg) ->
           if msg.success
             b = msg.body
-            bp = breakpoints[b.script_id + ':' + b.line] = {
+            bp = debug.breakpoints[b.script_id + ':' + b.line] = {
               sourceID: b.script_id
               url: debug.sourceIDs[b.script_id].url
               line: b.line

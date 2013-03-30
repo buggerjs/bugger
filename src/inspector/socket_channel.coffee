@@ -97,7 +97,7 @@ class SocketChannel
               condition: bp.condition
               number: bp.number
 
-            breakpoints[bp.script_id + ':' + (bp.line)] = data
+            debug.breakpoints[bp.script_id + ':' + (bp.line)] = data
             # @sendEvent 'restoredBreakpoint', data
             # @dispatchEvent ?
 

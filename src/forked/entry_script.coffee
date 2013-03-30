@@ -17,10 +17,8 @@ commands =
     requireScript entryScript, (brk is true)
 
   'Timeline.start': ({maxCallStackDepth}) ->
-    console.log 'Timeline#start'
     unless timelineInterval
       timelineInterval = setInterval( ->
-        console.log 'Time event triggered'
         process.send {
           method: 'Timeline.eventRecorded'
           record:
@@ -31,7 +29,6 @@ commands =
       1000)
 
   'Timeline.stop': ->
-    console.log 'Timeline#stop'
     if timelineInterval
       clearInterval timelineInterval
 
