@@ -2,3 +2,5 @@
 /test.*
 /node_modules
 /src.old
+.svn/
+
