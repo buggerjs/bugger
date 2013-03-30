@@ -58,6 +58,8 @@ supports loading javascript and coffee-script modules.
   possible. I'm using the IPC channel between the script- and the bugger-process, didn't find
   yet how to change the debug port without using the node CLI option.
 * LiveEdit is pretty certainly not working
+* `evaluateOnCallFrame` (and certainly other stuff that was just copied over from
+  `node-inspector`, too)
 
 ## Kudos to...
 
