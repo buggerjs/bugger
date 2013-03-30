@@ -74,7 +74,7 @@ patchProtocol = (protocol) ->
 
     requestId = (++lastRequestId).toString()
     loaderId = requestId
-    documentURL = url.format options
+    documentURL = url.format (options.uri ? options)
 
     patchedClientRequest = (cReq) ->
       _end = cReq.end
