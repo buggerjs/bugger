@@ -6,11 +6,16 @@ _ = require 'underscore'
 
 entryScript = require '../forked/entry_script'
 
-wrapperObject = (type, description, hasChildren, frame, scope, ref) ->
+wrapperObject = (type, description, hasChildren, frame, scope, ref, subtype) ->
   type: type
+  subtype: subtype
   description: description
-  hasChildren: hasChildren
-  objectId: "#{frame}:#{scope}:#{ref}"
+  hasChildren: type in ['function', 'object']
+  objectId: if type in ['function', 'object'] then "#{frame}:#{scope}:#{ref}" else null
+
+logAndReturn = (expr) ->
+  console.log expr
+  expr
 
 class SocketChannel
   constructor: ({ @socketConnection, @httpServer, @socketServer }) ->
@@ -123,9 +128,6 @@ class SocketChannel
 
   mapCallFrames: (backtraceResponse) ->
     if backtraceResponse.body.totalFrames > 0
-      console.log backtraceResponse.body.frames.map (frame, idx) ->
-        "[frame #{idx}] #{frame.func.scriptId.toString()} @ #{frame.line};#{frame.column} (#{frame.func.inferredName})"
-
       backtraceResponse.body.frames.map (frame) ->
         return {
           id: frame.index
@@ -137,13 +139,13 @@ class SocketChannel
             lineNumber: frame.line # frame.line is zero-indexed
             columnNumber: frame.column
           scopeChain: frame.scopes.map (scope) ->
-            object: wrapperObject('object', frame.receiver.className, true, frame.index, scope.index, frame.receiver.ref)
-            objectId: frame.index + ':' + scope.index + ':backtrace'
+            object: wrapperObject('object', frame.receiver.className, true, frame.index, scope.index, 'backtrace')
             type: switch scope.type
+              when 0 then 'global'
               when 1 then 'local'
               when 2 then 'with'
               when 3 then 'closure'
-              when 4 then 'global'
+              when 4 then 'catch'
         }
     else
       [{ type: 'program', location: { scriptId: 'internal' }, line: 0, id: 0, worldId: 1, scopeChain: [] }]

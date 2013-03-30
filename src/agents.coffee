@@ -54,12 +54,16 @@ refToObject = (ref) ->
   
   wrapperObject ref.type, desc, kids, 0, 0, ref.handle, subtype
 
+logAndReturn = (expr) ->
+  console.log expr
+  expr
+
 wrapperObject = (type, description, hasChildren, frame, scope, ref, subtype) ->
   type: type
-  description: description
-  hasChildren: hasChildren
   subtype: subtype
-  objectId: "#{frame}:#{scope}:#{ref}"
+  description: description
+  hasChildren: type in ['function', 'object']
+  objectId: if type in ['function', 'object'] then "#{frame}:#{scope}:#{ref}" else null
 
 toJSONValue = (objInfo, refs) ->
   refMap = {}
@@ -130,7 +134,6 @@ agents =
         cb null
 
     setBreakpointByUrl: ({ lineNumber, url, columnNumber, condition }, cb) ->
-      console.log 'setBreakpointByUrl', arguments
       enabled = true; sourceID = debug.sourceUrls[url]
       if bp = breakpoints[sourceID + ':' + lineNumber]
         args = { arguments: { breakpoint: bp.breakpointId, enabled, condition } }
@@ -283,9 +286,11 @@ agents =
 
     getProperties: ({objectId, ownProperties}, cb) ->
       [frame, scope, ref] = objectId.split ':'
+      console.log "[Runtime.getProperties] Object id: #{objectId}"
 
       if ref is 'backtrace'
-        debug.request 'scope', { arguments: { number: scope, frameNumber: frame, inlineRefs: true } }, (msg) ->
+        # debug.request 'scope', { arguments: { number: scope, frameNumber: frame, inlineRefs: true } }, (msg) ->
+        debug.request 'scope', { arguments: { number: scope, frameNumber: parseInt(frame), inlineRefs: true } }, (msg) ->
           if msg.success
             refs = {}
             if msg.refs and Array.isArray msg.refs
@@ -295,6 +300,8 @@ agents =
             cb null, msg.body.object.properties.map (p) ->
               r = refs[p.value.ref]
               { name: p.name, value: refToObject r }
+          else
+            console.log '[debug.error] scope: ', msg
       else
         # if ref is numeric, do a lookup. otherwise: evaluate
         handle = parseInt ref, 10
@@ -318,7 +325,6 @@ agents =
                 propObj = _.defaults { handle: "#{ref}[#{JSON.stringify pDesc.name}]" }, refMap[pDesc.ref]
                 { name: pDesc.name, value: refToObject(propObj) }
 
-              console.log props
               # resolvedObj = refToObject(result.body)
               # if returnByValue and not resolvedObj.value?
               #   resolvedObj.value = toJSONValue(result.body, result.refs)
@@ -337,10 +343,12 @@ agents =
             clearTimeout(timeout)
             # TODO break out commonality with above
             if msg.success
+              obj = msg.body[handle]
+              return cb(null, null) unless obj.properties?
+
               refs = {}
               props = []
               if msg.refs && Array.isArray(msg.refs)
-                obj = msg.body[handle]
                 objProps = obj.properties
                 proto = obj.protoObject
                 refs[r.handle] = r for r in msg.refs
