@@ -23,6 +23,7 @@ supports loading javascript and coffee-script modules.
 * `--no-brk` prevents a breakpoint to be added on the first line of the script
 * `--chrome` opens Chrome with the correct URL to start debugging
 * `--webhost`, `--webport` specifiy where the webserver with inspector will be listening
+* `--debugport` to let the debug session run over a port different from 5858
 
 ## Status and warnings
 
@@ -48,9 +49,6 @@ supports loading javascript and coffee-script modules.
 * `require` doesn't work in the console, it maybe should be more repl-like
 * A lot of stuff is just dumped to console.log - proper logging would be nice I guess
 * Generally the code shows that it's a prototype - code quality, test coverage, ...
-* Debugger is running on port 5858. So running more than one debug session is currently not
-  possible. I'm using the IPC channel between the script- and the bugger-process, didn't find
-  yet how to change the debug port without using the node CLI option.
 * LiveEdit is pretty certainly not working
 * The websocket connection isn't really stable
 * Memory usage monitoring is running inside of the script thread. Maybe it would be better to

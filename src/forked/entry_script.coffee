@@ -35,7 +35,8 @@ commands =
 # We are in a child process
 unless module.parent?
   # get ourselves into debug mode
-  process.kill process.pid, 'SIGUSR1'
+  process.debugPort = process.env.BUGGER_DEBUG_PORT
+  process._debugProcess process.pid
 
   process.on 'message', (message) ->
     if commands[message.method]?
@@ -63,12 +64,13 @@ class EntryScriptWrapper extends EventEmitter
     _probeCallbacks[callbackRef] = cb
     module.exports.proc.send _.extend({method, callbackRef}, params)
 
-  forkEntryScript: ({entryScript, scriptArgs, brk}, cb) ->
+  forkEntryScript: ({entryScript, scriptArgs, debugPort, brk}, cb) ->
     {spawn, fork} = require 'child_process'
     net = require 'net'
     networkAgent = require '../agents/network'
 
-    entryScriptProc = fork module.filename, scriptArgs, { silent: true }
+    env = _.defaults { BUGGER_DEBUG_PORT: debugPort }, process.env
+    entryScriptProc = fork module.filename, scriptArgs, { env, silent: true }
     startupFailedTimeout = setTimeout( ->
       throw new Error 'Process for entry script failed to start'
     1000)
@@ -80,7 +82,7 @@ class EntryScriptWrapper extends EventEmitter
         clearTimeout(startupFailedTimeout) if startupFailedTimeout
         startupFailedTimeout = true
 
-        debugConnection = net.connect 5858, ->
+        debugConnection = net.connect debugPort, ->
           entryScriptProc.send { method: 'startScript', entryScript, brk }
           cb { entryScriptProc, debugConnection }
 
