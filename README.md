@@ -44,7 +44,6 @@ supports loading javascript and coffee-script modules.
 * stderr to console.error forwarding
 
 ### What is hacked and/or broken
-* `agents.coffee` and `socket_channel.coffee` duplicate some functions
 * Right now all response bodies of outgoing http(s) requests are cached in the script process.
   As strings. And I'm offering memory usage graphs of that process. Kind of dangerous.
 * Memory usage monitoring is running inside of the script thread. Maybe it would be better to
@@ -60,6 +59,7 @@ supports loading javascript and coffee-script modules.
 * LiveEdit is pretty certainly not working
 * `evaluateOnCallFrame` (and certainly other stuff that was just copied over from
   `node-inspector`, too)
+* Auto-complete is broken when starting without `--no-brk`
 
 ## Kudos to...
 
