@@ -13,6 +13,7 @@ Module = require 'module'
 run = ->
   argv = require './argv'
   {chrome, brk, webhost, webport} = argv
+  debugPort = argv['debugport']
 
   # Make sure node knows about the additional script parsers
   require './lang'
@@ -52,7 +53,7 @@ run = ->
       console.log '[bugger] Chrome closed, exiting...'
       process.exit 0
 
-  forkEntryScript {entryScript, scriptArgs, brk}, ({entryScriptProc, debugConnection}) ->
+  forkEntryScript {entryScript, scriptArgs, brk, debugPort}, ({entryScriptProc, debugConnection}) ->
     _entryScriptProc = entryScriptProc
     _entryScriptProc.on 'exit', ->
       console.log '[bugger] Script finished, exiting...'
