@@ -25,8 +25,11 @@ module.exports = RuntimeAgent =
     try
       expression = prepareEvaluation languageMode, expression
     catch parseError
-      console.log expression, parseError
-      return throwErr cb, parseError.toString()
+      if languageMode isnt 'js'
+        expression = prepareEvaluation 'js', expression
+      else
+        console.log expression, parseError
+        return throwErr cb, parseError.toString()
 
     args =
       expression: expression
