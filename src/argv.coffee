@@ -24,6 +24,9 @@ argvParser = require('optimist')
   webport:
     default: 8058
     describe: 'Web port used by node-inspector'
+  debugport:
+    default: 5858
+    describe: 'Remote debugger port used by node'
 )
 
 argv = argvParser.argv
