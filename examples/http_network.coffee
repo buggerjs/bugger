@@ -1,6 +1,8 @@
 
 http = require 'http'
 
+console.error 'Use mkReq (global) to make requests'
+
 root.mkReq = ->
   http.get('http://www.google.com/?ncd=1', (res) ->
     console.log "Got response: #{res.statusCode}"
