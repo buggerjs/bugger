@@ -6,16 +6,7 @@ _ = require 'underscore'
 
 entryScript = require '../forked/entry_script'
 
-wrapperObject = (type, description, hasChildren, frame, scope, ref, subtype) ->
-  type: type
-  subtype: subtype
-  description: description
-  hasChildren: type in ['function', 'object']
-  objectId: if type in ['function', 'object'] then "#{frame}:#{scope}:#{ref}" else null
-
-logAndReturn = (expr) ->
-  console.log expr
-  expr
+{wrapperObject, logAndReturn} = require '../wrap_and_map'
 
 class SocketChannel
   constructor: ({ @socketConnection, @httpServer, @socketServer }) ->
