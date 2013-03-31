@@ -100,7 +100,6 @@ patchProtocolLib = (protocolLib) ->
           sendMessage 'Network.dataReceived', { requestId, dataLength: chunk.length, encodedDataLength: chunk.length }
 
         cRes.on 'end', ->
-          console.log "[Network.loadingFinished] #{requestId}"
           sendMessage 'Network.loadingFinished', { requestId }
 
         cRes.on 'error', (err) ->
