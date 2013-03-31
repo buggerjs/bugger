@@ -42,6 +42,7 @@ supports loading javascript and coffee-script modules.
 * Better usage of the Events/Timeline section
 * Decision whether the "Resources"-tab makes any sense
 * stderr to console.error forwarding
+* Support for cluster/fork - maybe consider those kind-of (web) workers..?
 
 ### What is hacked and/or broken
 * Auto-complete is broken when starting without `--no-brk`
