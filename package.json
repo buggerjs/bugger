@@ -1,6 +1,6 @@
 {
   "name": "bugger",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Debug everything",
   "main": "lib/bugger.js",
   "scripts": {
