@@ -43,8 +43,7 @@ run = ->
     try _chromeProc.kill() if _chromeProc?
     throw e
 
-  appUrl = "http://#{webhost}:#{webport}/?hiddenPanels=elements,audits&ws=#{webhost}:#{webport}/websocket"
-  console.log appUrl
+  appUrl = argv.getAppUrl()
 
   if chrome
     # Start chrome with the correct url opened and less UI

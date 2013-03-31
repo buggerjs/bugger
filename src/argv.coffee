@@ -43,5 +43,8 @@ unless argv._.length
   argvParser.showHelp()
   process.exit 1
 
+argv.getAppUrl = ->
+  "http://#{argv.webhost}:#{argv.webport}/?hiddenPanels=elements,audits&ws=#{argv.webhost}:#{argv.webport}/websocket"
+
 # Export the parsed arguments to the calling module
 module.exports = argv

@@ -8,6 +8,25 @@ entryScript = require '../forked/entry_script'
 
 {wrapperObject, logAndReturn} = require '../wrap_and_map'
 
+knownLogLevels =
+  "debug": [ 'debug', 'silly' ]
+  "error": [ 'error', 'fatal', 'alert' ]
+  "log": [ 'log', 'info' ]
+  "tip": [ 'tip', 'verbose' ]
+  "warning": [ 'warning', 'warn' ]
+
+knownLogLevelsToRegExp = {}
+for level, names of knownLogLevels
+  regexp = new RegExp( names.map( (name) -> "^#{name}:|\\[#{name}\\]" ).join('|'), 'ig')
+  knownLogLevelsToRegExp[level] = regexp
+
+detectLogLevel = (data, defaultLevel) ->
+  str = data.toString()
+  for level, regexp of knownLogLevelsToRegExp
+    if regexp.test str
+      return level
+  return defaultLevel
+
 class SocketChannel
   constructor: ({ @socketConnection, @httpServer, @socketServer }) ->
     console.log '[bugger] SocketChannel created'
@@ -19,7 +38,10 @@ class SocketChannel
     debug.on 'resumed', @onResumed
 
     entryScript.proc.stdout.on 'data', (data) =>
-      @console data, 'log'
+      @console data, detectLogLevel(data, 'log')
+
+    entryScript.proc.stderr.on 'data', (data) =>
+      @console data, detectLogLevel(data, 'debug')
 
     entryScript.on 'message', (message) =>
       @dispatchEvent message.method, _.omit(message, 'method')
