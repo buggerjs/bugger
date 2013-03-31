@@ -3,8 +3,6 @@
 WebInspector.settings.debuggerEnabled.set true
 window.dumpInspectorProtocolMessages = false
 
-WebInspector.inspectedPageURL = location.origin
-
 preloadMessageBuffer = []
 InspectorFrontendHost.sendMessageToBackend = (message) ->
   console.log 'Buffered', message

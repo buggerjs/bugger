@@ -91,6 +91,20 @@ module.exports = DebuggerAgent =
     debug.request 'scripts', args, (msg) ->
       cb null, msg.body[0].source
 
+  setScriptSource: ({scriptId, scriptSource, preview}, cb) ->
+    args =
+      script_id: scriptId
+      preview_only: preview
+      new_source: scriptSource
+
+    debug.request 'changelive', { arguments: args }, (msg) ->
+      # cb(error, callFrames)
+      if msg.success
+        console.log "[Debugger.setScriptSource] #{scriptId}"
+        cb null, null
+      else
+        cb msg.message
+
   getFunctionDetails: ({objectId}, cb) ->
     # response: cb(error, response = { location = { scriptId, lineNumber, columnNumber }, name, inferredName, displayName })
 

@@ -6,7 +6,7 @@ Module = require 'module'
 compileFile = (filename) ->
   input = fs.readFileSync filename, 'utf8'
   csAst = coffee.parse input, raw: yes
-  jsAst = coffee.compile csAst
+  jsAst = coffee.compile csAst, bare: yes
   {code, map} = coffee.jsWithSourceMap jsAst, filename
 
   # Make the source map available on request

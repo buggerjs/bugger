@@ -13,6 +13,8 @@ class InspectorBackendStub
       a.ignore 'canSetScriptSource'
       a.ignore 'setOverlayMessage'
       a.delegate 'getFunctionDetails', { objectId: { optional: false, type: 'string' } }
+      a.delegate 'setScriptSource', { scriptId: { optional: false, type: 'string' }, scriptSource: { optional: false, type: 'string'}, preview: { optional: true , type: 'boolean' } }
+      a.delegate 'getScriptSource', { scriptId: { optional: false, type: 'string' } }
 
     @agent 'HeapProfiler', (a) ->
       a.ignore 'hasHeapProfiler'
@@ -38,6 +40,15 @@ class InspectorBackendStub
       a.ignore 'canOverrideDeviceOrientation'
       a.ignore 'setTouchEmulationEnabled'
       a.ignore 'getScriptExecutionStatus'
+      a.delegate 'getResourceTree'
+      a.ignore 'addScriptToEvaluateOnLoad', {scriptSource: { optional: false, type: 'string' } }
+      a.ignore 'removeAllScriptsToEvaluateOnLoad'
+      a.ignore 'reload', { ignoreCache: { optional: true, type: 'boolean' } }
+      a.ignore 'open', { url: { optional: false, type: 'string' }, newWindow: { optional: true , type: 'boolean' } }
+      a.ignore 'getCookies'
+      a.ignore 'deleteCookie', { cookieName: { optional: false, type: 'string' }, domain: { optional: false, type: 'string' } }
+      a.ignore 'getResourceContent', { frameId: { optional: false, type: 'string' }, url: { optional: false, type: 'string' } }
+      a.ignore 'searchInResources', { text: { optional: false, type: 'string' }, 'caseSensitive': { optional: true , type: 'boolean' }, isRegex: { optional: true , type: 'boolean' } }
 
     @agent 'CSS', (a) ->
       a.ignore 'enable'
@@ -64,6 +75,15 @@ class InspectorBackendStub
       a.ignore 'setMonitoringXHREnabled', { nodeId: { optional: false, type: 'boolean' } }
       a.delegate 'addInspectedNode', { nodeId: { optional: false, type: 'number' } }
 
+    @agent 'Runtime', (a) ->
+      a.ignore 'enable'
+      a.ignore 'disable'
+
+    @agent 'ApplicationCache', (a) ->
+      a.ignore 'enable'
+      a.ignore 'disable'
+      a.ignore 'getFramesWithManifests'
+
     @_registerDelegate('{"method": "Runtime.evaluate", "params": {"expression": {"optional": false, "type": "string"},"objectGroup": {"optional": true , "type": "string"},"includeCommandLineAPI": {"optional": true , "type": "boolean"},"doNotPauseOnExceptions": {"optional": true , "type": "boolean"},"frameId": {"optional": true , "type": "string"},"returnByValue": {"optional": true , "type": "boolean"}}, "id": 0}')
     @_registerDelegate('{"method": "Runtime.callFunctionOn", "params": {"objectId": {"optional": false, "type": "string"},"functionDeclaration": {"optional": false, "type": "string"},"arguments": {"optional": true , "type": "object"},"returnByValue": {"optional": true , "type": "boolean"}}, "id": 0}')
     @_registerDelegate('{"method": "Runtime.getProperties", "params": {"objectId": {"optional": false, "type": "string"},"ownProperties": {"optional": true , "type": "boolean"}}, "id": 0}')
@@ -81,8 +101,6 @@ class InspectorBackendStub
     @_registerDelegate('{"method": "Debugger.stepOut", "id": 0}')
     @_registerDelegate('{"method": "Debugger.pause", "id": 0}')
     @_registerDelegate('{"method": "Debugger.resume", "id": 0}')
-    @_registerDelegate('{"method": "Debugger.setScriptSource", "params": {"scriptId": {"optional": false, "type": "string"},"scriptSource": {"optional": false, "type": "string"},"preview": {"optional": true , "type": "boolean"}}, "id": 0}')
-    @_registerDelegate('{"method": "Debugger.getScriptSource", "params": {"scriptId": {"optional": false, "type": "string"}}, "id": 0}')
     @_registerDelegate('{"method": "Debugger.setPauseOnExceptions", "params": {"state": {"optional": false, "type": "string"}}, "id": 0}')
     @_registerDelegate('{"method": "Debugger.evaluateOnCallFrame", "params": {"callFrameId": {"optional": true, "type": "string"},"expression": {"optional": false, "type": "string"},"objectGroup": {"optional": true , "type": "string"},"includeCommandLineAPI": {"optional": true , "type": "boolean"}, "doNotPauseOnExceptionsAndMuteConsole": {"optional":true,"type":"boolean"},"returnByValue": {"optional": true , "type": "boolean"},"generatePreview": {"optional": true , "type": "boolean"}}, "id": 0}')
     @_ignore('{"method": "Profiler.enable", "id": 0}')
@@ -98,15 +116,6 @@ class InspectorBackendStub
     @_ignore('{"method": "Profiler.collectGarbage", "id": 0}')
     @_ignore('{"method": "Profiler.causesRecompilation", "id": 0}')
     @_ignore('{"method": "Profiler.isSampling", "id": 0}')
-    @_ignore('{"method": "Page.addScriptToEvaluateOnLoad", "params": {"scriptSource": {"optional": false, "type": "string"}}, "id": 0}')
-    @_ignore('{"method": "Page.removeAllScriptsToEvaluateOnLoad", "id": 0}')
-    @_ignore('{"method": "Page.reload", "params": {"ignoreCache": {"optional": true , "type": "boolean"}}, "id": 0}')
-    @_ignore('{"method": "Page.open", "params": {"url": {"optional": false, "type": "string"},"newWindow": {"optional": true , "type": "boolean"}}, "id": 0}')
-    @_ignore('{"method": "Page.getCookies", "id": 0}')
-    @_ignore('{"method": "Page.deleteCookie", "params": {"cookieName": {"optional": false, "type": "string"},"domain": {"optional": false, "type": "string"}}, "id": 0}')
-    @_ignore('{"method": "Page.getResourceTree", "id": 0}')
-    @_ignore('{"method": "Page.getResourceContent", "params": {"frameId": {"optional": false, "type": "string"},"url": {"optional": false, "type": "string"}}, "id": 0}')
-    @_ignore('{"method": "Page.searchInResources", "params": {"text": {"optional": false, "type": "string"},"caseSensitive": {"optional": true , "type": "boolean"},"isRegex": {"optional": true , "type": "boolean"}}, "id": 0}')
     @_ignore('{"method": "Network.enable", "id": 0}')
     @_ignore('{"method": "Network.disable", "id": 0}')
     @_ignore('{"method": "Network.setUserAgentOverride", "params": {"userAgent": {"optional": false, "type": "string"}}, "id": 0}')
@@ -245,6 +254,7 @@ class InspectorBackendStub
     @registerProfilerDispatcher = @_registerDomainDispatcher.bind(this, "Profiler")
     @registerWorkerDispatcher = @_registerDomainDispatcher.bind(this, "Worker")
     @registerCSSDispatcher = @_registerDomainDispatcher.bind(this, "CSS")
+    @registerRuntimeDispatcher = @_registerDomainDispatcher.bind(this, "Runtime")
 
   agent: (agentId, withContext) ->
     agentName = "#{agentId}Agent"

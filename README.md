@@ -42,14 +42,14 @@ supports loading javascript and coffee-script modules.
   confusing when combined with outgoing requests?
 * Better usage of the Events/Timeline section
 * Decision whether the "Resources"-tab makes any sense
-* stderr to console.error forwarding
 * Support for cluster/fork - maybe consider those kind-of (web) workers..?
 
 ### What is hacked and/or broken
 * `require` doesn't work in the console, it maybe should be more repl-like
 * A lot of stuff is just dumped to console.log - proper logging would be nice I guess
 * Generally the code shows that it's a prototype - code quality, test coverage, ...
-* LiveEdit is pretty certainly not working
+* LiveEdit is only working for the compiled javascripts, not for the source mapped files. This
+  appears to be a limitation of the WebKit developer tools.
 * The websocket connection isn't really stable
 * Memory usage monitoring is running inside of the script thread. Maybe it would be better to
   externalize this (memory stats should be available to the debug/bugger process).
