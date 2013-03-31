@@ -23,7 +23,7 @@ mimeTypeToResponseType = (mimeType) ->
     'Other'
 
 sendMessage = (method, params) ->
-  message = _.extend { method, timestamp: Math.floor((new Date()).getTime() / 1000) }, params
+  message = _.extend { method, timestamp: (new Date()).getTime() / 1000.0 }, params
   if process.send
     process.send message
 
@@ -72,7 +72,6 @@ patchProtocolLib = (protocolLib) ->
     patchedClientRequest = (cReq) ->
       _end = cReq.end
       cReq.end = ->
-        timestamp = (new Date()).getTime()
         request = { headers: _renderHeaders.apply(cReq), method: cReq.method, postData: '', url: documentURL }
         stackTrace = makeStackTrace()
         initiator = { stackTrace, type: 'script' }
@@ -101,6 +100,7 @@ patchProtocolLib = (protocolLib) ->
           sendMessage 'Network.dataReceived', { requestId, dataLength: chunk.length, encodedDataLength: chunk.length }
 
         cRes.on 'end', ->
+          console.log "[Network.loadingFinished] #{requestId}"
           sendMessage 'Network.loadingFinished', { requestId }
 
         cRes.on 'error', (err) ->
