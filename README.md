@@ -21,7 +21,7 @@ supports loading javascript and coffee-script modules.
 
 * `-h`, `--help`, `-v`, `--version` do what you'd expect them to do
 * `--no-brk` prevents a breakpoint to be added on the first line of the script
-* `--chrome` opens Chrome with the correct URL to start debugging (kind of broken right now)
+* `--chrome` opens Chrome with the correct URL to start debugging
 * `--webhost`, `--webport` specifiy where the webserver with inspector will be listening
 
 ## Status and warnings
@@ -44,20 +44,19 @@ supports loading javascript and coffee-script modules.
 * stderr to console.error forwarding
 
 ### What is hacked and/or broken
-* Memory usage monitoring is running inside of the script thread. Maybe it would be better to
-  externalize this (memory stats should be available to the debug/bugger process).
-* The websocket connection isn't really stable
-* A lot of stuff is just dumped to console.log - proper logging would be nice I guess
 * Auto-complete is broken when starting without `--no-brk`
 * `require` doesn't work in the console, it maybe should be more repl-like
+* A lot of stuff is just dumped to console.log - proper logging would be nice I guess
 * Generally the code shows that it's a prototype - code quality, test coverage, ...
-* SourceMaps seem not be working in the browser opened by the `--chrome` option
 * Debugger is running on port 5858. So running more than one debug session is currently not
   possible. I'm using the IPC channel between the script- and the bugger-process, didn't find
   yet how to change the debug port without using the node CLI option.
 * LiveEdit is pretty certainly not working
 * `evaluateOnCallFrame` (and certainly other stuff that was just copied over from
   `node-inspector`, too)
+* The websocket connection isn't really stable
+* Memory usage monitoring is running inside of the script thread. Maybe it would be better to
+  externalize this (memory stats should be available to the debug/bugger process).
 
 ## Kudos to...
 

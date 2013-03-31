@@ -23,7 +23,7 @@ findChrome = ->
   firstExistingPath paths
 
 module.exports = ({ webhost, webport, appUrl }) ->
-  chromeProfilePath = path.join __dirname, '..', 'ChromeProfile'
+  chromeProfilePath = path.join __dirname, '..', '..', 'ChromeProfile'
   args = [
     "--app=#{appUrl}",
     "--user-data-dir=#{chromeProfilePath}"
