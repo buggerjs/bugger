@@ -12,10 +12,9 @@ agents =
       cb null, true
 
   Debugger: require './agents/debugger'
-
   Console: require './agents/console'
-
   Runtime: require './agents/runtime'
+  Network: require './agents/network'
 
 module.exports =
   invoke: (agentName, functionName, args) ->
