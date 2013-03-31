@@ -66,6 +66,7 @@ class EntryScriptWrapper extends EventEmitter
   forkEntryScript: ({entryScript, scriptArgs, brk}, cb) ->
     {spawn, fork} = require 'child_process'
     net = require 'net'
+    networkAgent = require '../agents/network'
 
     entryScriptProc = fork module.filename, scriptArgs, { silent: true }
     startupFailedTimeout = setTimeout( ->
@@ -82,6 +83,10 @@ class EntryScriptWrapper extends EventEmitter
         debugConnection = net.connect 5858, ->
           entryScriptProc.send { method: 'startScript', entryScript, brk }
           cb { entryScriptProc, debugConnection }
+
+      cacheResponseContent: () ->
+        # Just plain forwarding
+        networkAgent.cacheResponseContent.apply networkAgent, arguments
 
       refCallback: ({callbackRef, args}) ->
         _probeCallbacks[callbackRef].apply null, args
