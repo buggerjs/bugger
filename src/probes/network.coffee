@@ -1,12 +1,11 @@
 
 http = require 'http'
+https = require 'https'
 url = require 'url'
 
 _ = require 'underscore'
-{Probe} = require '../probes'
 
 lastRequestId = 0
-_responseContentCache = {}
 
 mimeTypeToResponseType = (mimeType) ->
   # [ "Document" , "Font" , "Image" , "Other" , "Script" , "Stylesheet" , "WebSocket" , "XHR" ]
@@ -22,11 +21,6 @@ mimeTypeToResponseType = (mimeType) ->
     'Image'
   else
     'Other'
-
-networkProbe = new Probe('Network')
-
-networkProbe.getResponseBody = ({requestId}, cb) ->
-  cb null, _responseContentCache[requestId].toString(), false
 
 sendMessage = (method, params) ->
   message = _.extend { method, timestamp: Math.floor((new Date()).getTime() / 1000) }, params
@@ -65,8 +59,7 @@ _renderHeaders = ->
 
   return headers
 
-patchProtocol = (protocol) ->
-  protocolLib = require protocol
+patchProtocolLib = (protocolLib) ->
   oldRequest = protocolLib.request
   protocolLib.request = (options, cb) ->
     if typeof options is 'string'
@@ -90,7 +83,6 @@ patchProtocol = (protocol) ->
 
     patchedClientResponseCallback = (cb) ->
       (cRes) ->
-        _responseContentCache[requestId] = ''
         mimeType = cRes.headers['content-type']?.split(';')[0] ? 'text/plain'
         type = mimeTypeToResponseType(mimeType)
         response = {
@@ -105,7 +97,7 @@ patchProtocol = (protocol) ->
         sendMessage 'Network.responseReceived', { requestId, loaderId, response, type }
 
         cRes.on 'data', (chunk) ->
-          _responseContentCache[requestId] += chunk.toString()
+          process.send { method: 'cacheResponseContent', requestId, chunk: chunk.toString() }
           sendMessage 'Network.dataReceived', { requestId, dataLength: chunk.length, encodedDataLength: chunk.length }
 
         cRes.on 'end', ->
@@ -118,5 +110,5 @@ patchProtocol = (protocol) ->
 
     patchedClientRequest(oldRequest options, patchedClientResponseCallback(cb))
 
-for protocol in ['http', 'https']
-  patchProtocol(protocol)
+for protocolLib in [http, https]
+  patchProtocolLib(protocolLib)

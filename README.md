@@ -44,12 +44,11 @@ supports loading javascript and coffee-script modules.
 * stderr to console.error forwarding
 
 ### What is hacked and/or broken
-* Right now all response bodies of outgoing http(s) requests are cached in the script process.
-  As strings. And I'm offering memory usage graphs of that process. Kind of dangerous.
 * Memory usage monitoring is running inside of the script thread. Maybe it would be better to
   externalize this (memory stats should be available to the debug/bugger process).
 * The websocket connection isn't really stable
 * A lot of stuff is just dumped to console.log - proper logging would be nice I guess
+* Auto-complete is broken when starting without `--no-brk`
 * `require` doesn't work in the console, it maybe should be more repl-like
 * Generally the code shows that it's a prototype - code quality, test coverage, ...
 * SourceMaps seem not be working in the browser opened by the `--chrome` option
@@ -59,7 +58,6 @@ supports loading javascript and coffee-script modules.
 * LiveEdit is pretty certainly not working
 * `evaluateOnCallFrame` (and certainly other stuff that was just copied over from
   `node-inspector`, too)
-* Auto-complete is broken when starting without `--no-brk`
 
 ## Kudos to...
 
