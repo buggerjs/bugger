@@ -45,7 +45,6 @@ supports loading javascript and coffee-script modules.
 * Support for cluster/fork - maybe consider those kind-of (web) workers..?
 
 ### What is hacked and/or broken
-* Auto-complete is broken when starting without `--no-brk`
 * `require` doesn't work in the console, it maybe should be more repl-like
 * A lot of stuff is just dumped to console.log - proper logging would be nice I guess
 * Generally the code shows that it's a prototype - code quality, test coverage, ...
@@ -53,8 +52,6 @@ supports loading javascript and coffee-script modules.
   possible. I'm using the IPC channel between the script- and the bugger-process, didn't find
   yet how to change the debug port without using the node CLI option.
 * LiveEdit is pretty certainly not working
-* `evaluateOnCallFrame` (and certainly other stuff that was just copied over from
-  `node-inspector`, too)
 * The websocket connection isn't really stable
 * Memory usage monitoring is running inside of the script thread. Maybe it would be better to
   externalize this (memory stats should be available to the debug/bugger process).

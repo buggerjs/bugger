@@ -12,6 +12,7 @@ class InspectorBackendStub
       a.ignore 'supportsSeparateScriptCompilationAndExecution'
       a.ignore 'canSetScriptSource'
       a.ignore 'setOverlayMessage'
+      a.delegate 'getFunctionDetails', { objectId: { optional: false, type: 'string' } }
 
     @agent 'HeapProfiler', (a) ->
       a.ignore 'hasHeapProfiler'
@@ -56,16 +57,18 @@ class InspectorBackendStub
     @agent 'Worker', (a) ->
       a.ignore 'enable'
 
+    @agent 'Console', (a) ->
+      a.delegate 'enable'
+      a.delegate 'disable'
+      a.delegate 'clearMessages'
+      a.ignore 'setMonitoringXHREnabled', { nodeId: { optional: false, type: 'boolean' } }
+      a.delegate 'addInspectedNode', { nodeId: { optional: false, type: 'number' } }
+
     @_registerDelegate('{"method": "Runtime.evaluate", "params": {"expression": {"optional": false, "type": "string"},"objectGroup": {"optional": true , "type": "string"},"includeCommandLineAPI": {"optional": true , "type": "boolean"},"doNotPauseOnExceptions": {"optional": true , "type": "boolean"},"frameId": {"optional": true , "type": "string"},"returnByValue": {"optional": true , "type": "boolean"}}, "id": 0}')
     @_registerDelegate('{"method": "Runtime.callFunctionOn", "params": {"objectId": {"optional": false, "type": "string"},"functionDeclaration": {"optional": false, "type": "string"},"arguments": {"optional": true , "type": "object"},"returnByValue": {"optional": true , "type": "boolean"}}, "id": 0}')
     @_registerDelegate('{"method": "Runtime.getProperties", "params": {"objectId": {"optional": false, "type": "string"},"ownProperties": {"optional": true , "type": "boolean"}}, "id": 0}')
     @_ignore('{"method": "Runtime.releaseObject", "params": {"objectId": {"optional": false, "type": "string"}}, "id": 0}')
     @_ignore('{"method": "Runtime.releaseObjectGroup", "params": {"objectGroup": {"optional": false, "type": "string"}}, "id": 0}')
-    @_registerDelegate('{"method": "Console.enable", "id": 0}')
-    @_registerDelegate('{"method": "Console.disable", "id": 0}')
-    @_registerDelegate('{"method": "Console.clearConsoleMessages", "id": 0}')
-    @_ignore('{"method": "Console.setMonitoringXHREnabled", "params": {"enabled": {"optional": false, "type": "boolean"}}, "id": 0}')
-    @_registerDelegate('{"method": "Console.addInspectedNode", "params": {"nodeId": {"optional": false, "type": "number"}}, "id": 0}')
     @_registerDelegate('{"method": "Debugger.enable", "id": 0}')
     @_registerDelegate('{"method": "Debugger.disable", "id": 0}')
     @_registerDelegate('{"method": "Debugger.setBreakpointsActive", "params": {"active": {"optional": false, "type": "boolean"}}, "id": 0}')
