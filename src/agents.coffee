@@ -15,6 +15,7 @@ agents =
   Console: require './agents/console'
   Runtime: require './agents/runtime'
   Network: require './agents/network'
+  Page: require './agents/page'
 
 module.exports =
   invoke: (agentName, functionName, args) ->
