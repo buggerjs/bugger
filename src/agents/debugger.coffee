@@ -1,7 +1,7 @@
 
 debug = require '../debug-client'
 
-{refToObject} = require '../wrap_and_map'
+{refToObject, expressionToHandle, throwErr} = require '../wrap_and_map'
 
 module.exports = DebuggerAgent =
   enable: (cb) ->
@@ -64,22 +64,23 @@ module.exports = DebuggerAgent =
   resume: (cb) ->
     console.log 'Debugger#resume'
     debug.request 'continue', {}, (msg) ->
+      debug.emit 'resumed'
       cb(null, true)
 
   stepOver: (cb) ->
     debug.request 'continue', { arguments: {stepaction: 'next'} }, (msg) ->
+      debug.emit 'resumed'
       cb(null, true)
-    # sendEvent('resumedScript')
 
   stepInto: (cb) ->
     debug.request 'continue', { arguments: {stepaction: 'in'} }, (msg) ->
+      debug.emit 'resumed'
       cb(null, true)
-    # sendEvent('resumedScript')
 
   stepOutOfFunction: (cb) ->
     debug.request 'continue', { arguments: {stepaction: 'out'} }, (msg) ->
+      debug.emit 'resumed'
       cb(null, true)
-    # sendEvent('resumedScript')
 
   getScriptSource: ({scriptId}, cb) ->
     args =
@@ -90,6 +91,9 @@ module.exports = DebuggerAgent =
     debug.request 'scripts', args, (msg) ->
       cb null, msg.body[0].source
 
+  getFunctionDetails: ({objectId}, cb) ->
+    # response: cb(error, response = { location = { scriptId, lineNumber, columnNumber }, name, inferredName, displayName })
+
   evaluateOnCallFrame: (options, cb) ->
     {callFrameId, expression, objectGroup, includeCommandLineAPI} = options
     {doNotPauseOnExceptionsAndMuteConsole, returnByValue, generatePreview} = options
@@ -97,19 +101,19 @@ module.exports = DebuggerAgent =
     args =
       expression: expression
       disable_break: doNotPauseOnExceptionsAndMuteConsole
-      global: true
+      global: false
       maxStringLength: 100000
 
     if callFrameId?
       args.frame = callFrameId
-      args.global = false
 
     debug.request 'evaluate', { arguments: args }, (result) ->
       if result.success
-        resolvedObj = refToObject(result.body)
+        result.body.handle = expressionToHandle expression
+        resolvedObj = refToObject(result.body, callFrameId ? 0)
         if returnByValue and not resolvedObj.value?
           resolvedObj.value = toJSONValue(result.body, result.refs)
 
         cb null, resolvedObj
       else
-        cb result.message
+        throwErr cb, (result.message + JSON.stringify(args))

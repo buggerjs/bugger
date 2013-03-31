@@ -3,7 +3,7 @@ _ = require 'underscore'
 {prepareEvaluation} = require '../lang'
 debug = require '../debug-client'
 
-{toJSONValue, wrapperObject, logAndReturn, throwErr, expressionToHandle, handleToExpression, refToObject} = require '../wrap_and_map'
+{toJSONValue, wrapperObject, logAndReturn, throwErr, expressionToHandle, handleToExpression, refToObject, makePropertyHandle} = require '../wrap_and_map'
 
 LOOKUP_TIMEOUT = 2500
 
@@ -40,7 +40,7 @@ module.exports = RuntimeAgent =
       if result.success
         # we need to return object ids that can be referenced by callFunctionOn
         result.body.handle = expressionToHandle expression
-        resolvedObj = refToObject(result.body)
+        resolvedObj = refToObject(result.body, '_')
         if returnByValue and not resolvedObj.value?
           resolvedObj.value = toJSONValue(result.body, result.refs)
 
@@ -55,11 +55,10 @@ module.exports = RuntimeAgent =
     {objectId, functionDeclaration, returnByValue} = options
     args = options.arguments
     [frame, scope, ref] = objectId.split ':'
-    console.log 'Call on ', objectId, "returnByValue", returnByValue
     expression = "(#{functionDeclaration}).apply(#{handleToExpression ref}, #{JSON.stringify(args)});"
     disable_break = true
-    additional_context = [] # [ { name: 'obj', handle: parseInt(ref) } ]
-    debug.request 'evaluate', { arguments: { expression, disable_break, additional_context, global: true } }, (result) ->
+    args = { expression, disable_break, global: frame is '_' }
+    debug.request 'evaluate', { arguments: args }, (result) ->
       if result.success
         resolvedObj = refToObject(result.body)
         if returnByValue and not resolvedObj.value?
@@ -101,18 +100,16 @@ module.exports = RuntimeAgent =
 
         expression = "(#{functionDeclaration}).apply(#{handleToExpression ref}, []);"
         disable_break = true
-        debug.request 'evaluate', { arguments: { expression, disable_break, global: true } }, (result) ->
+
+        args = { expression, disable_break, global: frame is '_' }
+        debug.request 'evaluate', { arguments: args }, (result) ->
           if result.success
             refMap = {}
             result.refs.forEach (refDesc) -> refMap[refDesc.handle] = refDesc
 
             props = result.body.properties.map (pDesc) ->
-              propObj = _.defaults { handle: "#{ref}[#{JSON.stringify pDesc.name}]" }, refMap[pDesc.ref]
+              propObj = _.defaults { handle: makePropertyHandle(ref, pDesc.name) }, refMap[pDesc.ref]
               { name: pDesc.name, value: refToObject(propObj) }
-
-            # resolvedObj = refToObject(result.body)
-            # if returnByValue and not resolvedObj.value?
-            #   resolvedObj.value = toJSONValue(result.body, result.refs)
 
             cb null, props
           else
