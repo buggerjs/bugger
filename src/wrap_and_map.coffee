@@ -17,7 +17,12 @@ expressionToHandle = (expression) ->
 handleToExpression = (handle) ->
   knownExpressionsRev[handle.substr(1)]
 
-refToObject = (ref) ->
+makePropertyHandle = (parentHandle, propertyName) ->
+  parentExpression = handleToExpression parentHandle
+  propertyExpression = parentExpression + "[#{JSON.stringify propertyName}]"
+  expressionToHandle propertyExpression
+
+refToObject = (ref, frame=0, scope=0) ->
   desc = ''
   name = null
   subtype = null
@@ -42,7 +47,7 @@ refToObject = (ref) ->
 
   desc = desc.substring(0, 100) + '\u2026' if desc.length > 100
   
-  wrapperObject ref.type, desc, kids, 0, 0, ref.handle, subtype
+  wrapperObject ref.type, desc, kids, frame, scope, ref.handle, subtype
 
 logAndReturn = (expr) ->
   console.log expr
@@ -68,7 +73,7 @@ toJSONValue = (objInfo, refs) ->
 
       properties = {}
       objInfo.properties.forEach (prop) ->
-        propObjInfo = _.defaults { handle: "#{objInfo.handle}.#{prop.name}" }, refMap[prop.ref]
+        propObjInfo = _.defaults { handle: makePropertyHandle(objInfo.handle, prop.name) }, refMap[prop.ref]
         properties[prop.name] = toJSONValue(propObjInfo, refs)
 
       properties
@@ -78,4 +83,4 @@ toJSONValue = (objInfo, refs) ->
       console.log objInfo
       null
 
-module.exports = {toJSONValue, wrapperObject, logAndReturn, throwErr, expressionToHandle, handleToExpression, refToObject}
+module.exports = {toJSONValue, wrapperObject, logAndReturn, throwErr, expressionToHandle, handleToExpression, refToObject, makePropertyHandle}

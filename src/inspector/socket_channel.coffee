@@ -16,6 +16,8 @@ class SocketChannel
 
     debug.on 'break', @onPauseOrBreakpoint
 
+    debug.on 'resumed', @onResumed
+
     entryScript.proc.stdout.on 'data', (data) =>
       @console data, 'log'
 
@@ -94,6 +96,9 @@ class SocketChannel
 
         unless breakpointsResponse.running
           @sendBacktrace()
+
+  onResumed: =>
+    @dispatchEvent 'Debugger.resumed'
 
   onPauseOrBreakpoint: (breakDesc) =>
     scriptId = if breakDesc? then breakDesc.body.script.id else null
