@@ -36,7 +36,7 @@ commands =
 unless module.parent?
   # get ourselves into debug mode
   process.debugPort = process.env.BUGGER_DEBUG_PORT
-  process._debugProcess process.pid
+  process.kill process.pid, 'SIGUSR1'
 
   process.on 'message', (message) ->
     if commands[message.method]?
@@ -56,6 +56,9 @@ unless module.parent?
       }
     }
 
+  # Dummy for keep-alive
+  setTimeout (-> ), 5 # dummy
+
   process.send { method: 'childReady' }
 
 class EntryScriptWrapper extends EventEmitter
@@ -68,6 +71,7 @@ class EntryScriptWrapper extends EventEmitter
     {spawn, fork} = require 'child_process'
     net = require 'net'
     networkAgent = require '../agents/network'
+    debugClient = require '../debug-client'
 
     env = _.defaults { BUGGER_DEBUG_PORT: debugPort }, process.env
     entryScriptProc = fork module.filename, scriptArgs, { env, silent: true }
@@ -83,8 +87,13 @@ class EntryScriptWrapper extends EventEmitter
         startupFailedTimeout = true
 
         debugConnection = net.connect debugPort, ->
-          entryScriptProc.send { method: 'startScript', entryScript, brk }
-          cb { entryScriptProc, debugConnection }
+          debugClient.init connection: debugConnection
+
+          setTimeout (->
+            debugClient.request 'continue', {}, ->
+              entryScriptProc.send { method: 'startScript', entryScript, brk }
+              cb debugClient
+          ), 1
 
       cacheResponseContent: () ->
         # Just plain forwarding

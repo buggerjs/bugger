@@ -5,7 +5,6 @@
 forkChrome = require './forked/chrome'
 {forkEntryScript} = require './forked/entry_script'
 
-debugClient = require './debug-client'
 inspectorServer = require './inspector/server'
 
 Module = require 'module'
@@ -52,14 +51,13 @@ run = ->
       console.log '[bugger] Chrome closed, exiting...'
       process.exit 0
 
-  forkEntryScript {entryScript, scriptArgs, brk, debugPort}, ({entryScriptProc, debugConnection}) ->
+  forkEntryScript {entryScript, scriptArgs, brk, debugPort}, (entryScriptProc) ->
     _entryScriptProc = entryScriptProc
     _entryScriptProc.on 'exit', ->
       console.log '[bugger] Script finished, exiting...'
       process.exit 0
 
     # Create a proper debug client from the connection
-    debugClient.init { connection: debugConnection }
     inspectorServer.start { webhost, webport, appUrl }
 
 module.exports = {run}

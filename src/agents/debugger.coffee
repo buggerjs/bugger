@@ -1,7 +1,7 @@
 
 debug = require '../debug-client'
 
-{refToObject, expressionToHandle, throwErr} = require '../wrap_and_map'
+{toJSONValue, refToObject, expressionToHandle, throwErr} = require '../wrap_and_map'
 
 module.exports = DebuggerAgent =
   enable: (cb) ->
