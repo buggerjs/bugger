@@ -1,6 +1,8 @@
 
 # debugger always enabled
 WebInspector.settings.debuggerEnabled.set true
+# source maps always enabled
+WebInspector.settings.sourceMapsEnabled.set true
 window.dumpInspectorProtocolMessages = false
 
 preloadMessageBuffer = []
