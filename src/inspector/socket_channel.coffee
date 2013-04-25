@@ -1,5 +1,6 @@
 
 fs = require 'fs'
+path = require 'path'
 debug = require '../debug-client'
 agents = require '../agents'
 _ = require 'underscore'
@@ -31,11 +32,16 @@ class SocketChannel
   constructor: ({ @socketConnection, @httpServer, @socketServer }) ->
     console.log '[bugger] SocketChannel created'
 
-    @hiddenFilePatterns = []
+    @hiddenFilePatterns = [
+      new RegExp('^' + path.join(__dirname, '..', '..', 'lib') )
+      new RegExp('^' + path.join(__dirname, '..', '..', 'node_modules') )
+    ]
 
     debug.on 'break', @onPauseOrBreakpoint
 
     debug.on 'resumed', @onResumed
+
+    debug.on 'afterCompile', @onAfterCompile
 
     entryScript.proc.stdout.on 'data', (data) =>
       @console data, detectLogLevel(data, 'log')
@@ -167,6 +173,14 @@ class SocketChannel
         }
     else
       [{ type: 'program', location: { scriptId: 'internal' }, line: 0, id: 0, worldId: 1, scopeChain: [] }]
+
+  onAfterCompile: (afterCompileEvent) =>
+    args =
+      arguments:
+        includeSource: true
+        types: 4
+        ids: [afterCompileEvent.body.script.id]
+    debug.request 'scripts', args, @sendParsedScripts
 
   sendParsedScripts: (scriptsResponse) =>
     scripts = scriptsResponse.body.map (s) ->
