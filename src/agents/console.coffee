@@ -1,5 +1,5 @@
 
 module.exports = ConsoleAgent =
   enable: (cb) ->
-    console.log 'Console#enable'
+    # TODO: proper handling
     cb(null, true)

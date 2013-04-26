@@ -32,12 +32,12 @@ run = ->
   _chromeProc = null
 
   process.on 'exit', ->
-    console.log '[bugger] Cleanup on exit...'
+    console.error '[bugger] Cleanup on exit...'
     try _entryScriptProc.kill() if _entryScriptProc?
     try _chromeProc.kill() if _chromeProc?
 
   process.once 'uncaughtException', (e) ->
-    console.log '[bugger] Cleanup on exception...'
+    console.error '[bugger] Cleanup on exception...'
     try _entryScriptProc.kill() if _entryScriptProc?
     try _chromeProc.kill() if _chromeProc?
     throw e
@@ -48,13 +48,13 @@ run = ->
     # Start chrome with the correct url opened and less UI
     _chromeProc = forkChrome { webhost, webport, appUrl }
     _chromeProc.on 'exit', ->
-      console.log '[bugger] Chrome closed, exiting...'
+      console.error '[bugger] Chrome closed, exiting...'
       process.exit 0
 
   forkEntryScript {entryScript, scriptArgs, brk, debugPort}, (entryScriptProc) ->
     _entryScriptProc = entryScriptProc
     _entryScriptProc.on 'exit', ->
-      console.log '[bugger] Script finished, exiting...'
+      console.error '[bugger] Script finished, exiting...'
       process.exit 0
 
     # Create a proper debug client from the connection

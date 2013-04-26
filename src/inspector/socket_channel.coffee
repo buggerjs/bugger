@@ -7,7 +7,7 @@ _ = require 'underscore'
 
 entryScript = require '../forked/entry_script'
 
-{wrapperObject, logAndReturn} = require '../wrap_and_map'
+{wrapperObject} = require '../wrap_and_map'
 
 knownLogLevels =
   "debug": [ 'debug', 'silly' ]
@@ -30,8 +30,6 @@ detectLogLevel = (data, defaultLevel) ->
 
 class SocketChannel
   constructor: ({ @socketConnection, @httpServer, @socketServer }) ->
-    console.log '[bugger] SocketChannel created'
-
     @hiddenFilePatterns = [
       new RegExp('^' + path.join(__dirname, '..', '..', 'lib') )
       new RegExp('^' + path.join(__dirname, '..', '..', 'node_modules') )
@@ -72,7 +70,6 @@ class SocketChannel
   handleRequest: (msg) ->
     if msg.method
       [agentName, functionName] = msg.method.split('.')
-      console.log "[agents.handleRequest] #{agentName}##{functionName}"
 
       args = []
       if msg.params
@@ -87,25 +84,23 @@ class SocketChannel
 
       agents.invoke agentName, functionName, args
     else
-      console.log 'Unknown message from frontend:', msg
+      console.error '[bugger] Unknown message from frontend:', msg
 
   sendResponse: (seq, err, data={}) ->
     if @socketConnection
       @socketConnection.send(JSON.stringify id: seq, error: err, result: data)
     else
-      console.log 'Could not send response: ', req, data
+      console.error '[bugger] Could not send response: ', req, data
 
   dispatchEvent: (method, params={}) ->
     if @socketConnection
       @socketConnection.send(JSON.stringify {method, params})
     else
-      console.log 'Could not dispatch event: ', method, params
+      console.error '[bugger] Could not dispatch event: ', method, params
 
   syncBrowser: ->
     args = { arguments: { includeSource: true, types: 4 } }
-    console.log '[debug.request] scripts', args
     debug.request 'scripts', args, (scriptsResponse) =>
-      console.log '[debug.response] scripts'
       @sendParsedScripts scriptsResponse
       debug.request 'listbreakpoints', {}, (breakpointsResponse) =>
         breakpointsResponse.body.breakpoints.forEach (bp) =>

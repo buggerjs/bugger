@@ -5,19 +5,17 @@ debug = require '../debug-client'
 
 module.exports = DebuggerAgent =
   enable: (cb) ->
-    console.log 'Debbuger#enable'
     cb(null, true)
 
   disable: (cb) ->
-    console.log 'Debbuger#disable'
     cb(null, true)
 
   setPauseOnExceptions: ({state}, cb) ->
-    console.log 'Debugger#setPauseOnExceptions', arguments[0]
+    # TODO
     cb(null, true)
 
   setBreakpointsActive: ({active}, cb) ->
-    console.log 'Debugger#setBreakpointsActive', arguments[0]
+    # TODO
     cb(null, true)
 
   removeBreakpoint: ({breakpointId}, cb) ->
@@ -57,12 +55,10 @@ module.exports = DebuggerAgent =
           cb null, bp.breakpointId, bp.locations
 
   pause: (cb) ->
-    console.log 'Debugger#pause'
     debug.request 'suspend', {}, (msg) ->
       debug.emit 'break'
 
   resume: (cb) ->
-    console.log 'Debugger#resume'
     debug.request 'continue', {}, (msg) ->
       debug.emit 'resumed'
       cb(null, true)
@@ -98,9 +94,8 @@ module.exports = DebuggerAgent =
       new_source: scriptSource
 
     debug.request 'changelive', { arguments: args }, (msg) ->
-      # cb(error, callFrames)
       if msg.success
-        console.log "[Debugger.setScriptSource] #{scriptId}"
+        # TODO: is this the proper response?
         cb null, null
       else
         cb msg.message

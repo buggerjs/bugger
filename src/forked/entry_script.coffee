@@ -44,18 +44,6 @@ unless module.parent?
     else
       console.error "[bugger] Unknown message from parent: #{message.method}", message
 
-  process.on 'uncaughtException', (error) ->
-    process.send {
-      method: 'uncaughtException'
-      error: {
-        name: error.name
-        message: error.message
-        stack: error.stack
-        method: error.method
-        meta: error.meta
-      }
-    }
-
   # Dummy for keep-alive
   setTimeout (-> ), 5 # dummy
 
@@ -80,6 +68,8 @@ class EntryScriptWrapper extends EventEmitter
     1000)
 
     module.exports.proc = entryScriptProc
+    entryScriptProc.stdout.pipe process.stdout
+    entryScriptProc.stderr.pipe process.stderr
 
     backChannelHandlers =
       childReady: ->
@@ -101,9 +91,6 @@ class EntryScriptWrapper extends EventEmitter
 
       refCallback: ({callbackRef, args}) ->
         _probeCallbacks[callbackRef].apply null, args
-
-      uncaughtException: ({error}) ->
-        console.log 'Uncaught exception in child:', error
 
     entryScriptProc.on 'message', (message) ->
       if backChannelHandlers[message.method]?
