@@ -49,10 +49,6 @@ refToObject = (ref, frame=0, scope=0) ->
   
   wrapperObject ref.type, desc, kids, frame, scope, ref.handle, subtype
 
-logAndReturn = (expr) ->
-  console.log expr
-  expr
-
 wrapperObject = (type, description, hasChildren, frame, scope, ref, subtype) ->
   type: type
   subtype: subtype
@@ -79,8 +75,7 @@ toJSONValue = (objInfo, refs) ->
       properties
     when 'boolean' then objInfo.value
     else
-      console.log 'Unknown type: ', objInfo.type
-      console.log objInfo
+      console.error 'Unknown type: ', objInfo
       null
 
-module.exports = {toJSONValue, wrapperObject, logAndReturn, throwErr, expressionToHandle, handleToExpression, refToObject, makePropertyHandle}
+module.exports = {toJSONValue, wrapperObject, throwErr, expressionToHandle, handleToExpression, refToObject, makePropertyHandle}

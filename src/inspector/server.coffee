@@ -54,7 +54,7 @@ module.exports = Object.create EventEmitter.prototype, {
         }
 
       httpServer.on 'listening', ->
-        console.log "[bugger] Visit #{appUrl} to start debugging"
+        console.error "[bugger] Visit #{appUrl} to start debugging"
 
       httpServer.listen webport, webhost
 
