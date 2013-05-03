@@ -264,7 +264,7 @@ class InspectorBackendStub
       ignore: (functionName) ->
         _agent[functionName] = ->
         _agent[functionName].invoke = (args, callback) ->
-          console.log "Invoked the ignored function: #{agentName}##{functionName}"
+          console.warn "Invoked the ignored function: #{agentName}##{functionName}"
           callback()
         return ctx
 
@@ -286,7 +286,7 @@ class InspectorBackendStub
       return callbackId
 
   loadFromJSONIfNeeded: (jsonFile) ->
-    console.log 'InspectorBackend#loadFromJSONIfNeeded', { jsonFile }
+    # ignore
 
   _registerDelegate: (requestString) ->
       domainAndFunction = JSON.parse(requestString).method.split(".")
@@ -428,7 +428,7 @@ class InspectorBackendStub
               @runAfterPendingDispatches()
       else
         if messageObject.type is 'event'
-          console.log 'Event from socket.io: ', messageObject
+          console.error 'Unexpected event from socket.io: ', messageObject
           return
 
         [domainName, functionName] = messageObject.method.split(".")

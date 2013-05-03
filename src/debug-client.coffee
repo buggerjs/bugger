@@ -19,7 +19,7 @@ class DebugClient extends EventEmitter
     if @connected
       @connection.write "Content-Length: #{data.length}\r\n\r\n#{data}"
     else
-      console.log '[debug] Not connected'
+      console.error '[debug] Not connected'
 
   request: (command, params, requestCallback) ->
     messageObj = { seq: 0, type: 'request', command: command }

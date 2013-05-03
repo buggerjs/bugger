@@ -3,7 +3,7 @@ _ = require 'underscore'
 {prepareEvaluation} = require '../lang'
 debug = require '../debug-client'
 
-{toJSONValue, wrapperObject, logAndReturn, throwErr, expressionToHandle, handleToExpression, refToObject, makePropertyHandle} = require '../wrap_and_map'
+{toJSONValue, wrapperObject, throwErr, expressionToHandle, handleToExpression, refToObject, makePropertyHandle} = require '../wrap_and_map'
 
 LOOKUP_TIMEOUT = 2500
 
@@ -28,7 +28,6 @@ module.exports = RuntimeAgent =
       if languageMode isnt 'js'
         expression = prepareEvaluation 'js', expression
       else
-        console.log expression, parseError
         return throwErr cb, parseError.toString()
 
     args =
@@ -36,8 +35,6 @@ module.exports = RuntimeAgent =
       disable_break: doNotPauseOnExceptions
       global: true
       maxStringLength: 100000
-
-    console.log args
 
     debug.request 'evaluate', { arguments: args }, (result) ->
       if result.success
@@ -47,12 +44,9 @@ module.exports = RuntimeAgent =
         if returnByValue and not resolvedObj.value?
           resolvedObj.value = toJSONValue(result.body, result.refs)
 
-        console.log "Runtime.evaluate #{expression}"
         cb null, resolvedObj
       else
-        console.log result
         throwErr cb, result.message
-        cb null, result.message, true # was thrown
 
   callFunctionOn: (options, cb) ->
     {objectId, functionDeclaration, returnByValue} = options
@@ -73,7 +67,6 @@ module.exports = RuntimeAgent =
 
   getProperties: ({objectId, ownProperties}, cb) ->
     [frame, scope, ref] = objectId.split ':'
-    console.log "[Runtime.getProperties] Object id: #{objectId}"
 
     if ref is 'backtrace'
       # debug.request 'scope', { arguments: { number: scope, frameNumber: frame, inlineRefs: true } }, (msg) ->
@@ -88,7 +81,7 @@ module.exports = RuntimeAgent =
             r = refs[p.value.ref]
             { name: p.name, value: refToObject r }
         else
-          console.log '[debug.error] scope: ', msg
+          cb msg.message
     else
       # if ref is numeric, do a lookup. otherwise: evaluate
       handle = parseInt ref, 10
@@ -116,7 +109,6 @@ module.exports = RuntimeAgent =
 
             cb null, props
           else
-            console.log result
             cb result.message
       else
         timeout = setTimeout( ->
@@ -148,4 +140,4 @@ module.exports = RuntimeAgent =
                   value: refToObject refs[proto.ref]
             cb(null, props)
           else
-            console.log '[error] Runtime#getProperties', msg
+            cb msg.message
