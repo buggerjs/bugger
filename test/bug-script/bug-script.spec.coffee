@@ -49,25 +49,22 @@ describe 'forked', ->
 
     ['js', 'coffee'].forEach (extension) ->
       it "exposes output of #{extension}-scripts to the parent process", (done) ->
+        data = {}
+
         forkScript "examples/simple.#{extension}", ->
           forked.on 'debugConnection', ->
-            data = {}
+            calledOnce = false
+            checkOutput = ->
+              return if calledOnce
+              calledOnce = true
+              testAnyhowTimeout = null
+              expect(data.stderr).to.be "Log to stderr\n"
+              expect(data.stdout).to.be "Log to stdout\n"
+              done()
+
             ['stdout', 'stderr'].forEach (streamName) ->
               data[streamName] = ''
               forked[streamName].on 'data', (chunk) ->
                 data[streamName] += chunk.toString()
-
-            testAnyhowTimeout = null
-
-            checkOutput = ->
-              if testAnyhowTimeout?
-                clearTimeout(testAnyhowTimeout)
-                testAnyhowTimeout = null
-                expect(data.stderr).to.be "Log to stderr\n"
-                expect(data.stdout).to.be "Log to stdout\n"
-                done()
-
-            # Needed because node 0.8 will not terminate the child while a debug
-            # connection is open.
-            testAnyhowTimeout = setTimeout checkOutput, 400
-            forked.on 'exit', checkOutput
+                if data.stderr is "Log to stderr\n" and data.stdout is "Log to stdout\n"
+                  checkOutput()

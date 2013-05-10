@@ -5,22 +5,21 @@
 # {defaults} = require 'underscore'
 path = require 'path'
 
-class BackChannel
-  constructor: (@childProcess) ->
-    @buffer = ''
-    @connection = null
-    @childProcess.stderr.on 'data', @waitForDebugger
+openDebugConnection = (childProcess) ->
+  buffer = ''
 
-  waitForDebugger: (chunk) =>
-    @buffer += chunk.toString()
-    match = @buffer.match /debugger listening/
+  waitForDebugger = (chunk) ->
+    buffer += chunk.toString()
+    match = buffer.match /debugger listening/
     if match?
-      @childProcess.stderr.removeListener 'data', @waitForDebugger
-      @buffer = null
-
+      buffer = null
+      childProcess.stderr.removeListener 'data', waitForDebugger
       # connect to debug port port
-      @childProcess.debugConnection = connect @childProcess.debugPort, =>
-        @childProcess.emit 'debugConnection'
+      debugConnection = connect childProcess.debugPort, ->
+        childProcess.debugConnection = debugConnection
+        childProcess.emit 'debugConnection', debugConnection
+
+  childProcess.stderr.on 'data', waitForDebugger
 
 bugScript = (moduleName, childArgs..., cb) ->
   moduleName = "./#{moduleName}" unless moduleName[0] is '/'
@@ -45,8 +44,8 @@ bugScript = (moduleName, childArgs..., cb) ->
       stdio: ['pipe', 'pipe', 'pipe', 'ipc']
 
     forked = spawn process.argv[0], childArgs, options
-    forked.backChannel = new BackChannel(forked)
     forked.debugPort = debugPort
+    openDebugConnection forked
 
     cb(null, forked)
 
