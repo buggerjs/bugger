@@ -33,20 +33,20 @@ bugScript = (moduleName, childArgs..., cb) ->
   tmpServer.listen 0, ->
     debugPort = @address().port
     tmpServer.close()
+    tmpServer.on 'close', ->
+      childArgs = [
+        "--debug=#{debugPort}",
+        path.join(__dirname, 'child.js'),
+        moduleName
+      ].concat childArgs
 
-    childArgs = [
-      "--debug=#{debugPort}",
-      path.join(__dirname, 'child.js'),
-      moduleName
-    ].concat childArgs
+      options =
+        stdio: ['pipe', 'pipe', 'pipe', 'ipc']
 
-    options =
-      stdio: ['pipe', 'pipe', 'pipe', 'ipc']
+      forked = spawn process.argv[0], childArgs, options
+      forked.debugPort = debugPort
+      openDebugConnection forked
 
-    forked = spawn process.argv[0], childArgs, options
-    forked.debugPort = debugPort
-    openDebugConnection forked
-
-    cb(null, forked)
+      cb(null, forked)
 
 module.exports = bugScript
