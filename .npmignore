@@ -1,0 +1,7 @@
+test/
+src/
+examples/
+Makefile
+/test.*
+/node_modules
+.svn/
