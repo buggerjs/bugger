@@ -10,10 +10,13 @@ Module._sourceMaps ?= {}
 compilers =
   '.js':
     compile: (filename, code, cb) -> cb(null, { code, map: null })
-
     compileString: (input) -> input
 
-  '.coffee': require './compile/coffee'
+scriptContext = { compilers }
+
+['./probes/coffee'].forEach (probeModule) ->
+  {load} = require probeModule
+  load scriptContext
 
 realpath process.argv[1], (err, filename) ->
   throw err if err?

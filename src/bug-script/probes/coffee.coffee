@@ -14,4 +14,7 @@ compileString = (input) ->
   jsAst = coffee.compile csAst, bare: yes
   coffee.js(jsAst, 'repl', compact: yes)
 
-module.exports = {compile, compileString}
+load = (scriptContext) ->
+  scriptContext.compilers['.coffee'] = {compile, compileString}
+
+module.exports = {compile, compileString, load}

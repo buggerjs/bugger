@@ -62,6 +62,8 @@ describe 'forked', ->
               expect(data.stdout).to.be "Log to stdout\n"
               done()
 
+            setTimeout checkOutput, 1000
+
             ['stdout', 'stderr'].forEach (streamName) ->
               data[streamName] = ''
               forked[streamName].on 'data', (chunk) ->
