@@ -47,30 +47,27 @@ describe 'forked', ->
         expect(parseInt forked.debugPort).to.be.greaterThan 1000
         done()
 
-    it 'works with coffee-script files', (done) ->
-      forkScript 'examples/simple.coffee', ->
-        forked.on 'debugConnection', ->
-          data = {}
-          ['stdout', 'stderr'].forEach (streamName) ->
-            data[streamName] = ''
-            forked[streamName].on 'data', (chunk) ->
-              data[streamName] += chunk.toString()
+    ['js', 'coffee'].forEach (extension) ->
+      it "exposes output of #{extension}-scripts to the parent process", (done) ->
+        forkScript "examples/simple.#{extension}", ->
+          forked.on 'debugConnection', ->
+            data = {}
+            ['stdout', 'stderr'].forEach (streamName) ->
+              data[streamName] = ''
+              forked[streamName].on 'data', (chunk) ->
+                data[streamName] += chunk.toString()
 
-          forked.on 'exit', ->
-            expect(data.stderr).to.be "Log to stderr\n"
-            expect(data.stdout).to.be "Log to stdout\n"
-            done()
+            testAnyhowTimeout = null
 
-    it 'exposes stdout and stderr to the parent process', (done) ->
-      forkScript 'examples/simple.js', ->
-        forked.on 'debugConnection', ->
-          data = {}
-          ['stdout', 'stderr'].forEach (streamName) ->
-            data[streamName] = ''
-            forked[streamName].on 'data', (chunk) ->
-              data[streamName] += chunk.toString()
+            checkOutput = ->
+              if testAnyhowTimeout?
+                clearTimeout(testAnyhowTimeout)
+                testAnyhowTimeout = null
+                expect(data.stderr).to.be "Log to stderr\n"
+                expect(data.stdout).to.be "Log to stdout\n"
+                done()
 
-          forked.on 'exit', ->
-            expect(data.stderr).to.be "Log to stderr\n"
-            expect(data.stdout).to.be "Log to stdout\n"
-            done()
+            # Needed because node 0.8 will not terminate the child while a debug
+            # connection is open.
+            testAnyhowTimeout = setTimeout checkOutput, 400
+            forked.on 'exit', checkOutput
