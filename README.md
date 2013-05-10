@@ -1,5 +1,7 @@
 # bugger
 
+[![Build Status](https://travis-ci.org/jkrems/bugger.png)](https://travis-ci.org/jkrems/bugger)
+
 **Warning: Experimental**
 
 ## Installation
