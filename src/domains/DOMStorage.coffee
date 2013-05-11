@@ -29,27 +29,29 @@ module.exports = (agentContext) ->
     # Not implemented
 
   # @param storageId StorageId 
-  # @param key string 
-  DOMStorage.emit_removeDOMStorageItem = (params) ->
-    notification = {params, method: 'DOMStorage.removeDOMStorageItem'}
+  DOMStorage.emit_domStorageItemsCleared = (params) ->
+    notification = {params, method: 'DOMStorage.domStorageItemsCleared'}
     @emit 'notification', notification
 
   # @param storageId StorageId 
   # @param key string 
-  DOMStorage.emit_removeDOMStorageItem = (params) ->
-    notification = {params, method: 'DOMStorage.removeDOMStorageItem'}
+  DOMStorage.emit_domStorageItemRemoved = (params) ->
+    notification = {params, method: 'DOMStorage.domStorageItemRemoved'}
     @emit 'notification', notification
 
   # @param storageId StorageId 
   # @param key string 
-  DOMStorage.emit_removeDOMStorageItem = (params) ->
-    notification = {params, method: 'DOMStorage.removeDOMStorageItem'}
+  # @param newValue string 
+  DOMStorage.emit_domStorageItemAdded = (params) ->
+    notification = {params, method: 'DOMStorage.domStorageItemAdded'}
     @emit 'notification', notification
 
   # @param storageId StorageId 
   # @param key string 
-  DOMStorage.emit_removeDOMStorageItem = (params) ->
-    notification = {params, method: 'DOMStorage.removeDOMStorageItem'}
+  # @param oldValue string 
+  # @param newValue string 
+  DOMStorage.emit_domStorageItemUpdated = (params) ->
+    notification = {params, method: 'DOMStorage.domStorageItemUpdated'}
     @emit 'notification', notification
 
   # # Types

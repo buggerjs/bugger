@@ -33,24 +33,26 @@ module.exports = (agentContext) ->
   Worker.setAutoconnectToWorkers = ({value}, cb) ->
     # Not implemented
 
-  # @param value boolean 
-  Worker.emit_setAutoconnectToWorkers = (params) ->
-    notification = {params, method: 'Worker.setAutoconnectToWorkers'}
+  # @param workerId integer 
+  # @param url string 
+  # @param inspectorConnected boolean 
+  Worker.emit_workerCreated = (params) ->
+    notification = {params, method: 'Worker.workerCreated'}
     @emit 'notification', notification
 
-  # @param value boolean 
-  Worker.emit_setAutoconnectToWorkers = (params) ->
-    notification = {params, method: 'Worker.setAutoconnectToWorkers'}
+  # @param workerId integer 
+  Worker.emit_workerTerminated = (params) ->
+    notification = {params, method: 'Worker.workerTerminated'}
     @emit 'notification', notification
 
-  # @param value boolean 
-  Worker.emit_setAutoconnectToWorkers = (params) ->
-    notification = {params, method: 'Worker.setAutoconnectToWorkers'}
+  # @param workerId integer 
+  # @param message object 
+  Worker.emit_dispatchMessageFromWorker = (params) ->
+    notification = {params, method: 'Worker.dispatchMessageFromWorker'}
     @emit 'notification', notification
 
-  # @param value boolean 
-  Worker.emit_setAutoconnectToWorkers = (params) ->
-    notification = {params, method: 'Worker.setAutoconnectToWorkers'}
+  Worker.emit_disconnectedFromWorker = (params) ->
+    notification = {params, method: 'Worker.disconnectedFromWorker'}
     @emit 'notification', notification
 
 

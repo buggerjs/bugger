@@ -12,24 +12,28 @@ module.exports = (agentContext) ->
   Inspector.disable = ({}, cb) ->
     # Not implemented
 
-  # Disables inspector domain notifications.
-  Inspector.emit_disable = (params) ->
-    notification = {params, method: 'Inspector.disable'}
+  # @param testCallId integer 
+  # @param script string 
+  Inspector.emit_evaluateForTestInFrontend = (params) ->
+    notification = {params, method: 'Inspector.evaluateForTestInFrontend'}
     @emit 'notification', notification
 
-  # Disables inspector domain notifications.
-  Inspector.emit_disable = (params) ->
-    notification = {params, method: 'Inspector.disable'}
+  # @param object Runtime.RemoteObject 
+  # @param hints object 
+  Inspector.emit_inspect = (params) ->
+    notification = {params, method: 'Inspector.inspect'}
     @emit 'notification', notification
 
-  # Disables inspector domain notifications.
-  Inspector.emit_disable = (params) ->
-    notification = {params, method: 'Inspector.disable'}
+  # Fired when remote debugging connection is about to be terminated. Contains detach reason.
+  #
+  # @param reason string The reason why connection has been terminated.
+  Inspector.emit_detached = (params) ->
+    notification = {params, method: 'Inspector.detached'}
     @emit 'notification', notification
 
-  # Disables inspector domain notifications.
-  Inspector.emit_disable = (params) ->
-    notification = {params, method: 'Inspector.disable'}
+  # Fired when debugging target has crashed
+  Inspector.emit_targetCrashed = (params) ->
+    notification = {params, method: 'Inspector.targetCrashed'}
     @emit 'notification', notification
 
 

@@ -233,92 +233,76 @@ module.exports = (agentContext) ->
   Page.handleJavaScriptDialog = ({accept, promptText}, cb) ->
     # Not implemented
 
-  # Accepts or dismisses a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload).
-  #
-  # @param accept boolean Whether to accept or dismiss the dialog.
-  # @param promptText string? The text to enter into the dialog prompt before accepting. Used only if this is a prompt dialog.
-  Page.emit_handleJavaScriptDialog = (params) ->
-    notification = {params, method: 'Page.handleJavaScriptDialog'}
+  # @param timestamp number 
+  Page.emit_domContentEventFired = (params) ->
+    notification = {params, method: 'Page.domContentEventFired'}
     @emit 'notification', notification
 
-  # Accepts or dismisses a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload).
-  #
-  # @param accept boolean Whether to accept or dismiss the dialog.
-  # @param promptText string? The text to enter into the dialog prompt before accepting. Used only if this is a prompt dialog.
-  Page.emit_handleJavaScriptDialog = (params) ->
-    notification = {params, method: 'Page.handleJavaScriptDialog'}
+  # @param timestamp number 
+  Page.emit_loadEventFired = (params) ->
+    notification = {params, method: 'Page.loadEventFired'}
     @emit 'notification', notification
 
-  # Accepts or dismisses a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload).
+  # Fired once navigation of the frame has completed. Frame is now associated with the new loader.
   #
-  # @param accept boolean Whether to accept or dismiss the dialog.
-  # @param promptText string? The text to enter into the dialog prompt before accepting. Used only if this is a prompt dialog.
-  Page.emit_handleJavaScriptDialog = (params) ->
-    notification = {params, method: 'Page.handleJavaScriptDialog'}
+  # @param frame Frame Frame object.
+  Page.emit_frameNavigated = (params) ->
+    notification = {params, method: 'Page.frameNavigated'}
     @emit 'notification', notification
 
-  # Accepts or dismisses a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload).
+  # Fired when frame has been detached from its parent.
   #
-  # @param accept boolean Whether to accept or dismiss the dialog.
-  # @param promptText string? The text to enter into the dialog prompt before accepting. Used only if this is a prompt dialog.
-  Page.emit_handleJavaScriptDialog = (params) ->
-    notification = {params, method: 'Page.handleJavaScriptDialog'}
+  # @param frameId Network.FrameId Id of the frame that has been detached.
+  Page.emit_frameDetached = (params) ->
+    notification = {params, method: 'Page.frameDetached'}
     @emit 'notification', notification
 
-  # Accepts or dismisses a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload).
+  # Fired when frame has started loading.
   #
-  # @param accept boolean Whether to accept or dismiss the dialog.
-  # @param promptText string? The text to enter into the dialog prompt before accepting. Used only if this is a prompt dialog.
-  Page.emit_handleJavaScriptDialog = (params) ->
-    notification = {params, method: 'Page.handleJavaScriptDialog'}
+  # @param frameId Network.FrameId Id of the frame that has started loading.
+  Page.emit_frameStartedLoading = (params) ->
+    notification = {params, method: 'Page.frameStartedLoading'}
     @emit 'notification', notification
 
-  # Accepts or dismisses a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload).
+  # Fired when frame has stopped loading.
   #
-  # @param accept boolean Whether to accept or dismiss the dialog.
-  # @param promptText string? The text to enter into the dialog prompt before accepting. Used only if this is a prompt dialog.
-  Page.emit_handleJavaScriptDialog = (params) ->
-    notification = {params, method: 'Page.handleJavaScriptDialog'}
+  # @param frameId Network.FrameId Id of the frame that has stopped loading.
+  Page.emit_frameStoppedLoading = (params) ->
+    notification = {params, method: 'Page.frameStoppedLoading'}
     @emit 'notification', notification
 
-  # Accepts or dismisses a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload).
+  # Fired when frame schedules a potential navigation.
   #
-  # @param accept boolean Whether to accept or dismiss the dialog.
-  # @param promptText string? The text to enter into the dialog prompt before accepting. Used only if this is a prompt dialog.
-  Page.emit_handleJavaScriptDialog = (params) ->
-    notification = {params, method: 'Page.handleJavaScriptDialog'}
+  # @param frameId Network.FrameId Id of the frame that has scheduled a navigation.
+  # @param delay number Delay (in seconds) until the navigation is scheduled to begin. The navigation is not guaranteed to start.
+  Page.emit_frameScheduledNavigation = (params) ->
+    notification = {params, method: 'Page.frameScheduledNavigation'}
     @emit 'notification', notification
 
-  # Accepts or dismisses a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload).
+  # Fired when frame no longer has a scheduled navigation.
   #
-  # @param accept boolean Whether to accept or dismiss the dialog.
-  # @param promptText string? The text to enter into the dialog prompt before accepting. Used only if this is a prompt dialog.
-  Page.emit_handleJavaScriptDialog = (params) ->
-    notification = {params, method: 'Page.handleJavaScriptDialog'}
+  # @param frameId Network.FrameId Id of the frame that has cleared its scheduled navigation.
+  Page.emit_frameClearedScheduledNavigation = (params) ->
+    notification = {params, method: 'Page.frameClearedScheduledNavigation'}
     @emit 'notification', notification
 
-  # Accepts or dismisses a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload).
+  # Fired when a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload) is about to open.
   #
-  # @param accept boolean Whether to accept or dismiss the dialog.
-  # @param promptText string? The text to enter into the dialog prompt before accepting. Used only if this is a prompt dialog.
-  Page.emit_handleJavaScriptDialog = (params) ->
-    notification = {params, method: 'Page.handleJavaScriptDialog'}
+  # @param message string Message that will be displayed by the dialog.
+  Page.emit_javascriptDialogOpening = (params) ->
+    notification = {params, method: 'Page.javascriptDialogOpening'}
     @emit 'notification', notification
 
-  # Accepts or dismisses a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload).
-  #
-  # @param accept boolean Whether to accept or dismiss the dialog.
-  # @param promptText string? The text to enter into the dialog prompt before accepting. Used only if this is a prompt dialog.
-  Page.emit_handleJavaScriptDialog = (params) ->
-    notification = {params, method: 'Page.handleJavaScriptDialog'}
+  # Fired when a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload) has been closed.
+  Page.emit_javascriptDialogClosed = (params) ->
+    notification = {params, method: 'Page.javascriptDialogClosed'}
     @emit 'notification', notification
 
-  # Accepts or dismisses a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload).
+  # Fired when the JavaScript is enabled/disabled on the page
   #
-  # @param accept boolean Whether to accept or dismiss the dialog.
-  # @param promptText string? The text to enter into the dialog prompt before accepting. Used only if this is a prompt dialog.
-  Page.emit_handleJavaScriptDialog = (params) ->
-    notification = {params, method: 'Page.handleJavaScriptDialog'}
+  # @param isEnabled boolean Whether script execution is enabled or disabled on the page.
+  Page.emit_scriptsEnabled = (params) ->
+    notification = {params, method: 'Page.scriptsEnabled'}
     @emit 'notification', notification
 
   # # Types

@@ -246,92 +246,90 @@ module.exports = (agentContext) ->
   DOM.setFileInputFiles = ({nodeId, files}, cb) ->
     # Not implemented
 
-  # Sets files for the given file input element.
-  #
-  # @param nodeId NodeId Id of the file input node to set files for.
-  # @param files string[] Array of file paths to set.
-  DOM.emit_setFileInputFiles = (params) ->
-    notification = {params, method: 'DOM.setFileInputFiles'}
+  # Fired when <code>Document</code> has been totally updated. Node ids are no longer valid.
+  DOM.emit_documentUpdated = (params) ->
+    notification = {params, method: 'DOM.documentUpdated'}
     @emit 'notification', notification
 
-  # Sets files for the given file input element.
+  # Fired when backend wants to provide client with the missing DOM structure. This happens upon most of the calls requesting node ids.
   #
-  # @param nodeId NodeId Id of the file input node to set files for.
-  # @param files string[] Array of file paths to set.
-  DOM.emit_setFileInputFiles = (params) ->
-    notification = {params, method: 'DOM.setFileInputFiles'}
+  # @param parentId NodeId Parent node id to populate with children.
+  # @param nodes Node[] Child nodes array.
+  DOM.emit_setChildNodes = (params) ->
+    notification = {params, method: 'DOM.setChildNodes'}
     @emit 'notification', notification
 
-  # Sets files for the given file input element.
+  # Fired when <code>Element</code>'s attribute is modified.
   #
-  # @param nodeId NodeId Id of the file input node to set files for.
-  # @param files string[] Array of file paths to set.
-  DOM.emit_setFileInputFiles = (params) ->
-    notification = {params, method: 'DOM.setFileInputFiles'}
+  # @param nodeId NodeId Id of the node that has changed.
+  # @param name string Attribute name.
+  # @param value string Attribute value.
+  DOM.emit_attributeModified = (params) ->
+    notification = {params, method: 'DOM.attributeModified'}
     @emit 'notification', notification
 
-  # Sets files for the given file input element.
+  # Fired when <code>Element</code>'s attribute is removed.
   #
-  # @param nodeId NodeId Id of the file input node to set files for.
-  # @param files string[] Array of file paths to set.
-  DOM.emit_setFileInputFiles = (params) ->
-    notification = {params, method: 'DOM.setFileInputFiles'}
+  # @param nodeId NodeId Id of the node that has changed.
+  # @param name string A ttribute name.
+  DOM.emit_attributeRemoved = (params) ->
+    notification = {params, method: 'DOM.attributeRemoved'}
     @emit 'notification', notification
 
-  # Sets files for the given file input element.
+  # Fired when <code>Element</code>'s inline style is modified via a CSS property modification.
   #
-  # @param nodeId NodeId Id of the file input node to set files for.
-  # @param files string[] Array of file paths to set.
-  DOM.emit_setFileInputFiles = (params) ->
-    notification = {params, method: 'DOM.setFileInputFiles'}
+  # @param nodeIds NodeId[] Ids of the nodes for which the inline styles have been invalidated.
+  DOM.emit_inlineStyleInvalidated = (params) ->
+    notification = {params, method: 'DOM.inlineStyleInvalidated'}
     @emit 'notification', notification
 
-  # Sets files for the given file input element.
+  # Mirrors <code>DOMCharacterDataModified</code> event.
   #
-  # @param nodeId NodeId Id of the file input node to set files for.
-  # @param files string[] Array of file paths to set.
-  DOM.emit_setFileInputFiles = (params) ->
-    notification = {params, method: 'DOM.setFileInputFiles'}
+  # @param nodeId NodeId Id of the node that has changed.
+  # @param characterData string New text value.
+  DOM.emit_characterDataModified = (params) ->
+    notification = {params, method: 'DOM.characterDataModified'}
     @emit 'notification', notification
 
-  # Sets files for the given file input element.
+  # Fired when <code>Container</code>'s child node count has changed.
   #
-  # @param nodeId NodeId Id of the file input node to set files for.
-  # @param files string[] Array of file paths to set.
-  DOM.emit_setFileInputFiles = (params) ->
-    notification = {params, method: 'DOM.setFileInputFiles'}
+  # @param nodeId NodeId Id of the node that has changed.
+  # @param childNodeCount integer New node count.
+  DOM.emit_childNodeCountUpdated = (params) ->
+    notification = {params, method: 'DOM.childNodeCountUpdated'}
     @emit 'notification', notification
 
-  # Sets files for the given file input element.
+  # Mirrors <code>DOMNodeInserted</code> event.
   #
-  # @param nodeId NodeId Id of the file input node to set files for.
-  # @param files string[] Array of file paths to set.
-  DOM.emit_setFileInputFiles = (params) ->
-    notification = {params, method: 'DOM.setFileInputFiles'}
+  # @param parentNodeId NodeId Id of the node that has changed.
+  # @param previousNodeId NodeId If of the previous siblint.
+  # @param node Node Inserted node data.
+  DOM.emit_childNodeInserted = (params) ->
+    notification = {params, method: 'DOM.childNodeInserted'}
     @emit 'notification', notification
 
-  # Sets files for the given file input element.
+  # Mirrors <code>DOMNodeRemoved</code> event.
   #
-  # @param nodeId NodeId Id of the file input node to set files for.
-  # @param files string[] Array of file paths to set.
-  DOM.emit_setFileInputFiles = (params) ->
-    notification = {params, method: 'DOM.setFileInputFiles'}
+  # @param parentNodeId NodeId Parent id.
+  # @param nodeId NodeId Id of the node that has been removed.
+  DOM.emit_childNodeRemoved = (params) ->
+    notification = {params, method: 'DOM.childNodeRemoved'}
     @emit 'notification', notification
 
-  # Sets files for the given file input element.
+  # Called when shadow root is pushed into the element.
   #
-  # @param nodeId NodeId Id of the file input node to set files for.
-  # @param files string[] Array of file paths to set.
-  DOM.emit_setFileInputFiles = (params) ->
-    notification = {params, method: 'DOM.setFileInputFiles'}
+  # @param hostId NodeId Host element id.
+  # @param root Node Shadow root.
+  DOM.emit_shadowRootPushed = (params) ->
+    notification = {params, method: 'DOM.shadowRootPushed'}
     @emit 'notification', notification
 
-  # Sets files for the given file input element.
+  # Called when shadow root is popped from the element.
   #
-  # @param nodeId NodeId Id of the file input node to set files for.
-  # @param files string[] Array of file paths to set.
-  DOM.emit_setFileInputFiles = (params) ->
-    notification = {params, method: 'DOM.setFileInputFiles'}
+  # @param hostId NodeId Host element id.
+  # @param rootId NodeId Shadow root id.
+  DOM.emit_shadowRootPopped = (params) ->
+    notification = {params, method: 'DOM.shadowRootPopped'}
     @emit 'notification', notification
 
   # # Types

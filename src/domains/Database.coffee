@@ -25,10 +25,9 @@ module.exports = (agentContext) ->
   Database.executeSQL = ({databaseId, query}, cb) ->
     # Not implemented
 
-  # @param databaseId DatabaseId 
-  # @param query string 
-  Database.emit_executeSQL = (params) ->
-    notification = {params, method: 'Database.executeSQL'}
+  # @param database Database 
+  Database.emit_addDatabase = (params) ->
+    notification = {params, method: 'Database.addDatabase'}
     @emit 'notification', notification
 
   # # Types

@@ -32,19 +32,23 @@ module.exports = (agentContext) ->
   Console.addInspectedHeapObject = ({heapObjectId}, cb) ->
     # Not implemented
 
-  # @param heapObjectId integer 
-  Console.emit_addInspectedHeapObject = (params) ->
-    notification = {params, method: 'Console.addInspectedHeapObject'}
+  # Issued when new console message is added.
+  #
+  # @param message ConsoleMessage Console message that has been added.
+  Console.emit_messageAdded = (params) ->
+    notification = {params, method: 'Console.messageAdded'}
     @emit 'notification', notification
 
-  # @param heapObjectId integer 
-  Console.emit_addInspectedHeapObject = (params) ->
-    notification = {params, method: 'Console.addInspectedHeapObject'}
+  # Issued when subsequent message(s) are equal to the previous one(s).
+  #
+  # @param count integer New repeat count value.
+  Console.emit_messageRepeatCountUpdated = (params) ->
+    notification = {params, method: 'Console.messageRepeatCountUpdated'}
     @emit 'notification', notification
 
-  # @param heapObjectId integer 
-  Console.emit_addInspectedHeapObject = (params) ->
-    notification = {params, method: 'Console.addInspectedHeapObject'}
+  # Issued when console is cleared. This happens either upon <code>clearMessages</code> command or after page navigation.
+  Console.emit_messagesCleared = (params) ->
+    notification = {params, method: 'Console.messagesCleared'}
     @emit 'notification', notification
 
   # # Types

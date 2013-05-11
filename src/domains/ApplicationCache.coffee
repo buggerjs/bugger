@@ -28,18 +28,16 @@ module.exports = (agentContext) ->
   ApplicationCache.getApplicationCacheForFrame = ({frameId}, cb) ->
     # Not implemented
 
-  # Returns relevant application cache data for the document in given frame.
-  #
-  # @param frameId Network.FrameId Identifier of the frame containing document whose application cache is retrieved.
-  ApplicationCache.emit_getApplicationCacheForFrame = (params) ->
-    notification = {params, method: 'ApplicationCache.getApplicationCacheForFrame'}
+  # @param frameId Network.FrameId Identifier of the frame containing document whose application cache updated status.
+  # @param manifestURL string Manifest URL.
+  # @param status integer Updated application cache status.
+  ApplicationCache.emit_applicationCacheStatusUpdated = (params) ->
+    notification = {params, method: 'ApplicationCache.applicationCacheStatusUpdated'}
     @emit 'notification', notification
 
-  # Returns relevant application cache data for the document in given frame.
-  #
-  # @param frameId Network.FrameId Identifier of the frame containing document whose application cache is retrieved.
-  ApplicationCache.emit_getApplicationCacheForFrame = (params) ->
-    notification = {params, method: 'ApplicationCache.getApplicationCacheForFrame'}
+  # @param isNowOnline boolean 
+  ApplicationCache.emit_networkStateUpdated = (params) ->
+    notification = {params, method: 'ApplicationCache.networkStateUpdated'}
     @emit 'notification', notification
 
   # # Types

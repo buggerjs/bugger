@@ -73,9 +73,11 @@ module.exports = (agentContext) ->
   Runtime.disable = ({}, cb) ->
     # Not implemented
 
-  # Disables reporting of execution contexts creation.
-  Runtime.emit_disable = (params) ->
-    notification = {params, method: 'Runtime.disable'}
+  # Issued when new execution context is created.
+  #
+  # @param context ExecutionContextDescription A newly created execution contex.
+  Runtime.emit_executionContextCreated = (params) ->
+    notification = {params, method: 'Runtime.executionContextCreated'}
     @emit 'notification', notification
 
   # # Types

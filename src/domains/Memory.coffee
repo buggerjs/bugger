@@ -10,8 +10,9 @@ module.exports = (agentContext) ->
   Memory.getDOMCounters = ({}, cb) ->
     # Not implemented
 
-  Memory.emit_getDOMCounters = (params) ->
-    notification = {params, method: 'Memory.getDOMCounters'}
+  # @param chunk HeapSnapshotChunk A chunk of the serialized the snapshot.
+  Memory.emit_addNativeSnapshotChunk = (params) ->
+    notification = {params, method: 'Memory.addNativeSnapshotChunk'}
     @emit 'notification', notification
 
   # # Types

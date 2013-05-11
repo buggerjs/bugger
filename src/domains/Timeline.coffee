@@ -28,9 +28,11 @@ module.exports = (agentContext) ->
   Timeline.canMonitorMainThread = ({}, cb) ->
     # Not implemented
 
-  # Tells whether timeline agent supports main thread CPU utilization instrumentation.
-  Timeline.emit_canMonitorMainThread = (params) ->
-    notification = {params, method: 'Timeline.canMonitorMainThread'}
+  # Fired for every instrumentation event while timeline is started.
+  #
+  # @param record TimelineEvent Timeline event record data.
+  Timeline.emit_eventRecorded = (params) ->
+    notification = {params, method: 'Timeline.eventRecorded'}
     @emit 'notification', notification
 
   # # Types

@@ -135,39 +135,38 @@ module.exports = (agentContext) ->
   CSS.getNamedFlowCollection = ({documentNodeId}, cb) ->
     # Not implemented
 
-  # Returns the Named Flows from the document.
-  #
-  # @param documentNodeId DOM.NodeId The document node id for which to get the Named Flow Collection.
-  CSS.emit_getNamedFlowCollection = (params) ->
-    notification = {params, method: 'CSS.getNamedFlowCollection'}
+  # Fires whenever a MediaQuery result changes (for example, after a browser window has been resized.) The current implementation considers only viewport-dependent media features.
+  CSS.emit_mediaQueryResultChanged = (params) ->
+    notification = {params, method: 'CSS.mediaQueryResultChanged'}
     @emit 'notification', notification
 
-  # Returns the Named Flows from the document.
+  # Fired whenever a stylesheet is changed as a result of the client operation.
   #
-  # @param documentNodeId DOM.NodeId The document node id for which to get the Named Flow Collection.
-  CSS.emit_getNamedFlowCollection = (params) ->
-    notification = {params, method: 'CSS.getNamedFlowCollection'}
+  # @param styleSheetId StyleSheetId 
+  CSS.emit_styleSheetChanged = (params) ->
+    notification = {params, method: 'CSS.styleSheetChanged'}
     @emit 'notification', notification
 
-  # Returns the Named Flows from the document.
+  # Fires when a Named Flow is created.
   #
-  # @param documentNodeId DOM.NodeId The document node id for which to get the Named Flow Collection.
-  CSS.emit_getNamedFlowCollection = (params) ->
-    notification = {params, method: 'CSS.getNamedFlowCollection'}
+  # @param namedFlow NamedFlow The new Named Flow.
+  CSS.emit_namedFlowCreated = (params) ->
+    notification = {params, method: 'CSS.namedFlowCreated'}
     @emit 'notification', notification
 
-  # Returns the Named Flows from the document.
+  # Fires when a Named Flow is removed: has no associated content nodes and regions.
   #
-  # @param documentNodeId DOM.NodeId The document node id for which to get the Named Flow Collection.
-  CSS.emit_getNamedFlowCollection = (params) ->
-    notification = {params, method: 'CSS.getNamedFlowCollection'}
+  # @param documentNodeId DOM.NodeId The document node id.
+  # @param flowName string Identifier of the removed Named Flow.
+  CSS.emit_namedFlowRemoved = (params) ->
+    notification = {params, method: 'CSS.namedFlowRemoved'}
     @emit 'notification', notification
 
-  # Returns the Named Flows from the document.
+  # Fires when a Named Flow's layout may have changed.
   #
-  # @param documentNodeId DOM.NodeId The document node id for which to get the Named Flow Collection.
-  CSS.emit_getNamedFlowCollection = (params) ->
-    notification = {params, method: 'CSS.getNamedFlowCollection'}
+  # @param namedFlow NamedFlow The Named Flow whose layout may have changed.
+  CSS.emit_regionLayoutUpdated = (params) ->
+    notification = {params, method: 'CSS.regionLayoutUpdated'}
     @emit 'notification', notification
 
   # # Types

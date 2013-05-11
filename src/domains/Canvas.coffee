@@ -64,16 +64,19 @@ module.exports = (agentContext) ->
   Canvas.getResourceState = ({traceLogId, resourceId}, cb) ->
     # Not implemented
 
-  # @param traceLogId TraceLogId 
-  # @param resourceId ResourceId 
-  Canvas.emit_getResourceState = (params) ->
-    notification = {params, method: 'Canvas.getResourceState'}
+  # Fired when a canvas context has been created in the given frame. The context may not be instrumented (see hasUninstrumentedCanvases command).
+  #
+  # @param frameId Network.FrameId Identifier of the frame containing a canvas with a context.
+  Canvas.emit_contextCreated = (params) ->
+    notification = {params, method: 'Canvas.contextCreated'}
     @emit 'notification', notification
 
-  # @param traceLogId TraceLogId 
-  # @param resourceId ResourceId 
-  Canvas.emit_getResourceState = (params) ->
-    notification = {params, method: 'Canvas.getResourceState'}
+  # Fired when a set of trace logs were removed from the backend. If no parameters are given, all trace logs were removed.
+  #
+  # @param frameId Network.FrameId? If given, trace logs from the given frame were removed.
+  # @param traceLogId TraceLogId? If given, trace log with the given ID was removed.
+  Canvas.emit_traceLogsRemoved = (params) ->
+    notification = {params, method: 'Canvas.traceLogsRemoved'}
     @emit 'notification', notification
 
   # # Types

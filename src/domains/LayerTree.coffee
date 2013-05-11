@@ -26,11 +26,8 @@ module.exports = (agentContext) ->
   LayerTree.reasonsForCompositingLayer = ({layerId}, cb) ->
     # Not implemented
 
-  # Provides the reasons why the given layer was composited.
-  #
-  # @param layerId LayerId The id of the layer for which we want to get the reasons it was composited.
-  LayerTree.emit_reasonsForCompositingLayer = (params) ->
-    notification = {params, method: 'LayerTree.reasonsForCompositingLayer'}
+  LayerTree.emit_layerTreeDidChange = (params) ->
+    notification = {params, method: 'LayerTree.layerTreeDidChange'}
     @emit 'notification', notification
 
   # # Types

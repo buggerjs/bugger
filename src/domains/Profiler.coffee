@@ -67,34 +67,35 @@ module.exports = (agentContext) ->
   Profiler.getHeapObjectId = ({objectId}, cb) ->
     # Not implemented
 
-  # @param objectId Runtime.RemoteObjectId Identifier of the object to get heap object id for.
-  Profiler.emit_getHeapObjectId = (params) ->
-    notification = {params, method: 'Profiler.getHeapObjectId'}
+  # @param header ProfileHeader 
+  Profiler.emit_addProfileHeader = (params) ->
+    notification = {params, method: 'Profiler.addProfileHeader'}
     @emit 'notification', notification
 
-  # @param objectId Runtime.RemoteObjectId Identifier of the object to get heap object id for.
-  Profiler.emit_getHeapObjectId = (params) ->
-    notification = {params, method: 'Profiler.getHeapObjectId'}
+  # @param uid integer 
+  # @param chunk string 
+  Profiler.emit_addHeapSnapshotChunk = (params) ->
+    notification = {params, method: 'Profiler.addHeapSnapshotChunk'}
     @emit 'notification', notification
 
-  # @param objectId Runtime.RemoteObjectId Identifier of the object to get heap object id for.
-  Profiler.emit_getHeapObjectId = (params) ->
-    notification = {params, method: 'Profiler.getHeapObjectId'}
+  # @param uid integer 
+  Profiler.emit_finishHeapSnapshot = (params) ->
+    notification = {params, method: 'Profiler.finishHeapSnapshot'}
     @emit 'notification', notification
 
-  # @param objectId Runtime.RemoteObjectId Identifier of the object to get heap object id for.
-  Profiler.emit_getHeapObjectId = (params) ->
-    notification = {params, method: 'Profiler.getHeapObjectId'}
+  # @param isProfiling boolean 
+  Profiler.emit_setRecordingProfile = (params) ->
+    notification = {params, method: 'Profiler.setRecordingProfile'}
     @emit 'notification', notification
 
-  # @param objectId Runtime.RemoteObjectId Identifier of the object to get heap object id for.
-  Profiler.emit_getHeapObjectId = (params) ->
-    notification = {params, method: 'Profiler.getHeapObjectId'}
+  Profiler.emit_resetProfiles = (params) ->
+    notification = {params, method: 'Profiler.resetProfiles'}
     @emit 'notification', notification
 
-  # @param objectId Runtime.RemoteObjectId Identifier of the object to get heap object id for.
-  Profiler.emit_getHeapObjectId = (params) ->
-    notification = {params, method: 'Profiler.getHeapObjectId'}
+  # @param done integer 
+  # @param total integer 
+  Profiler.emit_reportHeapSnapshotProgress = (params) ->
+    notification = {params, method: 'Profiler.reportHeapSnapshotProgress'}
     @emit 'notification', notification
 
   # # Types

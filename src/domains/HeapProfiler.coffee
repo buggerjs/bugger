@@ -41,29 +41,30 @@ module.exports = (agentContext) ->
   HeapProfiler.getHeapObjectId = ({objectId}, cb) ->
     # Not implemented
 
-  # @param objectId Runtime.RemoteObjectId Identifier of the object to get heap object id for.
-  HeapProfiler.emit_getHeapObjectId = (params) ->
-    notification = {params, method: 'HeapProfiler.getHeapObjectId'}
+  # @param header ProfileHeader 
+  HeapProfiler.emit_addProfileHeader = (params) ->
+    notification = {params, method: 'HeapProfiler.addProfileHeader'}
     @emit 'notification', notification
 
-  # @param objectId Runtime.RemoteObjectId Identifier of the object to get heap object id for.
-  HeapProfiler.emit_getHeapObjectId = (params) ->
-    notification = {params, method: 'HeapProfiler.getHeapObjectId'}
+  # @param uid integer 
+  # @param chunk string 
+  HeapProfiler.emit_addHeapSnapshotChunk = (params) ->
+    notification = {params, method: 'HeapProfiler.addHeapSnapshotChunk'}
     @emit 'notification', notification
 
-  # @param objectId Runtime.RemoteObjectId Identifier of the object to get heap object id for.
-  HeapProfiler.emit_getHeapObjectId = (params) ->
-    notification = {params, method: 'HeapProfiler.getHeapObjectId'}
+  # @param uid integer 
+  HeapProfiler.emit_finishHeapSnapshot = (params) ->
+    notification = {params, method: 'HeapProfiler.finishHeapSnapshot'}
     @emit 'notification', notification
 
-  # @param objectId Runtime.RemoteObjectId Identifier of the object to get heap object id for.
-  HeapProfiler.emit_getHeapObjectId = (params) ->
-    notification = {params, method: 'HeapProfiler.getHeapObjectId'}
+  HeapProfiler.emit_resetProfiles = (params) ->
+    notification = {params, method: 'HeapProfiler.resetProfiles'}
     @emit 'notification', notification
 
-  # @param objectId Runtime.RemoteObjectId Identifier of the object to get heap object id for.
-  HeapProfiler.emit_getHeapObjectId = (params) ->
-    notification = {params, method: 'HeapProfiler.getHeapObjectId'}
+  # @param done integer 
+  # @param total integer 
+  HeapProfiler.emit_reportHeapSnapshotProgress = (params) ->
+    notification = {params, method: 'HeapProfiler.reportHeapSnapshotProgress'}
     @emit 'notification', notification
 
   # # Types

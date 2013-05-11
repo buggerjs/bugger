@@ -66,8 +66,8 @@ getCommandCode = (command, domainCtx) ->
   code += "    # Not implemented\n"
   code += "\n"
 
-getEventCode = (event, domainCtx) ->
-  {name, description, parameters, returns} = command
+getEventCode = (anEvent, domainCtx) ->
+  {name, description, parameters, returns} = anEvent
   {domain} = domainCtx
   parameters ?= []
   code  = ""
@@ -94,8 +94,8 @@ for domainDef in domains
   for command in commands
     code += getCommandCode command, domainDef
 
-  for event in events
-    code += getEventCode event, domainDef
+  for anEvent in events
+    code += getEventCode anEvent, domainDef
 
   if types? and types.length
     code += "  # # Types\n"

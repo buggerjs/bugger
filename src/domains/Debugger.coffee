@@ -187,70 +187,57 @@ module.exports = (agentContext) ->
   Debugger.setVariableValue = ({scopeNumber, variableName, newValue, callFrameId, functionObjectId}, cb) ->
     # Not implemented
 
-  # Changes value of variable in a callframe or a closure. Either callframe or function must be specified. Object-based scopes are not supported and must be mutated manually.
-  #
-  # @param scopeNumber integer 0-based number of scope as was listed in scope chain. Only 'local', 'closure' and 'catch' scope types are allowed. Other scopes could be manipulated manually.
-  # @param variableName string Variable name.
-  # @param newValue Runtime.CallArgument New variable value.
-  # @param callFrameId CallFrameId? Id of callframe that holds variable.
-  # @param functionObjectId Runtime.RemoteObjectId? Object id of closure (function) that holds variable.
-  Debugger.emit_setVariableValue = (params) ->
-    notification = {params, method: 'Debugger.setVariableValue'}
+  # Called when global has been cleared and debugger client should reset its state. Happens upon navigation or reload.
+  Debugger.emit_globalObjectCleared = (params) ->
+    notification = {params, method: 'Debugger.globalObjectCleared'}
     @emit 'notification', notification
 
-  # Changes value of variable in a callframe or a closure. Either callframe or function must be specified. Object-based scopes are not supported and must be mutated manually.
+  # Fired when virtual machine parses script. This event is also fired for all known and uncollected scripts upon enabling debugger.
   #
-  # @param scopeNumber integer 0-based number of scope as was listed in scope chain. Only 'local', 'closure' and 'catch' scope types are allowed. Other scopes could be manipulated manually.
-  # @param variableName string Variable name.
-  # @param newValue Runtime.CallArgument New variable value.
-  # @param callFrameId CallFrameId? Id of callframe that holds variable.
-  # @param functionObjectId Runtime.RemoteObjectId? Object id of closure (function) that holds variable.
-  Debugger.emit_setVariableValue = (params) ->
-    notification = {params, method: 'Debugger.setVariableValue'}
+  # @param scriptId ScriptId Identifier of the script parsed.
+  # @param url string URL or name of the script parsed (if any).
+  # @param startLine integer Line offset of the script within the resource with given URL (for script tags).
+  # @param startColumn integer Column offset of the script within the resource with given URL.
+  # @param endLine integer Last line of the script.
+  # @param endColumn integer Length of the last line of the script.
+  # @param isContentScript boolean? Determines whether this script is a user extension script.
+  # @param sourceMapURL string? URL of source map associated with script (if any).
+  # @param hasSourceURL boolean? True, if this script has sourceURL.
+  Debugger.emit_scriptParsed = (params) ->
+    notification = {params, method: 'Debugger.scriptParsed'}
     @emit 'notification', notification
 
-  # Changes value of variable in a callframe or a closure. Either callframe or function must be specified. Object-based scopes are not supported and must be mutated manually.
+  # Fired when virtual machine fails to parse the script.
   #
-  # @param scopeNumber integer 0-based number of scope as was listed in scope chain. Only 'local', 'closure' and 'catch' scope types are allowed. Other scopes could be manipulated manually.
-  # @param variableName string Variable name.
-  # @param newValue Runtime.CallArgument New variable value.
-  # @param callFrameId CallFrameId? Id of callframe that holds variable.
-  # @param functionObjectId Runtime.RemoteObjectId? Object id of closure (function) that holds variable.
-  Debugger.emit_setVariableValue = (params) ->
-    notification = {params, method: 'Debugger.setVariableValue'}
+  # @param url string URL of the script that failed to parse.
+  # @param scriptSource string Source text of the script that failed to parse.
+  # @param startLine integer Line offset of the script within the resource.
+  # @param errorLine integer Line with error.
+  # @param errorMessage string Parse error message.
+  Debugger.emit_scriptFailedToParse = (params) ->
+    notification = {params, method: 'Debugger.scriptFailedToParse'}
     @emit 'notification', notification
 
-  # Changes value of variable in a callframe or a closure. Either callframe or function must be specified. Object-based scopes are not supported and must be mutated manually.
+  # Fired when breakpoint is resolved to an actual script and location.
   #
-  # @param scopeNumber integer 0-based number of scope as was listed in scope chain. Only 'local', 'closure' and 'catch' scope types are allowed. Other scopes could be manipulated manually.
-  # @param variableName string Variable name.
-  # @param newValue Runtime.CallArgument New variable value.
-  # @param callFrameId CallFrameId? Id of callframe that holds variable.
-  # @param functionObjectId Runtime.RemoteObjectId? Object id of closure (function) that holds variable.
-  Debugger.emit_setVariableValue = (params) ->
-    notification = {params, method: 'Debugger.setVariableValue'}
+  # @param breakpointId BreakpointId Breakpoint unique identifier.
+  # @param location Location Actual breakpoint location.
+  Debugger.emit_breakpointResolved = (params) ->
+    notification = {params, method: 'Debugger.breakpointResolved'}
     @emit 'notification', notification
 
-  # Changes value of variable in a callframe or a closure. Either callframe or function must be specified. Object-based scopes are not supported and must be mutated manually.
+  # Fired when the virtual machine stopped on breakpoint or exception or any other stop criteria.
   #
-  # @param scopeNumber integer 0-based number of scope as was listed in scope chain. Only 'local', 'closure' and 'catch' scope types are allowed. Other scopes could be manipulated manually.
-  # @param variableName string Variable name.
-  # @param newValue Runtime.CallArgument New variable value.
-  # @param callFrameId CallFrameId? Id of callframe that holds variable.
-  # @param functionObjectId Runtime.RemoteObjectId? Object id of closure (function) that holds variable.
-  Debugger.emit_setVariableValue = (params) ->
-    notification = {params, method: 'Debugger.setVariableValue'}
+  # @param callFrames CallFrame[] Call stack the virtual machine stopped on.
+  # @param reason XHR|DOM|EventListener|exception|assert|CSPViolation|other Pause reason.
+  # @param data object? Object containing break-specific auxiliary properties.
+  Debugger.emit_paused = (params) ->
+    notification = {params, method: 'Debugger.paused'}
     @emit 'notification', notification
 
-  # Changes value of variable in a callframe or a closure. Either callframe or function must be specified. Object-based scopes are not supported and must be mutated manually.
-  #
-  # @param scopeNumber integer 0-based number of scope as was listed in scope chain. Only 'local', 'closure' and 'catch' scope types are allowed. Other scopes could be manipulated manually.
-  # @param variableName string Variable name.
-  # @param newValue Runtime.CallArgument New variable value.
-  # @param callFrameId CallFrameId? Id of callframe that holds variable.
-  # @param functionObjectId Runtime.RemoteObjectId? Object id of closure (function) that holds variable.
-  Debugger.emit_setVariableValue = (params) ->
-    notification = {params, method: 'Debugger.setVariableValue'}
+  # Fired when the virtual machine resumed execution.
+  Debugger.emit_resumed = (params) ->
+    notification = {params, method: 'Debugger.resumed'}
     @emit 'notification', notification
 
   # # Types

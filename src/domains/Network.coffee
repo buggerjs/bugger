@@ -64,102 +64,140 @@ module.exports = (agentContext) ->
   Network.setCacheDisabled = ({cacheDisabled}, cb) ->
     # Not implemented
 
-  # Toggles ignoring cache for each request. If <code>true</code>, cache will not be used.
+  # Fired when page is about to send HTTP request.
   #
-  # @param cacheDisabled boolean Cache disabled state.
-  Network.emit_setCacheDisabled = (params) ->
-    notification = {params, method: 'Network.setCacheDisabled'}
+  # @param requestId RequestId Request identifier.
+  # @param frameId FrameId Frame identifier.
+  # @param loaderId LoaderId Loader identifier.
+  # @param documentURL string URL of the document this request is loaded for.
+  # @param request Request Request data.
+  # @param timestamp Timestamp Timestamp.
+  # @param initiator Initiator Request initiator.
+  # @param redirectResponse Response? Redirect response data.
+  Network.emit_requestWillBeSent = (params) ->
+    notification = {params, method: 'Network.requestWillBeSent'}
     @emit 'notification', notification
 
-  # Toggles ignoring cache for each request. If <code>true</code>, cache will not be used.
+  # Fired if request ended up loading from cache.
   #
-  # @param cacheDisabled boolean Cache disabled state.
-  Network.emit_setCacheDisabled = (params) ->
-    notification = {params, method: 'Network.setCacheDisabled'}
+  # @param requestId RequestId Request identifier.
+  Network.emit_requestServedFromCache = (params) ->
+    notification = {params, method: 'Network.requestServedFromCache'}
     @emit 'notification', notification
 
-  # Toggles ignoring cache for each request. If <code>true</code>, cache will not be used.
+  # Fired when HTTP response is available.
   #
-  # @param cacheDisabled boolean Cache disabled state.
-  Network.emit_setCacheDisabled = (params) ->
-    notification = {params, method: 'Network.setCacheDisabled'}
+  # @param requestId RequestId Request identifier.
+  # @param frameId FrameId Frame identifier.
+  # @param loaderId LoaderId Loader identifier.
+  # @param timestamp Timestamp Timestamp.
+  # @param type Page.ResourceType Resource type.
+  # @param response Response Response data.
+  Network.emit_responseReceived = (params) ->
+    notification = {params, method: 'Network.responseReceived'}
     @emit 'notification', notification
 
-  # Toggles ignoring cache for each request. If <code>true</code>, cache will not be used.
+  # Fired when data chunk was received over the network.
   #
-  # @param cacheDisabled boolean Cache disabled state.
-  Network.emit_setCacheDisabled = (params) ->
-    notification = {params, method: 'Network.setCacheDisabled'}
+  # @param requestId RequestId Request identifier.
+  # @param timestamp Timestamp Timestamp.
+  # @param dataLength integer Data chunk length.
+  # @param encodedDataLength integer Actual bytes received (might be less than dataLength for compressed encodings).
+  Network.emit_dataReceived = (params) ->
+    notification = {params, method: 'Network.dataReceived'}
     @emit 'notification', notification
 
-  # Toggles ignoring cache for each request. If <code>true</code>, cache will not be used.
+  # Fired when HTTP request has finished loading.
   #
-  # @param cacheDisabled boolean Cache disabled state.
-  Network.emit_setCacheDisabled = (params) ->
-    notification = {params, method: 'Network.setCacheDisabled'}
+  # @param requestId RequestId Request identifier.
+  # @param timestamp Timestamp Timestamp.
+  # @param sourceMapURL string? URL of source map associated with this resource (if any).
+  Network.emit_loadingFinished = (params) ->
+    notification = {params, method: 'Network.loadingFinished'}
     @emit 'notification', notification
 
-  # Toggles ignoring cache for each request. If <code>true</code>, cache will not be used.
+  # Fired when HTTP request has failed to load.
   #
-  # @param cacheDisabled boolean Cache disabled state.
-  Network.emit_setCacheDisabled = (params) ->
-    notification = {params, method: 'Network.setCacheDisabled'}
+  # @param requestId RequestId Request identifier.
+  # @param timestamp Timestamp Timestamp.
+  # @param errorText string User friendly error message.
+  # @param canceled boolean? True if loading was canceled.
+  Network.emit_loadingFailed = (params) ->
+    notification = {params, method: 'Network.loadingFailed'}
     @emit 'notification', notification
 
-  # Toggles ignoring cache for each request. If <code>true</code>, cache will not be used.
+  # Fired when HTTP request has been served from memory cache.
   #
-  # @param cacheDisabled boolean Cache disabled state.
-  Network.emit_setCacheDisabled = (params) ->
-    notification = {params, method: 'Network.setCacheDisabled'}
+  # @param requestId RequestId Request identifier.
+  # @param frameId FrameId Frame identifier.
+  # @param loaderId LoaderId Loader identifier.
+  # @param documentURL string URL of the document this request is loaded for.
+  # @param timestamp Timestamp Timestamp.
+  # @param initiator Initiator Request initiator.
+  # @param resource CachedResource Cached resource data.
+  Network.emit_requestServedFromMemoryCache = (params) ->
+    notification = {params, method: 'Network.requestServedFromMemoryCache'}
     @emit 'notification', notification
 
-  # Toggles ignoring cache for each request. If <code>true</code>, cache will not be used.
+  # Fired when WebSocket is about to initiate handshake.
   #
-  # @param cacheDisabled boolean Cache disabled state.
-  Network.emit_setCacheDisabled = (params) ->
-    notification = {params, method: 'Network.setCacheDisabled'}
+  # @param requestId RequestId Request identifier.
+  # @param timestamp Timestamp Timestamp.
+  # @param request WebSocketRequest WebSocket request data.
+  Network.emit_webSocketWillSendHandshakeRequest = (params) ->
+    notification = {params, method: 'Network.webSocketWillSendHandshakeRequest'}
     @emit 'notification', notification
 
-  # Toggles ignoring cache for each request. If <code>true</code>, cache will not be used.
+  # Fired when WebSocket handshake response becomes available.
   #
-  # @param cacheDisabled boolean Cache disabled state.
-  Network.emit_setCacheDisabled = (params) ->
-    notification = {params, method: 'Network.setCacheDisabled'}
+  # @param requestId RequestId Request identifier.
+  # @param timestamp Timestamp Timestamp.
+  # @param response WebSocketResponse WebSocket response data.
+  Network.emit_webSocketHandshakeResponseReceived = (params) ->
+    notification = {params, method: 'Network.webSocketHandshakeResponseReceived'}
     @emit 'notification', notification
 
-  # Toggles ignoring cache for each request. If <code>true</code>, cache will not be used.
+  # Fired upon WebSocket creation.
   #
-  # @param cacheDisabled boolean Cache disabled state.
-  Network.emit_setCacheDisabled = (params) ->
-    notification = {params, method: 'Network.setCacheDisabled'}
+  # @param requestId RequestId Request identifier.
+  # @param url string WebSocket request URL.
+  Network.emit_webSocketCreated = (params) ->
+    notification = {params, method: 'Network.webSocketCreated'}
     @emit 'notification', notification
 
-  # Toggles ignoring cache for each request. If <code>true</code>, cache will not be used.
+  # Fired when WebSocket is closed.
   #
-  # @param cacheDisabled boolean Cache disabled state.
-  Network.emit_setCacheDisabled = (params) ->
-    notification = {params, method: 'Network.setCacheDisabled'}
+  # @param requestId RequestId Request identifier.
+  # @param timestamp Timestamp Timestamp.
+  Network.emit_webSocketClosed = (params) ->
+    notification = {params, method: 'Network.webSocketClosed'}
     @emit 'notification', notification
 
-  # Toggles ignoring cache for each request. If <code>true</code>, cache will not be used.
+  # Fired when WebSocket frame is received.
   #
-  # @param cacheDisabled boolean Cache disabled state.
-  Network.emit_setCacheDisabled = (params) ->
-    notification = {params, method: 'Network.setCacheDisabled'}
+  # @param requestId RequestId Request identifier.
+  # @param timestamp Timestamp Timestamp.
+  # @param response WebSocketFrame WebSocket response data.
+  Network.emit_webSocketFrameReceived = (params) ->
+    notification = {params, method: 'Network.webSocketFrameReceived'}
     @emit 'notification', notification
 
-  # Toggles ignoring cache for each request. If <code>true</code>, cache will not be used.
+  # Fired when WebSocket frame error occurs.
   #
-  # @param cacheDisabled boolean Cache disabled state.
-  Network.emit_setCacheDisabled = (params) ->
-    notification = {params, method: 'Network.setCacheDisabled'}
+  # @param requestId RequestId Request identifier.
+  # @param timestamp Timestamp Timestamp.
+  # @param errorMessage string WebSocket frame error message.
+  Network.emit_webSocketFrameError = (params) ->
+    notification = {params, method: 'Network.webSocketFrameError'}
     @emit 'notification', notification
 
-  # Toggles ignoring cache for each request. If <code>true</code>, cache will not be used.
+  # Fired when WebSocket frame is sent.
   #
-  # @param cacheDisabled boolean Cache disabled state.
-  Network.emit_setCacheDisabled = (params) ->
-    notification = {params, method: 'Network.setCacheDisabled'}
+  # @param requestId RequestId Request identifier.
+  # @param timestamp Timestamp Timestamp.
+  # @param response WebSocketFrame WebSocket response data.
+  Network.emit_webSocketFrameSent = (params) ->
+    notification = {params, method: 'Network.webSocketFrameSent'}
     @emit 'notification', notification
 
   # # Types
