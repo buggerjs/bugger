@@ -1,0 +1,58 @@
+# Domain bindings for Console
+{EventEmitter} = require 'events'
+
+module.exports = (agentContext) ->
+  Console = new EventEmitter()
+
+  # Enables console domain, sends the messages collected so far to the client by means of the <code>messageAdded</code> notification.
+  Console.enable = ({}, cb) ->
+    # Not implemented
+
+  # Disables console domain, prevents further console messages from being reported to the client.
+  Console.disable = ({}, cb) ->
+    # Not implemented
+
+  # Clears console messages collected in the browser.
+  Console.clearMessages = ({}, cb) ->
+    # Not implemented
+
+  # Toggles monitoring of XMLHttpRequest. If <code>true</code>, console will receive messages upon each XHR issued.
+  #
+  # @param enabled boolean Monitoring enabled state.
+  Console.setMonitoringXHREnabled = ({enabled}, cb) ->
+    # Not implemented
+
+  # Enables console to refer to the node with given id via $x (see Command Line API for more details $x functions).
+  #
+  # @param nodeId DOM.NodeId DOM node id to be accessible by means of $x command line API.
+  Console.addInspectedNode = ({nodeId}, cb) ->
+    # Not implemented
+
+  # @param heapObjectId integer 
+  Console.addInspectedHeapObject = ({heapObjectId}, cb) ->
+    # Not implemented
+
+  # @param heapObjectId integer 
+  Console.emit_addInspectedHeapObject = (params) ->
+    notification = {params, method: 'Console.addInspectedHeapObject'}
+    @emit 'notification', notification
+
+  # @param heapObjectId integer 
+  Console.emit_addInspectedHeapObject = (params) ->
+    notification = {params, method: 'Console.addInspectedHeapObject'}
+    @emit 'notification', notification
+
+  # @param heapObjectId integer 
+  Console.emit_addInspectedHeapObject = (params) ->
+    notification = {params, method: 'Console.addInspectedHeapObject'}
+    @emit 'notification', notification
+
+  # # Types
+  # Console message.
+  Console.ConsoleMessage = {"id":"ConsoleMessage","type":"object","description":"Console message.","properties":[{"name":"source","type":"string","enum":["xml","javascript","network","console-api","storage","appcache","rendering","css","security","other"],"description":"Message source."},{"name":"level","type":"string","enum":["log","warning","error","debug"],"description":"Message severity."},{"name":"text","type":"string","description":"Message text."},{"name":"type","type":"string","optional":true,"enum":["log","dir","dirxml","table","trace","clear","startGroup","startGroupCollapsed","endGroup","assert","timing","profile","profileEnd"],"description":"Console message type."},{"name":"url","type":"string","optional":true,"description":"URL of the message origin."},{"name":"line","type":"integer","optional":true,"description":"Line number in the resource that generated this message."},{"name":"column","type":"integer","optional":true,"description":"Column number on the line in the resource that generated this message."},{"name":"repeatCount","type":"integer","optional":true,"description":"Repeat count for repeated messages."},{"name":"parameters","type":"array","items":{"$ref":"Runtime.RemoteObject"},"optional":true,"description":"Message parameters in case of the formatted message."},{"name":"stackTrace","$ref":"StackTrace","optional":true,"description":"JavaScript stack trace for assertions and error messages."},{"name":"networkRequestId","$ref":"Network.RequestId","optional":true,"description":"Identifier of the network request associated with this message."}]}
+  # Stack entry for console errors and assertions.
+  Console.CallFrame = {"id":"CallFrame","type":"object","description":"Stack entry for console errors and assertions.","properties":[{"name":"functionName","type":"string","description":"JavaScript function name."},{"name":"url","type":"string","description":"JavaScript script name or url."},{"name":"lineNumber","type":"integer","description":"JavaScript script line number."},{"name":"columnNumber","type":"integer","description":"JavaScript script column number."}]}
+  # Call frames for assertions or error messages.
+  Console.StackTrace = {"id":"StackTrace","type":"array","items":{"$ref":"CallFrame"},"description":"Call frames for assertions or error messages."}
+
+  return Console

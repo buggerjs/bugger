@@ -1,6 +1,7 @@
 test/
 src/
 examples/
+scripts/
 Makefile
 /test.*
 /node_modules

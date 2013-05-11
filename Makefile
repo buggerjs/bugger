@@ -21,9 +21,12 @@ docs:
 clean:
 	@rm $(LIB)
 
+src/inspector.json:
+	curl http://trac.webkit.org/browser/trunk/Source/WebCore/inspector/Inspector.json\?format=txt >$@
+
 lib/%.js: src/%.coffee
 	@echo "[coffee] "$<
-	dirname "$@" | xargs mkdir -p
+	@dirname "$@" | xargs mkdir -p
 	@$(COFFEE) -i "$<" >"$(@:%=%.tmp)" && mv "$(@:%=%.tmp)" "$@"
 
 .PHONY : test

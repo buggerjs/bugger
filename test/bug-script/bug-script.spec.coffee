@@ -8,10 +8,6 @@ describe 'forked', ->
     forked = null
 
     forkScript = (moduleName, childArgs..., cb) ->
-      # if arguments.length == 2
-      #   cb = childArgs
-      #   childArgs = []
-
       _bugScript moduleName, childArgs..., (err, _forked) ->
         throw err if err?
         forked = _forked
