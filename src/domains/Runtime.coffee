@@ -11,6 +11,7 @@ module.exports = ({debugClient}) ->
 
     lastObjectId = 0
     objects = {}
+    properties = {}
 
     registerObject = (obj, {expression, global, frame}) ->
       return obj unless obj.objectId?
@@ -18,23 +19,38 @@ module.exports = ({debugClient}) ->
       global ?= !frame?
       objects[objectId] = {expression, global, frame}
       obj.objectId = objectId
+      properties[objectId] = obj.properties?.map (property) ->
+        propExpr = "(#{expression})[#{JSON.stringify property.name}]"
+        {
+          name: property.name
+          value: registerObject property.value, {global, frame, expression: propExpr}
+        }
       obj
+
+    getObjectProperties = (objectId) ->
+      properties[objectId]
 
     releaseAll = ->
       lastObjectId = 0
       objects = {}
+      properties = {}
 
     releaseObject = (objectId) ->
       delete objects[objectId]
+      delete properties[objectId]
 
     resolveObjectId = (objectId) ->
-      objects[objectId].expression
+      objects[objectId]
 
-    objectGroups[name] = {registerObject, releaseAll, releaseObject, resolveObjectId}
+    objectGroups[name] = {registerObject, releaseAll, releaseObject, resolveObjectId, getObjectProperties}
 
   resolveManagedObjectId = (objectId) ->
     groupName = objectId.split('::')[0]
     getObjectGroup(groupName).resolveObjectId objectId
+
+  getManagedObjectProperties = (objectId) ->
+    groupName = objectId.split('::')[0]
+    getObjectGroup(groupName).getObjectProperties objectId
 
   # Parses JavaScript source code for errors.
   #
@@ -82,7 +98,7 @@ module.exports = ({debugClient}) ->
     argExpressions = []
 
     if 0 < objectId.indexOf '::'
-      argExpressions.push resolveManagedObjectId(objectId)
+      argExpressions.push resolveManagedObjectId(objectId).expression
     else
       additional_context.push { name: '$objectCtx', handle: parseInt(objectId) }
       argExpressions.push '$objectCtx'
@@ -103,9 +119,14 @@ module.exports = ({debugClient}) ->
   # @returns result PropertyDescriptor[] Object properties.
   # @returns internalProperties InternalPropertyDescriptor[]? Internal object properties.
   Runtime.getProperties = ({objectId, ownProperties}, cb) ->
-    debugClient.lookup { handles: [objectId], includeSource: false, inlineRefs: true }, (err, objectMap) ->
-      return cb(err) if err?
-      cb null, result: objectMap[objectId].properties
+    if 0 < objectId.indexOf '::'
+      properties = getManagedObjectProperties objectId
+      properties ?= []
+      cb null, result: properties
+    else
+      debugClient.lookup { handles: [objectId], includeSource: false, inlineRefs: true }, (err, objectMap) ->
+        return cb(err) if err?
+        cb null, result: objectMap[objectId].properties
 
   # Releases remote object with given id.
   #
