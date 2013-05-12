@@ -7,7 +7,7 @@ coffee.register()
 compile = (filename, input, cb) ->
   csAst = coffee.parse input, raw: yes
   jsAst = coffee.compile csAst, bare: yes
-  {code, map} = coffee.jsWithSourceMap jsAst, filename, compact: yes
+  {code, map} = coffee.jsWithSourceMap jsAst, filename
 
   cb null, {code, map}
 
