@@ -111,8 +111,8 @@ module.exports = debugClient = (debugConnection) ->
   registerEvent 'scriptCollected', (refs) -> ({script}) ->
     { scriptId: script.id }
 
-  registerEvent 'exception', (refs) -> (body) ->
-    body
+  registerEvent 'exception', (refs) -> ({uncaught, exception}) ->
+    { uncaught, exception: (mapValue(refs) exception) }
 
   # The request continue is a request from the debugger to start the VM
   # running again. As part of the continue request the debugger can specify if

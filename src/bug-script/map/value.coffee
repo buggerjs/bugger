@@ -116,5 +116,18 @@ module.exports = (refs) ->
       objectDefaults {
         type: 'object'
       }
+    else if body.type is 'error'
+      {
+        type: 'object'
+        className: body.className
+        description: body.text
+        value: null
+        properties: body.properties.map (property) ->
+          unless property.value
+            property.value = refs[property.ref] ? property
+
+          name: property.name?.toString()
+          value: mapValue(property.value, ++depth)
+      }
     else
       { type: 'object', objectId: body.handle }

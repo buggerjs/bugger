@@ -1,6 +1,8 @@
 # Domain bindings for Debugger
 {EventEmitter} = require 'events'
 
+{parallel} = require 'async'
+
 module.exports = ({debugClient}) ->
   Debugger = new EventEmitter()
 
@@ -11,6 +13,11 @@ module.exports = ({debugClient}) ->
       return null if err?
       {callFrames} = data
       Debugger.emit_paused {callFrames, reason: 'other'}
+
+  handleException = ({exception, uncaught}) ->
+    debugClient.backtrace {inlineRefs: true}, (err, data) ->
+      callFrames = data?.callFrames ? []
+      Debugger.emit_paused {callFrames, reason: 'exception', data: exception}
 
   # Tells whether enabling debugger causes scripts recompilation.
   #
@@ -27,6 +34,7 @@ module.exports = ({debugClient}) ->
   # Enables debugger for the given page. Clients should not assume that the debugging has been enabled until the result for this command is received.
   Debugger.enable = ({}, cb) ->
     debugClient.on 'break', handleBreakEvent
+    debugClient.on 'exception', handleException
 
     debugClient.scripts {includeSource: true}, (err, scripts) ->
       handleBreakEvent() unless debugClient.running
@@ -176,7 +184,11 @@ module.exports = ({debugClient}) ->
   #
   # @param state none|uncaught|all Pause on exceptions mode.
   Debugger.setPauseOnExceptions = ({state}, cb) ->
-    # Not implemented
+    tasks = [
+      (cb) -> debugClient.setexceptionbreak {type: 'all', enabled: state is 'all'}
+      (cb) -> debugClient.setexceptionbreak {type: 'uncaught', enabled: state is 'uncaught'}
+    ]
+    parallel tasks, cb
 
   # Evaluates expression on a given call frame.
   #
