@@ -127,7 +127,9 @@ module.exports = debugClient = (debugConnection) ->
       type: 'request'
       command: command
       seq: wrapCallback(cb)
-      arguments: params
+
+    if Object.keys(params).length > 0
+      messageObj.arguments = params
 
     sendString JSON.stringify messageObj
 
@@ -164,6 +166,13 @@ module.exports = debugClient = (debugConnection) ->
     mapScript(refs) script
 
   registerEvent 'break'
+
+  # Script is no longer active (?)
+  registerEvent 'scriptCollected', (refs) -> ({script}) ->
+    { scriptId: script.id }
+
+  registerEvent 'exception', (refs) -> (body) ->
+    body
 
   # The request continue is a request from the debugger to start the VM
   # running again. As part of the continue request the debugger can specify if
