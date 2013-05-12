@@ -24,10 +24,13 @@ module.exports = ({debugClient}) ->
       lastObjectId = 0
       objects = {}
 
+    releaseObject = (objectId) ->
+      delete objects[objectId]
+
     resolveObjectId = (objectId) ->
       objects[objectId].expression
 
-    objectGroups[name] = {registerObject, releaseAll, resolveObjectId}
+    objectGroups[name] = {registerObject, releaseAll, releaseObject, resolveObjectId}
 
   resolveManagedObjectId = (objectId) ->
     groupName = objectId.split('::')[0]
@@ -108,13 +111,17 @@ module.exports = ({debugClient}) ->
   #
   # @param objectId RemoteObjectId Identifier of the object to release.
   Runtime.releaseObject = ({objectId}, cb) ->
-    # Not implemented
+    if 0 < objectId.indexOf '::'
+      [objectGroup] = objectId.split '::'
+      getObjectGroup(objectGroup).releaseObject objectId
+    cb()
 
   # Releases all remote objects that belong to a given group.
   #
   # @param objectGroup string Symbolic object group name.
   Runtime.releaseObjectGroup = ({objectGroup}, cb) ->
-    # Not implemented
+    getObjectGroup(objectGroup).releaseAll()
+    cb()
 
   # Tells inspected instance(worker or page) that it can run in case it was started paused.
   Runtime.run = ({}, cb) ->
