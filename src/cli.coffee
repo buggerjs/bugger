@@ -1,63 +1,45 @@
-# # cli.coffee
-# 
-# Main entry point for the cli application
+# We use optimist for parsing the CLI arguments
+argvParser = require('optimist')
+.usage(
+  'bugger [OPTIONS] FILE_NAME'
+).options(
+  version:
+    alias: 'v'
+    describe: 'Just show version information'
+    boolean: true
+  help:
+    alias: 'h'
+    describe: 'Show this text'
+    boolean: true
+  brk:
+    describe: 'Break on first line of script'
+    boolean: true,
+    default: true
+  webhost:
+    default: '127.0.0.1'
+    describe: 'Web host used by node-inspector'
+  webport:
+    default: 8058
+    describe: 'Web port used by node-inspector'
+)
 
-forkChrome = require './forked/chrome'
-{forkEntryScript} = require './forked/entry_script'
+argv = argvParser.argv
 
-inspectorServer = require './inspector/server'
+if argv.version
+  console.log require('../package.json').version
+  process.exit 0
 
-Module = require 'module'
+if argv.help
+  argvParser.showHelp()
+  process.exit 0
 
-run = ->
-  argv = require './argv'
-  {chrome, brk, webhost, webport} = argv
-  debugPort = argv['debugport']
+unless argv._.length
+  argvParser.showHelp()
+  process.exit 1
 
-  # Make sure node knows about the additional script parsers
-  require './lang'
+# debugBreak = true, webport = 8058, webhost = '127.0.0.1'
+bugger = require('./bugger')(argv.brk, argv.webport, argv.webhost)
+script = argv._.shift()
+scriptArgs = argv._
 
-  # Resolve the entry script to a full filename
-  entryScriptArg = argv._.shift()
-  entryScript =
-    try
-      Module._resolveFilename entryScriptArg
-    catch err
-      throw err if entryScriptArg[0] is '/'
-      Module._resolveFilename "./#{entryScriptArg}"
-  scriptArgs = argv._ # remaining parameters get passed through
-
-  # We'll really try to make the child processes die whenever we die.
-  _entryScriptProc = null
-  _chromeProc = null
-
-  process.on 'exit', ->
-    console.error '[bugger] Cleanup on exit...'
-    try _entryScriptProc.kill() if _entryScriptProc?
-    try _chromeProc.kill() if _chromeProc?
-
-  process.once 'uncaughtException', (e) ->
-    console.error '[bugger] Cleanup on exception...'
-    try _entryScriptProc.kill() if _entryScriptProc?
-    try _chromeProc.kill() if _chromeProc?
-    throw e
-
-  appUrl = argv.getAppUrl()
-
-  if chrome
-    # Start chrome with the correct url opened and less UI
-    _chromeProc = forkChrome { webhost, webport, appUrl }
-    _chromeProc.on 'exit', ->
-      console.error '[bugger] Chrome closed, exiting...'
-      process.exit 0
-
-  forkEntryScript {entryScript, scriptArgs, brk, debugPort}, (entryScriptProc) ->
-    _entryScriptProc = entryScriptProc
-    _entryScriptProc.on 'exit', ->
-      console.error '[bugger] Script finished, exiting...'
-      process.exit 0
-
-    # Create a proper debug client from the connection
-    inspectorServer.start { webhost, webport, appUrl }
-
-module.exports = {run}
+bugger.run script, scriptArgs
