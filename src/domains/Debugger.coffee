@@ -123,7 +123,7 @@ module.exports = ({debugClient}) ->
   #
   # @returns result boolean True if <code>setScriptSource</code> is supported.
   Debugger.canSetScriptSource = ({}, cb) ->
-    # Not implemented
+    cb null, result: true
 
   # Edits JavaScript source live.
   #
