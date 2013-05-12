@@ -7,8 +7,8 @@ describe 'forked', ->
   describe 'script', ->
     forked = null
 
-    forkScript = (moduleName, childArgs..., cb) ->
-      _bugScript moduleName, childArgs..., (err, _forked) ->
+    forkScript = (moduleName, childArgs, cb) ->
+      _bugScript moduleName, childArgs, {debugBreak: false}, (err, _forked) ->
         throw err if err?
         forked = _forked
         cb()
@@ -27,18 +27,18 @@ describe 'forked', ->
         done()
 
     it 'returns a process', (done) ->
-      forkScript 'examples/simple.js', ->
+      forkScript 'examples/simple.js', [], ->
         expect(forked.pid).to.be.a 'number'
         expect(forked.kill).to.be.a 'function'
         done()
 
     it 'opens an IPC channel', (done) ->
-      forkScript 'examples/simple.js', ->
+      forkScript 'examples/simple.js', [], ->
         expect(forked.send).to.be.a 'function'
         done()
 
     it 'returns a debug port for the process', (done) ->
-      forkScript 'examples/simple.js', ->
+      forkScript 'examples/simple.js', [], ->
         expect(parseInt forked.debugPort).to.be.a 'number'
         expect(parseInt forked.debugPort).to.be.greaterThan 1000
         done()
@@ -47,8 +47,8 @@ describe 'forked', ->
       it "exposes output of #{extension}-scripts to the parent process", (done) ->
         data = {}
 
-        forkScript "examples/simple.#{extension}", ->
-          forked.on 'debugConnection', ->
+        forkScript "examples/simple.#{extension}", [], ->
+          forked.on 'debugClient', ->
             calledOnce = false
             checkOutput = ->
               return if calledOnce
