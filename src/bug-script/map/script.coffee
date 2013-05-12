@@ -33,9 +33,9 @@
 ###
 
 module.exports = (refs) -> (body) ->
-  {
+  script = {
     scriptId: body.id.toString()
-    url: body.name
+    url: 'file://' + body.name
     startLine: body.lineOffset
     # endLine: body.lineCount
     # endColumn
@@ -43,3 +43,5 @@ module.exports = (refs) -> (body) ->
     # sourceMapURL
     scriptSource: body.source
   }
+
+  return script

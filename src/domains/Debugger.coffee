@@ -4,6 +4,8 @@
 module.exports = ({debugClient}) ->
   Debugger = new EventEmitter()
 
+  sources = {}
+
   handleBreakEvent = ->
     debugClient.backtrace {inlineRefs: true}, (err, data) ->
       return null if err?
@@ -26,7 +28,7 @@ module.exports = ({debugClient}) ->
   Debugger.enable = ({}, cb) ->
     debugClient.on 'break', handleBreakEvent
 
-    debugClient.scripts {includeSource: false}, (err, scripts) ->
+    debugClient.scripts {includeSource: true}, (err, scripts) ->
       handleBreakEvent() unless debugClient.running
 
       Debugger.emit_scriptParsed(script) for script in scripts
@@ -58,7 +60,7 @@ module.exports = ({debugClient}) ->
       breakpointDesc.target = urlRegex
     else
       breakpointDesc.type = 'script'
-      breakpointDesc.target = url
+      breakpointDesc.target = url.replace(/^file:\/\//, '')
 
     debugClient.setbreakpoint breakpointDesc, (err, data) ->
       return cb(err) if err?
@@ -148,6 +150,9 @@ module.exports = ({debugClient}) ->
   # @param scriptId ScriptId Id of the script to get source for.
   # @returns scriptSource string Script source.
   Debugger.getScriptSource = ({scriptId}, cb) ->
+    if sources[scriptId]?
+      return cb null, scriptSource: sources[scriptId]
+
     ids = [scriptId]
     debugClient.scripts {filter: scriptId, includeSource: true}, (err, [script]) ->
       cb err, script
@@ -238,8 +243,13 @@ module.exports = ({debugClient}) ->
   # @param isContentScript boolean? Determines whether this script is a user extension script.
   # @param sourceMapURL string? URL of source map associated with script (if any).
   # @param hasSourceURL boolean? True, if this script has sourceURL.
-  Debugger.emit_scriptParsed = (params) ->
-    notification = {params, method: 'Debugger.scriptParsed'}
+  Debugger.emit_scriptParsed = (script) ->
+    if script.scriptSource?
+      sources[script.scriptId] = script.scriptSource
+      # We don't delete the script here so the server can intercept the source
+      # and he may extract source maps
+
+    notification = {params: script, method: 'Debugger.scriptParsed'}
     @emit 'notification', notification
 
   # Fired when virtual machine fails to parse the script.
