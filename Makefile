@@ -4,12 +4,13 @@ SRC = $(shell find src -name "*.coffee" -type f | sort)
 LIB = $(SRC:src/%.coffee=lib/%.js)
 
 COFFEE = node_modules/.bin/coffee --js --bare
+MOCHA  = node_modules/.bin/mocha --timeout 3s --recursive --compilers coffee:coffee-script-redux -u tdd
 WACHS  = node_modules/.bin/wachs
 GROC   = node_modules/.bin/groc
 
-all: compile
+all: build
 
-compile: lib_dirs $(LIB)
+build: $(LIB)
 
 watch:
 	$(WACHS) -o "src/**/*.coffee" make all
@@ -20,14 +21,14 @@ docs:
 clean:
 	@rm $(LIB)
 
-lib:
-	@test -d lib || mkdir lib
-
-lib_dirs: lib/inspector lib/forked lib/lang lib/probes lib/agents
+src/inspector.json:
+	curl http://trac.webkit.org/browser/trunk/Source/WebCore/inspector/Inspector.json\?format=txt >$@
 
 lib/%.js: src/%.coffee
 	@echo "[coffee] "$<
+	@dirname "$@" | xargs mkdir -p
 	@$(COFFEE) -i "$<" >"$(@:%=%.tmp)" && mv "$(@:%=%.tmp)" "$@"
 
-lib/%: lib
-	@test -d "$@" || mkdir "$@"
+.PHONY : test
+test: build
+	NODE_ENV=test ${MOCHA} -R spec -r test/setup.js --recursive test
