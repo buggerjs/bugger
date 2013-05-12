@@ -177,7 +177,13 @@ module.exports = ({debugClient}) ->
   # @returns result Runtime.RemoteObject Object wrapper for the evaluation result.
   # @returns wasThrown boolean? True if the result was thrown during the evaluation.
   Debugger.evaluateOnCallFrame = ({callFrameId, expression, objectGroup, includeCommandLineAPI, doNotPauseOnExceptionsAndMuteConsole, returnByValue, generatePreview}, cb) ->
-    # Not implemented
+    params = { expression, global: false, frame: callFrameId, disable_break: doNotPauseOnExceptionsAndMuteConsole }
+    debugClient.evaluate params, (err, res) ->
+      if err?
+        { message, stack } = err
+        return cb null, result: { type: 'string', value: message }, wasThrown: true
+      else
+        return cb null, result: res
 
   # Compiles expression.
   #
@@ -203,7 +209,8 @@ module.exports = ({debugClient}) ->
   #
   # @param message string? Overlay message to display when paused in debugger.
   Debugger.setOverlayMessage = ({message}, cb) ->
-    # Not implemented
+    # This just gets stupid. Too much noise.
+    cb()
 
   # Changes value of variable in a callframe or a closure. Either callframe or function must be specified. Object-based scopes are not supported and must be mutated manually.
   #

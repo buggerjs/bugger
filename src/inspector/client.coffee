@@ -29,8 +29,11 @@ createClient = (socket) ->
     if socket and socket.connected
       response =
         if error?
-          {message, stack} = error
-          { id, result: null, error: {message, stack} }
+          errorMessage =
+            if 'string' is typeof error
+              error
+            else (error.stack ? error.message)
+          { id, result: null, error: errorMessage }
         else
           { id, result, error: null }
       socket.send JSON.stringify response
