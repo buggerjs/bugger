@@ -6,7 +6,7 @@ module.exports = (agentContext) ->
 
   # Enables console domain, sends the messages collected so far to the client by means of the <code>messageAdded</code> notification.
   Console.enable = ({}, cb) ->
-    # Not implemented
+    cb()
 
   # Disables console domain, prevents further console messages from being reported to the client.
   Console.disable = ({}, cb) ->

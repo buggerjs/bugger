@@ -37,8 +37,18 @@ module.exports = ({debugClient}) ->
   # @param generatePreview boolean? Whether preview should be generated for the result.
   # @returns result RemoteObject Call result.
   # @returns wasThrown boolean? True if the result was thrown during the evaluation.
-  Runtime.callFunctionOn = ({objectId, functionDeclaration, $arguments, doNotPauseOnExceptionsAndMuteConsole, returnByValue, generatePreview}, cb) ->
-    # Not implemented
+  Runtime.callFunctionOn = ({objectId, functionDeclaration, doNotPauseOnExceptionsAndMuteConsole, returnByValue, generatePreview}, cb) ->
+    args = arguments[0].arguments ? []
+
+    additional_context = [ { name: '$objectCtx', handle: parseInt(objectId) } ]
+    expression = "(#{functionDeclaration}).call($objectCtx, []);"
+    params = { expression, additional_context, global: true, disable_break: doNotPauseOnExceptionsAndMuteConsole }
+    debugClient.evaluate params, (err, res) ->
+      if err?
+        { message, stack } = err
+        return cb null, result: { type: 'string', value: message }, wasThrown: true
+      else
+        return cb null, result: res
 
   # Returns properties of a given object. Object group of the result is inherited from the target object.
   #

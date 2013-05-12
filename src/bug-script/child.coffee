@@ -41,7 +41,7 @@ realpath process.argv[1], (err, filename) ->
     compile mainModule.filename, input, (err, {code, map}) ->
       throw err if err?
       if process.env.ENABLE_DEBUG_BREAK?
-        code = "console.error('[bugger] Execution stopped at first line'); debugger; " + code
+        code = "debugger; " + code
 
       if map?
         # Return the compiled javascript
