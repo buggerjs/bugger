@@ -40,6 +40,12 @@ resolveSelfRef = (refs, body) ->
 isPrimitive = (obj) ->
   obj.type in [ 'number', 'string', 'boolean', 'undefined', 'null' ]
 
+propertiesToJSON = (properties) ->
+  json = {}
+  for property in properties
+    json[property.name] = property.value.value
+  json
+
 module.exports = (refs) ->
   mapValue = (_body, depth = 0) ->
     body = resolveSelfRef refs, _body
@@ -51,7 +57,6 @@ module.exports = (refs) ->
       obj.objectId = body.handle.toString()
       obj.className = body.className
       obj.description = (body.text ? '').replace /^#<(.*)>$/, '$1'
-      obj.preview = body.text
 
       if obj.description == 'Array'
         obj.subtype = 'array'
@@ -67,6 +72,8 @@ module.exports = (refs) ->
           name: property.name?.toString()
           value: mapValue(property.value, ++depth)
 
+        obj.value ?= propertiesToJSON obj.properties
+
       obj
 
     if body.type in ['null', 'undefined']
@@ -77,14 +84,13 @@ module.exports = (refs) ->
       {
         type: body.type
         value: body.value
-        preview: body.value
       }
     else if body.type is 'function'
       {
         type: 'function'
-        preview: body.text
+        objectId: body.handle.toString()
         className: body.className
-        description: if !!body.name then body.name else body.inferredName
+        description: body.text
       }
     else if body.type is 'regexp'
       ###
