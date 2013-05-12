@@ -52,7 +52,20 @@ module.exports = ({debugClient}) ->
   # @returns breakpointId BreakpointId Id of the created breakpoint for further reference.
   # @returns locations Location[] List of the locations this breakpoint resolved into upon addition.
   Debugger.setBreakpointByUrl = ({lineNumber, url, urlRegex, columnNumber, condition}, cb) ->
-    # Not implemented
+    breakpointDesc = { line: lineNumber, column: columnNumber, condition }
+    if urlRegex?
+      breakpointDesc.type = 'scriptRegExp'
+      breakpointDesc.target = urlRegex
+    else
+      breakpointDesc.type = 'script'
+      breakpointDesc.target = url
+
+    debugClient.setbreakpoint breakpointDesc, (err, data) ->
+      return cb(err) if err?
+      cb null,
+        breakpointId: data.breakpoint.toString()
+        locations: data.actual_locations.map (l) ->
+          { scriptId: l.script_id.toString(), lineNumber: l.line, columnNumber: l.column }
 
   # Sets JavaScript breakpoint at a given location.
   #
@@ -67,7 +80,7 @@ module.exports = ({debugClient}) ->
   #
   # @param breakpointId BreakpointId 
   Debugger.removeBreakpoint = ({breakpointId}, cb) ->
-    # Not implemented
+    debugClient.clearbreakpoint {breakpoint: breakpointId}, (err, data) -> cb()
 
   # Continues execution until specific location is reached.
   #

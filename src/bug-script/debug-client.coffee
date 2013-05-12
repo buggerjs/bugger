@@ -2,7 +2,7 @@
 {EventEmitter} = require 'events'
 
 {defaults} = require 'underscore'
-{parallel} = require 'async'
+{series} = require 'async'
 
 mapValue = require './map/value'
 mapScope = require './map/scope'
@@ -212,7 +212,7 @@ module.exports = debugClient = (debugConnection) ->
   # @returns Array of serialized objects indexed using their handle
   registerRequest 'lookup', (refs) -> (body) ->
     objMap = {}
-    mapper = mapValue(refs)
+    mapper = mapValue refs
     for handle, ref of body
       objMap[handle] = mapper ref
     objMap
@@ -231,14 +231,15 @@ module.exports = debugClient = (debugConnection) ->
   # @returns frames StackFrame[]
   registerRequest 'backtrace', (refs) -> ({fromFrame, toFrame, totalFrames, frames}, cb) ->
     # Get all scopes for those frames
-    tasks = frames.map ({index}) ->
+    tasks = frames.map (frame) ->
       (cb) ->
-        client.scopes {frameNumber: index}, (err, res) ->
+        client.scopes { frameNumber: frame.index }, (err, res) ->
           return cb(err) if err?
-          refs["scope:#{index}:#{scope.index}"] = scope for scope in res.scopes
+          for scope in res.scopes
+            refs["scope:#{frame.index}:#{scope.index}"] = scope
           cb()
 
-    parallel tasks, (err) ->
+    series tasks, (err) ->
       return cb(err) if err?
       callFrames = frames.map mapFrame(refs)
       cb null, {fromFrame, toFrame, totalFrames, callFrames}
@@ -256,7 +257,9 @@ module.exports = debugClient = (debugConnection) ->
   # @param number Scope number
   # @param frameNumber integer? Optional uses selected frame if missing
   # @returns Scope
-  registerRequest 'scope', mapScope
+  registerRequest 'scope', (refs) -> (scope) ->
+    refs["value:#{scope.object.ref}"] = mapValue(refs) scope.object
+    mapScope(refs) scope
 
   # The request scopes returns all the scopes for a given frame. If no frame
   # number is specified the selected frame is returned.
@@ -266,7 +269,12 @@ module.exports = debugClient = (debugConnection) ->
   # @returns toScope integer Number of last scope in response
   # @returns totalScopes integer Total number of scopes for this frame
   # @returns scopes Scope[]
-  registerRequest 'scopes', (refs) -> ({fromScope, toScope, totalScopes, scopes}, cb) ->
+  registerRequest 'scopes', (refs) -> ({fromScope, toScope, totalScopes, scopes}) ->
+    scopes = scopes.map (scope) ->
+      refs["value:#{scope.object.ref}"] ?= mapValue(refs) scope.object
+      mapScope(refs) scope
+    return {fromScope, toScope, totalScopes, scopes}
+
     handles = scopes.map (scope) -> scope.object.ref ? scope.object.handle
     client.lookup { handles, inlineRefs: true }, (err, scopeRefs) ->
       return cb(err) if err?

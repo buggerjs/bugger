@@ -29,6 +29,8 @@ Runtime.PropertyDescriptor = {"id":"PropertyDescriptor","type":"object","descrip
   {"name":"isOwn","optional":true,"type":"boolean","description":"True if the property is owned for the object.","hidden":true}]}
 ###
 
+stringify = require 'json-stringify-safe'
+
 resolveSelfRef = (refs, body) ->
   if body.ref?
     refs[body.ref] ? body
@@ -38,74 +40,75 @@ resolveSelfRef = (refs, body) ->
 isPrimitive = (obj) ->
   obj.type in [ 'number', 'string', 'boolean', 'undefined', 'null' ]
 
-module.exports = (refs) -> mapValue = (_body) ->
-  body = resolveSelfRef refs, _body
-  body.handle ?= body.ref
+module.exports = (refs) ->
+  mapValue = (_body, depth = 0) ->
+    body = resolveSelfRef refs, _body
+    body.handle ?= body.ref
 
-  return refs["value:#{body.handle}"] if refs["value:#{body.handle}"]?
+    return refs["value:#{body.handle}"] if refs["value:#{body.handle}"]?
 
-  objectDefaults = (obj) ->
-    obj.objectId = body.handle.toString()
-    obj.className = body.className
-    obj.description = (body.text ? '').replace /^#<(.*)>$/, '$1'
-    obj.preview = body.text
+    objectDefaults = (obj) ->
+      obj.objectId = body.handle.toString()
+      obj.className = body.className
+      obj.description = (body.text ? '').replace /^#<(.*)>$/, '$1'
+      obj.preview = body.text
 
-    if obj.description == 'Array'
-      obj.subtype = 'array'
-      for property in body.properties
-        if property.name is 'length' and property.value?
-          obj.description += "[#{property.value.value}]"
+      if obj.description == 'Array'
+        obj.subtype = 'array'
+        for property in body.properties
+          if property.name is 'length' and property.value?
+            obj.description += "[#{property.value.value}]"
 
-    if body.properties?
-      obj.properties = body.properties.map (property) ->
-        unless property.value
-          property.value = refs[property.ref] ? property
+      if body.properties? and depth == 0
+        obj.properties = body.properties.map (property) ->
+          unless property.value
+            property.value = refs[property.ref] ? property
 
-        name: property.name?.toString()
-        value: mapValue(property.value)
+          name: property.name?.toString()
+          value: mapValue(property.value, ++depth)
 
-    obj
+      obj
 
-  if body.type in ['null', 'undefined']
-    {
-      type: body.type
-    }
-  else if body.type in [ 'number', 'string', 'boolean' ]
-    {
-      type: body.type
-      value: body.value
-      preview: body.value
-    }
-  else if body.type is 'function'
-    {
-      type: 'function'
-      preview: body.text
-      className: body.className
-      description: if !!body.name then body.name else body.inferredName
-    }
-  else if body.type is 'regexp'
-    ###
-    { "handle":191
-    , "type":"regexp"
-    , "className":"RegExp"
-    , "constructorFunction":{"ref":143,"type":"function","name":"RegExp","inferredName":""}
-    , "protoObject":{"ref":449,"type":"regexp","value":"/(?:)/"}
-    , "prototypeObject":{"ref":3,"type":"undefined"}
-    , "properties":
-      [ { "name":"lastIndex","value":{"ref":189,"type":"number","value":0}}
-      , {"name":"source","value":{"ref":569,"type":"string","value":"^[\\/]*"}}
-      , {"name":"ignoreCase","value":{"ref":215,"type":"boolean","value":false}}
-      , {"name":"multiline","value":{"ref":215,"type":"boolean","value":false}}
-      , {"name":"global","value":{"ref":215,"type":"boolean","value":false}}]
-    ,"text":"/^[\\/]*/" }
-    ###
-    objectDefaults {
-      type: 'object'
-      subtype: 'regexp'
-    }
-  else if body.type is 'object'
-    objectDefaults {
-      type: 'object'
-    }
-  else
-    throw new Error('Unknown type: ' + body.type + ' - ' + JSON.stringify({body, _body}))
+    if body.type in ['null', 'undefined']
+      {
+        type: body.type
+      }
+    else if body.type in [ 'number', 'string', 'boolean' ]
+      {
+        type: body.type
+        value: body.value
+        preview: body.value
+      }
+    else if body.type is 'function'
+      {
+        type: 'function'
+        preview: body.text
+        className: body.className
+        description: if !!body.name then body.name else body.inferredName
+      }
+    else if body.type is 'regexp'
+      ###
+      { "handle":191
+      , "type":"regexp"
+      , "className":"RegExp"
+      , "constructorFunction":{"ref":143,"type":"function","name":"RegExp","inferredName":""}
+      , "protoObject":{"ref":449,"type":"regexp","value":"/(?:)/"}
+      , "prototypeObject":{"ref":3,"type":"undefined"}
+      , "properties":
+        [ { "name":"lastIndex","value":{"ref":189,"type":"number","value":0}}
+        , {"name":"source","value":{"ref":569,"type":"string","value":"^[\\/]*"}}
+        , {"name":"ignoreCase","value":{"ref":215,"type":"boolean","value":false}}
+        , {"name":"multiline","value":{"ref":215,"type":"boolean","value":false}}
+        , {"name":"global","value":{"ref":215,"type":"boolean","value":false}}]
+      ,"text":"/^[\\/]*/" }
+      ###
+      objectDefaults {
+        type: 'object'
+        subtype: 'regexp'
+      }
+    else if body.type is 'object'
+      objectDefaults {
+        type: 'object'
+      }
+    else
+      { type: 'object', objectId: body.handle }
