@@ -92,15 +92,21 @@ module.exports = ({debugClient}) ->
 
   # Steps over the statement.
   Debugger.stepOver = ({}, cb) ->
-    debugClient.continue {stepaction: 'next'}, cb
+    debugClient.continue {stepaction: 'next'}, ->
+      Debugger.emit_resumed()
+      cb()
 
   # Steps into the function call.
   Debugger.stepInto = ({}, cb) ->
-    debugClient.continue {stepaction: 'in'}, cb
+    debugClient.continue {stepaction: 'in'}, ->
+      Debugger.emit_resumed()
+      cb()
 
   # Steps out of the function call.
   Debugger.stepOut = ({}, cb) ->
-    debugClient.continue {stepaction: 'out'}, cb
+    debugClient.continue {stepaction: 'out'}, ->
+      Debugger.emit_resumed()
+      cb()
 
   # Stops on the next JavaScript statement.
   Debugger.pause = ({}, cb) ->
@@ -109,7 +115,9 @@ module.exports = ({debugClient}) ->
 
   # Resumes JavaScript execution.
   Debugger.resume = ({}, cb) ->
-    debugClient.continue {}, cb
+    debugClient.continue {}, ->
+      Debugger.emit_resumed()
+      cb()
 
   # Searches for given string in script content.
   #
