@@ -38,7 +38,8 @@ bugger = (debugBreak = true, webport = 8058, webhost = '127.0.0.1') ->
     parallel tasks, (err, [inspector, forked]) ->
       forked.on 'debugClient', (debugClient) ->
         wire {inspector, forked, debugClient, domains}
-        console.log "[bugger] Debugging #{script}", scriptArgs.join(' ')
+        argString = scriptArgs.map( (arg) -> JSON.stringify(arg) ).join(' ')
+        console.log "[bugger] Debugging #{script} #{argString}"
         console.log "[bugger] #{inspector.DEFAULT_URL}"
 
   {run}
