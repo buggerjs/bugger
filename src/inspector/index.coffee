@@ -35,8 +35,6 @@ module.exports = ->
 
   websocket.on 'connect', (socket) ->
     client = createClient socket
-    inspector.clients[client.id] = client
-    inspector.emit 'join', client
 
     client.on 'error', (err) ->
       inspector.emit 'error', err
@@ -49,15 +47,20 @@ module.exports = ->
       delete inspector.clients[client.id]
       inspector.emit 'disconnect', client
 
-  inspector.dispatchEvent = (method, params = {}) ->
+    inspector.clients[client.id] = client
+    inspector.emit 'join', client
+
+  inspector.dispatchEvent = (notification) ->
+    notification.params ?= {}
     for clientId, client of inspector.clients
-      client.dispatchEvent method, params
+      client.dispatchEvent notification
     null # for CS
 
   httpServer.on 'listening', ->
     {address, port} = @address()
-    @QUERY_STRING = "ws=#{address}:#{port}/websocket"
-    @DEFAULT_URL = "chrome://devtools/devtools.html?#{@QUERY_STRING}"
+    query = "ws=#{address}:#{port}/websocket"
+    @DEFAULT_URL = "chrome://devtools/devtools.html?#{query}"
+    inspector.DEFAULT_URL = @DEFAULT_URL
 
   inspector.listen = ->
     httpServer.listen arguments...

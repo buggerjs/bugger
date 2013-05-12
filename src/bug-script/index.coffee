@@ -2,8 +2,10 @@
 {spawn} = require 'child_process'
 {createServer, connect} = require 'net'
 {_resolveFilename} = require 'module'
-# {defaults} = require 'underscore'
 path = require 'path'
+{defaults} = require 'underscore'
+
+debugClient = require './debug-client'
 
 openDebugConnection = (childProcess) ->
   buffer = ''
@@ -17,11 +19,12 @@ openDebugConnection = (childProcess) ->
       # connect to debug port port
       debugConnection = connect childProcess.debugPort, ->
         childProcess.debugConnection = debugConnection
-        childProcess.emit 'debugConnection', debugConnection
+        childProcess.debugClient = debugClient debugConnection
+        childProcess.emit 'debugClient', childProcess.debugClient
 
   childProcess.stderr.on 'data', waitForDebugger
 
-bugScript = (moduleName, childArgs..., cb) ->
+bugScript = (moduleName, childArgs, {debugBreak}, cb) ->
   moduleName = "./#{moduleName}" unless moduleName[0] is '/'
   try
     moduleName = _resolveFilename moduleName
@@ -42,6 +45,10 @@ bugScript = (moduleName, childArgs..., cb) ->
 
       options =
         stdio: ['pipe', 'pipe', 'pipe', 'ipc']
+        env: defaults {}, process.env
+
+      if debugBreak
+        options.env.ENABLE_DEBUG_BREAK = '1'
 
       forked = spawn process.argv[0], childArgs, options
       forked.debugPort = debugPort

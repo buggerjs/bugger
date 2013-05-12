@@ -26,7 +26,7 @@ createClient = (socket) ->
     client.emit 'request', {method, params, callback, id}
 
   sendResponse = (id, error, result = {}) ->
-    if socket and socket.writable
+    if socket and socket.connected
       response =
         if error?
           {message, stack} = error
@@ -35,10 +35,11 @@ createClient = (socket) ->
           { id, result, error: null }
       socket.send JSON.stringify response
     else
-      client.emit 'error', new Error('Tried to write to non-writable socket')
+      client.emit 'error', new Error('Tried to write to non-connected socket')
 
-  client.dispatchEvent = (method, params = {}) ->
-    if socket and socket.writable
+  client.dispatchEvent = ({method, params}) ->
+    params ?= {}
+    if socket and socket.connected
       socket.send JSON.stringify { method, params }
     else
       errorMessage = "Could not dispatch #{method}(#{JSON.stringify params}"

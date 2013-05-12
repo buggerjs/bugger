@@ -1,7 +1,7 @@
 # Domain bindings for Runtime
 {EventEmitter} = require 'events'
 
-module.exports = (agentContext) ->
+module.exports = ({debugClient}) ->
   Runtime = new EventEmitter()
 
   # Parses JavaScript source code for errors.
@@ -47,7 +47,9 @@ module.exports = (agentContext) ->
   # @returns result PropertyDescriptor[] Object properties.
   # @returns internalProperties InternalPropertyDescriptor[]? Internal object properties.
   Runtime.getProperties = ({objectId, ownProperties}, cb) ->
-    # Not implemented
+    debugClient.lookup { handles: [objectId], includeSource: false, inlineRefs: true }, (err, objectMap) ->
+      return cb(err) if err?
+      cb null, result: objectMap[objectId].properties
 
   # Releases remote object with given id.
   #

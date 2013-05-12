@@ -20,13 +20,13 @@ module.exports = (agentContext) ->
   #
   # @returns result boolean True if timeline supports frame instrumentation.
   Timeline.supportsFrameInstrumentation = ({}, cb) ->
-    # Not implemented
+    cb null, result: false
 
   # Tells whether timeline agent supports main thread CPU utilization instrumentation.
   #
   # @returns result boolean True if timeline supports main thread CPU utilization instrumentation.
   Timeline.canMonitorMainThread = ({}, cb) ->
-    # Not implemented
+    cb null, result: false
 
   # Fired for every instrumentation event while timeline is started.
   #

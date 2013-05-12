@@ -6,15 +6,15 @@ module.exports = (agentContext) ->
 
   # @returns result boolean 
   Profiler.causesRecompilation = ({}, cb) ->
-    # Not implemented
+    cb null, result: false
 
   # @returns result boolean 
   Profiler.isSampling = ({}, cb) ->
-    # Not implemented
+    cb null, result: false
 
   # @returns result boolean 
   Profiler.hasHeapProfiler = ({}, cb) ->
-    # Not implemented
+    cb null, result: false
 
   Profiler.enable = ({}, cb) ->
     # Not implemented

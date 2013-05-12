@@ -1,24 +1,36 @@
 # Domain bindings for Debugger
 {EventEmitter} = require 'events'
 
-module.exports = (agentContext) ->
+module.exports = ({debugClient}) ->
   Debugger = new EventEmitter()
+
+  handleBreakEvent = ->
+    debugClient.backtrace {inlineRefs: true}, (err, data) ->
+      return null if err?
+      {callFrames} = data
+      Debugger.emit_paused {callFrames, reason: 'other'}
 
   # Tells whether enabling debugger causes scripts recompilation.
   #
   # @returns result boolean True if enabling debugger causes scripts recompilation.
   Debugger.causesRecompilation = ({}, cb) ->
-    # Not implemented
+    cb null, result: false
 
   # Tells whether debugger supports separate script compilation and execution.
   #
   # @returns result boolean True if debugger supports separate script compilation and execution.
   Debugger.supportsSeparateScriptCompilationAndExecution = ({}, cb) ->
-    # Not implemented
+    cb null, result: false
 
   # Enables debugger for the given page. Clients should not assume that the debugging has been enabled until the result for this command is received.
   Debugger.enable = ({}, cb) ->
-    # Not implemented
+    debugClient.on 'break', handleBreakEvent
+
+    debugClient.scripts {includeSource: false}, (err, scripts) ->
+      handleBreakEvent() unless debugClient.running
+
+      Debugger.emit_scriptParsed(script) for script in scripts
+      cb()
 
   # Disables debugger for given page.
   Debugger.disable = ({}, cb) ->
@@ -65,23 +77,24 @@ module.exports = (agentContext) ->
 
   # Steps over the statement.
   Debugger.stepOver = ({}, cb) ->
-    # Not implemented
+    debugClient.continue {stepaction: 'next'}, cb
 
   # Steps into the function call.
   Debugger.stepInto = ({}, cb) ->
-    # Not implemented
+    debugClient.continue {stepaction: 'in'}, cb
 
   # Steps out of the function call.
   Debugger.stepOut = ({}, cb) ->
-    # Not implemented
+    debugClient.continue {stepaction: 'out'}, cb
 
   # Stops on the next JavaScript statement.
   Debugger.pause = ({}, cb) ->
     # Not implemented
+    debugClient.suspend {}, cb
 
   # Resumes JavaScript execution.
   Debugger.resume = ({}, cb) ->
-    # Not implemented
+    debugClient.continue {}, cb
 
   # Searches for given string in script content.
   #
@@ -122,7 +135,9 @@ module.exports = (agentContext) ->
   # @param scriptId ScriptId Id of the script to get source for.
   # @returns scriptSource string Script source.
   Debugger.getScriptSource = ({scriptId}, cb) ->
-    # Not implemented
+    ids = [scriptId]
+    debugClient.scripts {filter: scriptId, includeSource: true}, (err, [script]) ->
+      cb err, script
 
   # Returns detailed informtation on given function.
   #

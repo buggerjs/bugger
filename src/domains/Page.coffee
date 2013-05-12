@@ -95,7 +95,7 @@ module.exports = (agentContext) ->
   #
   # @returns result boolean If true, <code>setDeviceMetricsOverride</code> can safely be invoked on the agent.
   Page.canOverrideDeviceMetrics = ({}, cb) ->
-    # Not implemented
+    cb null, result: false
 
   # Overrides the values of device screen dimensions (window.screen.width, window.screen.height, window.innerWidth, window.innerHeight, and "device-width"/"device-height"-related CSS media query results) and the font scale factor.
   #
@@ -116,7 +116,7 @@ module.exports = (agentContext) ->
   #
   # @returns show boolean True if the debug borders can be shown
   Page.canShowDebugBorders = ({}, cb) ->
-    # Not implemented
+    cb null, result: false
 
   # Requests that backend shows debug borders on layers
   #
@@ -128,7 +128,7 @@ module.exports = (agentContext) ->
   #
   # @returns show boolean True if the FPS count can be shown
   Page.canShowFPSCounter = ({}, cb) ->
-    # Not implemented
+    cb null, result: false
 
   # Requests that backend shows the FPS counter
   #
@@ -140,7 +140,7 @@ module.exports = (agentContext) ->
   #
   # @returns value boolean True if continuous painting is available
   Page.canContinuouslyPaint = ({}, cb) ->
-    # Not implemented
+    cb null, result: false
 
   # Requests that backend enables continuous painting
   #
@@ -176,7 +176,7 @@ module.exports = (agentContext) ->
   #
   # @returns result boolean True if browser can ovrride Geolocation.
   Page.canOverrideGeolocation = ({}, cb) ->
-    # Not implemented
+    cb null, result: false
 
   # Overrides the Device Orientation.
   #
@@ -194,7 +194,7 @@ module.exports = (agentContext) ->
   #
   # @returns result boolean If true, <code>setDeviceOrientationOverride</code> can safely be invoked on the agent.
   Page.canOverrideDeviceOrientation = ({}, cb) ->
-    # Not implemented
+    cb null, result: false
 
   # Toggles mouse event-based touch event emulation.
   #
