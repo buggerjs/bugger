@@ -232,6 +232,9 @@ module.exports = debugClient = (debugConnection) ->
   # @returns frames StackFrame[]
   registerRequest 'backtrace', (refs) -> ({fromFrame, toFrame, totalFrames, frames}, cb) ->
     # Get all scopes for those frames
+    unless Array.isArray frames
+      console.log arguments[0]
+      frames = []
     tasks = frames.map (frame) ->
       (cb) ->
         client.scopes { frameNumber: frame.index }, (err, res) ->

@@ -4,6 +4,35 @@
 module.exports = ({debugClient}) ->
   Runtime = new EventEmitter()
 
+  objectGroups = {}
+
+  getObjectGroup = (name) ->
+    return objectGroups[name] if objectGroups[name]?
+
+    lastObjectId = 0
+    objects = {}
+
+    registerObject = (obj, {expression, global, frame}) ->
+      return obj unless obj.objectId?
+      objectId = "#{name}::#{lastObjectId++}"
+      global ?= !frame?
+      objects[objectId] = {expression, global, frame}
+      obj.objectId = objectId
+      obj
+
+    releaseAll = ->
+      lastObjectId = 0
+      objects = {}
+
+    resolveObjectId = (objectId) ->
+      objects[objectId].expression
+
+    objectGroups[name] = {registerObject, releaseAll, resolveObjectId}
+
+  resolveManagedObjectId = (objectId) ->
+    groupName = objectId.split('::')[0]
+    getObjectGroup(groupName).resolveObjectId objectId
+
   # Parses JavaScript source code for errors.
   #
   # @param source string Source code to parse.
@@ -25,7 +54,13 @@ module.exports = ({debugClient}) ->
   # @returns result RemoteObject Evaluation result.
   # @returns wasThrown boolean? True if the result was thrown during the evaluation.
   Runtime.evaluate = ({expression, objectGroup, includeCommandLineAPI, doNotPauseOnExceptionsAndMuteConsole, contextId, returnByValue, generatePreview}, cb) ->
-    # Not implemented
+    params = { expression, global: true, disable_break: doNotPauseOnExceptionsAndMuteConsole }
+    debugClient.evaluate params, (err, res) ->
+      if err?
+        return cb null, result: { type: 'string', value: (err.stack ? err.message) }, wasThrown: true
+      else
+        {registerObject} = getObjectGroup objectGroup
+        return cb null, result: registerObject(res, params)
 
   # Calls function with given declaration on the given object. Object group of the result is inherited from the target object.
   #
@@ -40,13 +75,21 @@ module.exports = ({debugClient}) ->
   Runtime.callFunctionOn = ({objectId, functionDeclaration, doNotPauseOnExceptionsAndMuteConsole, returnByValue, generatePreview}, cb) ->
     args = arguments[0].arguments ? []
 
-    additional_context = [ { name: '$objectCtx', handle: parseInt(objectId) } ]
-    expression = "(#{functionDeclaration}).call($objectCtx, []);"
+    additional_context = []
+    argExpressions = []
+
+    if 0 < objectId.indexOf '::'
+      argExpressions.push resolveManagedObjectId(objectId)
+    else
+      additional_context.push { name: '$objectCtx', handle: parseInt(objectId) }
+      argExpressions.push '$objectCtx'
+    
+    expression = "(#{functionDeclaration}).call(#{argExpressions.join ', '});"
+
     params = { expression, additional_context, global: true, disable_break: doNotPauseOnExceptionsAndMuteConsole }
     debugClient.evaluate params, (err, res) ->
       if err?
-        { message, stack } = err
-        return cb null, result: { type: 'string', value: message }, wasThrown: true
+        return cb null, result: { type: 'string', value: (err.stack ? err.message) }, wasThrown: true
       else
         return cb null, result: res
 
