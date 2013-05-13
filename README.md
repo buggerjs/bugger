@@ -1,6 +1,7 @@
 # bugger
 
-[![Build Status](https://travis-ci.org/jkrems/bugger.png)](https://travis-ci.org/jkrems/bugger)
+[![Build Status](https://travis-ci.org/jkrems/bugger.png)](https://travis-ci.org/jkrems/bugger) 
+[![NPM version](https://badge.fury.io/js/bugger.png)](https://npmjs.org/package/bugger)
 
 **Warning: Experimental**
 
