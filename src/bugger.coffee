@@ -35,7 +35,7 @@ bugger = (debugBreak = true, webport = 8058, webhost = '127.0.0.1') ->
     forwardErrors debugClient, domains, forked, inspector
 
     # Load all the fancy handlers (and make debugClient <-> XAgent work)
-    domains.load {debugClient}
+    domains.load {debugClient, forked}
 
     # Make the Websocket <-> XAgent binding work
     inspector.on 'request', domains.handle
