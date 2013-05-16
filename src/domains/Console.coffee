@@ -1,16 +1,39 @@
 # Domain bindings for Console
 {EventEmitter} = require 'events'
 
-module.exports = (agentContext) ->
+{defaults} = require 'lodash'
+
+module.exports = ({debugClient, forked}) ->
   Console = new EventEmitter()
+
+  ConsoleMessage = (attrs) ->
+    defaults attrs, {
+      source: 'javascript'
+      level: 'log'
+    }
+
+  processStdOutData = (data) ->
+    Console.emit_messageAdded message: ConsoleMessage {
+      text: data.toString()
+    }
+
+  processStdErrData = (data) ->
+    Console.emit_messageAdded message: ConsoleMessage {
+      text: data.toString()
+      level: 'error'
+    }
 
   # Enables console domain, sends the messages collected so far to the client by means of the <code>messageAdded</code> notification.
   Console.enable = ({}, cb) ->
+    forked.stdout.on 'data', processStdOutData
+    forked.stderr.on 'data', processStdErrData
     cb()
 
   # Disables console domain, prevents further console messages from being reported to the client.
   Console.disable = ({}, cb) ->
-    # Not implemented
+    forked.stdout.removeListener 'data', processStdOutData
+    forked.stderr.removeListener 'data', processStdErrData
+    cb()
 
   # Clears console messages collected in the browser.
   Console.clearMessages = ({}, cb) ->

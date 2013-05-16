@@ -41,9 +41,8 @@ domains.unload = ->
     delete domains[domain]
   null # for cs
 
-domains.load = ({debugClient}) ->
+domains.load = (agentContext) ->
   do domains.unload
-  agentContext = {debugClient}
 
   for domain in domainNames
     agent = domains[domain] = require("./#{domain}") agentContext
