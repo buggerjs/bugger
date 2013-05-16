@@ -15,19 +15,20 @@ loadDomainNames = ->
 domainNames = do loadDomainNames
 
 domains.handle = (request) ->
-  {method} = request
+  {method, params, callback} = request
   [domain, command] = method.split '.'
   agent = domains[domain]
+  params ?= {}
 
   unless agent?
     error = new Error "Domain #{domain} not found"
     return domains.emit 'error', error
 
   unless typeof agent[command] is 'function'
-    error = new Error "Unknown command: #{domain}.#{command}"
+    paramHint = Object.keys(params ? {}).join(', ')
+    error = new Error "Unknown command: #{domain}.#{command}(#{paramHint})"
     return domains.emit 'error', error
 
-  {params, callback} = request
   agent[command] params, callback
 
 domains.unload = ->
