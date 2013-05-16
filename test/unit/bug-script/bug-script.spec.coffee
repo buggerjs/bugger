@@ -1,7 +1,7 @@
 
 expect = require 'expect.js'
 
-_bugScript = require '../../lib/bug-script'
+_bugScript = require '../../../lib/bug-script'
 
 describe 'forked', ->
   describe 'script', ->

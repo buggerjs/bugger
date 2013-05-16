@@ -1,4 +1,7 @@
 
+# v0.5.0-beta4
+* stdio forwarded to devtools
+
 # v0.5.0-beta3
 * Fix bug where unhandled domain functions were crashing the process
 

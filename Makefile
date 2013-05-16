@@ -31,4 +31,4 @@ lib/%.js: src/%.coffee
 
 .PHONY : test
 test: build
-	NODE_ENV=test ${MOCHA} -R spec -r test/setup.js --recursive test
+	NODE_ENV=test ${MOCHA} -R spec -r test/setup.js --recursive test/unit
