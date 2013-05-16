@@ -1,4 +1,6 @@
 
+{EventEmitter} = require 'events'
+
 {parallel} = require 'async'
 
 bugScript = require './bug-script'
@@ -10,6 +12,13 @@ bugger = (debugBreak = true, webport = 8058, webhost = '127.0.0.1') ->
     inspector = inspectorServer()
     inspector.listen webport, webhost, ->
       cb null, inspector
+
+  wrapEmitter = new EventEmitter()
+
+  forwardErrors = (internalObjects...) ->
+    for internalObj in internalObjects
+      internalObj.on 'error', (err) ->
+        wrapEmitter.emit 'error', err
 
   startScript = (script, scriptArgs, options) -> (cb) ->
     bugScript script, scriptArgs, options, cb
@@ -23,8 +32,7 @@ bugger = (debugBreak = true, webport = 8058, webhost = '127.0.0.1') ->
     # Pipe stdout/stderr/stdin
     wireStdIO forked
 
-    debugClient.on 'error', (err) ->
-      console.log '[bugger] [error]', err.message
+    forwardErrors debugClient, domains, forked, inspector
 
     # Load all the fancy handlers (and make debugClient <-> XAgent work)
     domains.load {debugClient}
@@ -33,7 +41,7 @@ bugger = (debugBreak = true, webport = 8058, webhost = '127.0.0.1') ->
     inspector.on 'request', domains.handle
     domains.on 'notification', inspector.dispatchEvent
 
-  run = (script, scriptArgs = []) ->
+  wrapEmitter.run = run = (script, scriptArgs = []) ->
     tasks = [ startServer, startScript(script, scriptArgs, {debugBreak}) ]
     parallel tasks, (err, [inspector, forked]) ->
       forked.on 'debugClient', (debugClient) ->
@@ -42,7 +50,7 @@ bugger = (debugBreak = true, webport = 8058, webhost = '127.0.0.1') ->
         console.log "[bugger] Debugging #{script} #{argString}"
         console.log "[bugger] #{inspector.DEFAULT_URL}"
 
-  {run}
+  wrapEmitter
 
 module.exports = bugger
 

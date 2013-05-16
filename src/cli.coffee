@@ -42,4 +42,7 @@ bugger = require('./bugger')(argv.brk, argv.webport, argv.webhost)
 script = argv._.shift()
 scriptArgs = argv._
 
+bugger.on 'error', (err) ->
+  console.log '[bugger] [error]', err.message
+
 bugger.run script, scriptArgs
