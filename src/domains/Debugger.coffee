@@ -67,20 +67,12 @@ module.exports = ({debugClient}) ->
   # @returns breakpointId BreakpointId Id of the created breakpoint for further reference.
   # @returns locations Location[] List of the locations this breakpoint resolved into upon addition.
   Debugger.setBreakpointByUrl = ({lineNumber, url, urlRegex, columnNumber, condition}, cb) ->
-    breakpointDesc = { line: lineNumber, column: columnNumber, condition }
-    if urlRegex?
-      breakpointDesc.type = 'scriptRegExp'
-      breakpointDesc.target = urlRegex
-    else
-      breakpointDesc.type = 'script'
-      breakpointDesc.target = url.replace(/^file:\/\//, '')
+    {setbreakpoint} = debugClient.commands
+    breakpoint = {lineNumber, url, urlRegex, columnNumber, condition}
 
-    # debugClient.setbreakpoint breakpointDesc, (err, data) ->
-    #   return cb(err) if err?
-    #   cb null,
-    #     breakpointId: data.breakpoint.toString()
-    #     locations: data.actual_locations.map (l) ->
-    #       { scriptId: l.script_id.toString(), lineNumber: l.line, columnNumber: l.column }
+    setbreakpoint breakpoint, (err, breakpointResponse) ->
+      return cb(err) if err?
+      cb null, breakpointResponse
 
   # Sets JavaScript breakpoint at a given location.
   #
@@ -95,7 +87,9 @@ module.exports = ({debugClient}) ->
   #
   # @param breakpointId BreakpointId 
   Debugger.removeBreakpoint = ({breakpointId}, cb) ->
-    debugClient.clearbreakpoint {breakpoint: breakpointId}, (err, data) -> cb()
+    {clearbreakpoint} = debugClient.commands
+    clearbreakpoint breakpointId, (err, data) ->
+      cb err
 
   # Continues execution until specific location is reached.
   #
@@ -105,30 +99,30 @@ module.exports = ({debugClient}) ->
 
   # Steps over the statement.
   Debugger.stepOver = ({}, cb) ->
-    debugClient.continue {stepaction: 'next'}, ->
+    debugClient.commands.continue 'next', ->
       Debugger.emit_resumed()
       cb()
 
   # Steps into the function call.
   Debugger.stepInto = ({}, cb) ->
-    debugClient.continue {stepaction: 'in'}, ->
+    debugClient.commands.continue 'in', ->
       Debugger.emit_resumed()
       cb()
 
   # Steps out of the function call.
   Debugger.stepOut = ({}, cb) ->
-    debugClient.continue {stepaction: 'out'}, ->
+    debugClient.commands.continue 'out', ->
       Debugger.emit_resumed()
       cb()
 
   # Stops on the next JavaScript statement.
   Debugger.pause = ({}, cb) ->
     # Not implemented
-    debugClient.suspend {}, cb
+    debugClient.commands.suspend cb
 
   # Resumes JavaScript execution.
   Debugger.resume = ({}, cb) ->
-    debugClient.continue {}, ->
+    debugClient.commands.continue ->
       Debugger.emit_resumed()
       cb()
 
