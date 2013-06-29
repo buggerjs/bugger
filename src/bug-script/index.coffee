@@ -5,7 +5,7 @@
 path = require 'path'
 {defaults} = require 'underscore'
 
-debugClient = require './debug-client'
+debugClient = require '../debug-client'
 
 openDebugConnection = (childProcess) ->
   buffer = ''

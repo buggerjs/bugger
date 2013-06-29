@@ -3,19 +3,24 @@
 
 {parallel} = require 'async'
 
+# DebugClient2 = require '../debug-client'
+
 module.exports = ({debugClient}) ->
   Debugger = new EventEmitter()
 
   sources = {}
+  # debugClient2 = DebugClient2(debugClient.debugConnection)
 
   handleBreakEvent = ->
-    debugClient.backtrace {inlineRefs: true}, (err, data) ->
+    {backtrace} = debugClient.commands
+    backtrace {inlineRefs: true}, (err, data) ->
       return null if err?
       {callFrames} = data
       Debugger.emit_paused {callFrames, reason: 'other'}
 
   handleException = ({exception, uncaught}) ->
-    debugClient.backtrace {inlineRefs: true}, (err, data) ->
+    {backtrace} = debugClient.commands
+    backtrace {inlineRefs: true}, (err, data) ->
       callFrames = data?.callFrames ? []
       Debugger.emit_paused {callFrames, reason: 'exception', data: exception}
 
@@ -36,7 +41,7 @@ module.exports = ({debugClient}) ->
     debugClient.on 'break', handleBreakEvent
     debugClient.on 'exception', handleException
 
-    debugClient.scripts {includeSource: true}, (err, scripts) ->
+    debugClient.commands.scripts {includeSource: true}, (err, scripts) ->
       handleBreakEvent() unless debugClient.running
 
       Debugger.emit_scriptParsed(script) for script in scripts
@@ -70,12 +75,12 @@ module.exports = ({debugClient}) ->
       breakpointDesc.type = 'script'
       breakpointDesc.target = url.replace(/^file:\/\//, '')
 
-    debugClient.setbreakpoint breakpointDesc, (err, data) ->
-      return cb(err) if err?
-      cb null,
-        breakpointId: data.breakpoint.toString()
-        locations: data.actual_locations.map (l) ->
-          { scriptId: l.script_id.toString(), lineNumber: l.line, columnNumber: l.column }
+    # debugClient.setbreakpoint breakpointDesc, (err, data) ->
+    #   return cb(err) if err?
+    #   cb null,
+    #     breakpointId: data.breakpoint.toString()
+    #     locations: data.actual_locations.map (l) ->
+    #       { scriptId: l.script_id.toString(), lineNumber: l.line, columnNumber: l.column }
 
   # Sets JavaScript breakpoint at a given location.
   #
@@ -184,9 +189,10 @@ module.exports = ({debugClient}) ->
   #
   # @param state none|uncaught|all Pause on exceptions mode.
   Debugger.setPauseOnExceptions = ({state}, cb) ->
+    {setexceptionbreak} = debugClient.commands
     tasks = [
-      (cb) -> debugClient.setexceptionbreak {type: 'all', enabled: state is 'all'}
-      (cb) -> debugClient.setexceptionbreak {type: 'uncaught', enabled: state is 'uncaught'}
+      (cb) -> setexceptionbreak {type: 'all', enabled: state is 'all'}
+      (cb) -> setexceptionbreak {type: 'uncaught', enabled: state is 'uncaught'}
     ]
     parallel tasks, cb
 
@@ -202,13 +208,17 @@ module.exports = ({debugClient}) ->
   # @returns result Runtime.RemoteObject Object wrapper for the evaluation result.
   # @returns wasThrown boolean? True if the result was thrown during the evaluation.
   Debugger.evaluateOnCallFrame = ({callFrameId, expression, objectGroup, includeCommandLineAPI, doNotPauseOnExceptionsAndMuteConsole, returnByValue, generatePreview}, cb) ->
-    params = { expression, global: false, frame: callFrameId, disable_break: doNotPauseOnExceptionsAndMuteConsole }
-    debugClient.evaluate params, (err, res) ->
-      if err?
-        { message, stack } = err
-        return cb null, result: { type: 'string', value: message }, wasThrown: true
+    {evaluate} = debugClient.commands
+
+    objectId = debugClient.nextObjectId()
+
+    evaluate({doNotPauseOnExceptionsAndMuteConsole, includeCommandLineAPI})
+    .saveInObjectGroup(objectGroup, objectId)
+    .onCallFrame(callFrameId) expression, (err, result) ->
+      if err
+        cb null, { result: err, wasThrown: true }
       else
-        return cb null, result: res
+        cb null, { result, wasThrown: false }
 
   # Compiles expression.
   #

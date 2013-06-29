@@ -69,3 +69,9 @@ outdated and also I was on vacation and had way too much time.
 ### WebKit inspector
 
 bugger uses the Chrome developer tools as it's frontend.
+
+## Reference links
+
+- https://svn.webkit.org/repository/webkit/trunk/Source/WebCore/inspector
+- https://developers.google.com/chrome-developer-tools/docs/protocol/1.0
+- https://code.google.com/p/v8/wiki/DebuggerProtocol

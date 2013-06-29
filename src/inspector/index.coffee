@@ -7,20 +7,6 @@ webSocket = require('websocket')
 createClient = require './client'
 
 module.exports = ->
-  # frontendOverrides = (root) ->
-  #   # debugger always enabled
-  #   root.WebInspector.settings.debuggerEnabled.set true
-  #   # source maps always enabled
-  #   root.WebInspector.settings.sourceMapsEnabled.set true
-  #   root.dumpInspectorProtocolMessages = false
-
-  #   preloadMessageBuffer = []
-  #   root.InspectorFrontendHost.sendMessageToBackend = (message) ->
-  #     preloadMessageBuffer.push message
-
-  #   root.InspectorFrontendHost.loaded = ->
-  #     root.InspectorFrontendAPI.dispatchQueryParameters()
-  #     root.WebInspector._doLoadedDoneWithCapabilities()
   inspector = new EventEmitter()
   inspector.clients = {}
 
