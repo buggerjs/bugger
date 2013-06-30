@@ -10,14 +10,14 @@ primitiveTypes =
 isPrimitiveValue = (body) ->
   body.type && primitiveTypes[body.type]
 
-RemoteObject = ({returnByValue, generatePreview}) -> (refs) ->
+RemoteObject = ({returnByValue, generatePreview}) -> (refMap) ->
   parseBody = (body) ->
     _resolveReffed = (o) ->
       return null unless o?
       o.ref = o.ref.toString() if o.ref?
       o.handle = o.handle.toString() if o.handle?
       if o.ref? and not o.handle?
-        extend o, { handle: o.ref }, refs[o.ref]
+        extend o, { handle: o.ref }, refMap[o.ref]
       else
         o
 
@@ -33,6 +33,18 @@ RemoteObject = ({returnByValue, generatePreview}) -> (refs) ->
     _toString = (obj) ->
       obj.className
 
+    _extractLength = (body) ->
+      return body.length if body.length?
+      for prop in body.properties
+        if prop.name is 'length'
+          console.log prop
+          return prop.value if prop.value?
+          return refMap[prop.ref.toString()]?.value if prop.ref?
+          return null
+        else
+          continue
+      return null
+
     _describe = (obj) ->
       # Type is object, get subtype.
       {subtype, className} = obj
@@ -41,6 +53,8 @@ RemoteObject = ({returnByValue, generatePreview}) -> (refs) ->
         when 'regexp' then _toString obj
         when 'date' then _toString obj
         when 'array'
+          # body.length = _extractLength body
+
           if body.length? then "#{className}[#{body.length}]"
           else className
         else className
@@ -75,13 +89,16 @@ RemoteObject = ({returnByValue, generatePreview}) -> (refs) ->
         obj.value = body.value
 
       if obj.type is 'number'
-        obj.description = obj.value.toString()
+        obj.description =
+          if obj.value? then obj.value.toString()
+          else
+            'NaN or Infinity'
     else if body.type is 'null'
       obj.type = 'object'
       obj.subtype = 'null'
       obj.value = null
-    else
-      obj.objectId = body.handle
+    else if body.type in [ 'object', 'function', 'regexp' ]
+      obj.objectId = body.handle.toString()
       obj.subtype =
         switch body.className
           when 'Date' then 'date'
@@ -91,6 +108,12 @@ RemoteObject = ({returnByValue, generatePreview}) -> (refs) ->
       obj.className = _constructorName()
       obj.description = _describe(obj)
       obj.value = null
+
+      if obj.subtype == 'array' and body.properties?
+        for property in body.properties
+          if property.name is 'length' and property.value?
+            obj.description = "Array[#{property.value.value}]"
+            break
 
       if returnByValue
         obj.value = (body.properties ? []).reduce ((acc, propDescriptor) ->
@@ -102,10 +125,12 @@ RemoteObject = ({returnByValue, generatePreview}) -> (refs) ->
 
       if generatePreview and obj.type is 'object'
         obj.preview = _generatePreview()
+    else
+      obj.objectId = body.handle
 
     obj
 
-ErrorObjectFromMessage = ({returnByValue, generatePreview}) -> (refs) -> (msg) ->
+ErrorObjectFromMessage = ({returnByValue, generatePreview}) -> (refMap) -> (msg) ->
   match = msg.match /^(\w+): (.*)$/
   if match?
     className = match[1]

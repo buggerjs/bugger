@@ -3,7 +3,7 @@
 
 RemoteScript = require '../remote-script'
 
-{ErrorObjectFromMessage} = require '../remote-object'
+{ErrorObjectFromMessage, RemoteObject} = require '../remote-object'
 
 module.exports = (debugClient) ->
   scopes = (options, cb) ->
@@ -11,7 +11,11 @@ module.exports = (debugClient) ->
       {refs, body, success, message} = response
       if success
         {fromScope, toScope, totalScopes, scopes} = body
-        scopes = scopes.map (scope) -> scope
+        scopes = scopes.map (scope) ->
+          scope.object = RemoteObject({})(refs) scope.object
+          scope.object.objectId = "scope:#{options.frameNumber}:#{scope.index}"
+          scope
+
         cb null, {fromScope, toScope, totalScopes, scopes}
       else
         cb ErrorObjectFromMessage(options)(refs) message

@@ -46,6 +46,11 @@ module.exports = (debugConnection) ->
   parser = debugParser debugConnection
   parser.on 'parsed:response', (obj) ->
     updateRunning obj.running if obj.running?
+    if Array.isArray obj.refs
+      refMap = {}
+      refMap[ref.handle.toString()] = ref for ref in obj.refs
+      obj.refMap = refMap
+
     unwrapCallback obj
 
   parser.on 'parsed:event', (obj) ->

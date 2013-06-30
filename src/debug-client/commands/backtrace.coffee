@@ -2,6 +2,7 @@
 {series} = require 'async'
 
 RemoteScript = require '../remote-script'
+{RemoteObject} = require '../remote-object'
 
 {ErrorObjectFromMessage} = require '../remote-object'
 

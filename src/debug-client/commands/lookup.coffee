@@ -12,20 +12,57 @@ safeInObjectGroup = (objectGroup, objectId, expr) ->
   cmd  = assertObjectGroup objectGroup
   cmd += "root.__bugger__[#{JSON.stringify objectGroup}][#{JSON.stringify objectId}] = (#{expr});"
 
+getObjectProperties = (refMap) -> (rawObj) ->
+  seenProps = {}
+  rawObj.properties.map( (prop) ->
+    value = RemoteObject({})(refMap) (prop.value ? prop)
+    { name: prop.name?.toString(), value }
+  ).filter (prop) ->
+    return false unless prop.name?
+    return false if seenProps[prop.name]
+    seenProps[prop.name] = true
+
 module.exports = (debugClient) ->
   lookup = (options) ->
-    fn = (objectId, cb) ->
-      reqParams = { handles: [objectId], includeSource: false, inlineRefs: true }
-      debugClient.sendRequest 'lookup', reqParams, (err, objectMap) ->
-        {refs, body, success, message} = response
+    fromNativeId = (objectId, cb) ->
+      reqParams = { handles: [objectId], includeSource: false }
+      debugClient.sendRequest 'lookup', reqParams, (err, response) ->
+        {refMap, body, success, message} = response
         if success
-          objMap = {}
-          mapper = mapValue(options)(refs)
-          for handle, ref of body
-            objMap[handle] = mapper ref
-          cb null, objMap
+          rawObj = body[objectId.toString()]
+          objDescription =
+            properties: getObjectProperties(refMap) rawObj
+            # properties: rawObj.properties.map (prop) ->
+            #   value = RemoteObject({})(refMap) prop
+            #   { name: prop.name?.toString(), value }
+          cb null, objDescription
         else
-          cb ErrorObjectFromMessage(options)(refs) message
+          cb ErrorObjectFromMessage(options)(refMap) message
+
+    fromScope = (objectId, cb) ->
+      [ _, frameNumber, scopeNumber ] = objectId.split ':'
+      reqParams =
+        number: parseInt(scopeNumber, 10)
+        frameNumber: parseInt(frameNumber, 10)
+        inlineRefs: true
+
+      debugClient.sendRequest 'scope', reqParams, (err, response) ->
+        {refMap, body, success, message} = response
+        if success
+          objDescription =
+            properties: getObjectProperties(refMap) body.object
+            # properties: body.object.properties.map (prop) ->
+            #   value = RemoteObject({})(refMap) prop.value
+            #   { name: prop.name?.toString(), value }
+          cb null, objDescription
+        else
+          cb ErrorObjectFromMessage(options)(refMap) message
+
+    fn = (objectId, cb) ->
+      if objectId.substr(0, 6) == 'scope:'
+        fromScope objectId, cb
+      else
+        fromNativeId objectId, cb
 
     return fn
 

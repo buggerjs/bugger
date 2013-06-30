@@ -124,7 +124,7 @@ module.exports = ({debugClient}) ->
   # @returns result PropertyDescriptor[] Object properties.
   # @returns internalProperties InternalPropertyDescriptor[]? Internal object properties.
   Runtime.getProperties = ({objectId, ownProperties}, cb) ->
-    if /^\d+$/.test objectId
+    if objectId.substr(0, 6) == 'scope:' || /^\d+$/.test objectId
       params = { objectId, ownProperties }
       debugClient.commands.lookup(params) objectId, (err, objectDescriptor) ->
         return cb(err) if err?
