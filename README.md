@@ -39,7 +39,7 @@ chrome-devtools://devtools/devtools.html?ws=127.0.0.1:8058/websocket
 * Variable introspection
 * stdout of the process is forwarded to console.log
 * Evalute expressions in the console
-* Monitor outgoing http(s) requests your script does (Network tab) (not in 0.5.x)
+* Monitor outgoing http(s) requests your script does (Network tab)
 * Pressing "Record" on the Timeline-tab will record memory usage stats (for a gotcha see below) (not in 0.5.x)
 * Live edit the running JavaScript code (not in 0.5.x)
 

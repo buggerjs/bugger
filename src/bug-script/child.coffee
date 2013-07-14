@@ -14,7 +14,9 @@ compilers =
 
 scriptContext = { compilers }
 
-['./probes/coffee'].forEach (probeModule) ->
+knownProbes = ['./probes/coffee', './probes/network']
+
+knownProbes.forEach (probeModule) ->
   {load} = require probeModule
   load scriptContext
 
