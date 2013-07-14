@@ -1,4 +1,8 @@
 
+# v0.5.0-beta5
+* Internal improvements
+* Fixed coffee-script debugging, now uses filename.src for the source file
+
 # v0.5.0-beta4
 * stdio forwarded to devtools
 
