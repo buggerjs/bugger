@@ -19,16 +19,17 @@ scriptContext = { compilers }
   load scriptContext
 
 registerExtension = (extension, {compile}) ->
-  require.extensions[extension] = (module, filename) ->
-    input = readFileSync filename, 'utf8'
-    {code, map} = compile filename, input
-    if map?
-      # Return the compiled javascript
-      code += "\n//@ sourceMappingURL=data:application/json;base64,"
-      code += new Buffer("#{map}").toString('base64')
-      code += "\n"
+  Object.defineProperty require.extensions, extension, enumerable: true, get: ->
+    (module, filename) ->
+      input = readFileSync filename, 'utf8'
+      {code, map} = compile filename, input
+      if map?
+        # Return the compiled javascript
+        code += "\n//@ sourceMappingURL=data:application/json;base64,"
+        code += new Buffer("#{map}").toString('base64')
+        code += "\n"
 
-    module._compile code, filename
+      module._compile code, filename
 
 for extension, compiler of compilers
   continue if extension is '.js' # no special handling for plain javascript
