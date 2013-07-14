@@ -22,6 +22,7 @@ callbackWrapper = ->
   unwrapCallback = (obj) ->
     {request_seq, success} = obj
     cb = callbackBySeq[request_seq]
+    return unless cb?
     if success
       refMap = {}
       if Array.isArray(obj.refs)
@@ -35,6 +36,7 @@ callbackWrapper = ->
 module.exports = debugClient = (debugConnection) ->
   client = new EventEmitter()
   client.running = true
+  client.debugConnection = debugConnection
 
   debugConnection.setEncoding 'utf8'
 
@@ -75,6 +77,18 @@ module.exports = debugClient = (debugConnection) ->
 
   registerRequest = (command, mapBody) ->
     mapBody ?= (refs) -> (b) -> b
+
+    client[command + '_raw'] = (params, cb) ->
+      params =
+        if typeof params is 'function'
+          cb = params
+          {}
+        else
+          params ? {}
+
+      sendRequest command, params, (err, body, refs) ->
+        return unless cb?
+        cb err, body, refs
 
     client[command] = (params, cb) ->
       params =

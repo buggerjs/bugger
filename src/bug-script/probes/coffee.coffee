@@ -2,14 +2,12 @@
 coffee = require 'coffee-script-redux'
 Module = require 'module'
 
-coffee.register()
-
-compile = (filename, input, cb) ->
+compile = (filename, input) ->
   csAst = coffee.parse input, raw: yes
   jsAst = coffee.compile csAst, bare: yes
   {code, map} = coffee.jsWithSourceMap jsAst, filename
 
-  cb null, {code, map}
+  {code, map}
 
 compileString = (input) ->
   csAst = coffee.parse input, raw: yes

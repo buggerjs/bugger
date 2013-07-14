@@ -9,15 +9,36 @@ module.exports = ({debugClient}) ->
   sources = {}
 
   handleBreakEvent = ->
-    debugClient.backtrace {inlineRefs: true}, (err, data) ->
+    {backtrace} = debugClient.commands
+    backtrace {inlineRefs: true}, (err, data) ->
       return null if err?
       {callFrames} = data
       Debugger.emit_paused {callFrames, reason: 'other'}
 
   handleException = ({exception, uncaught}) ->
-    debugClient.backtrace {inlineRefs: true}, (err, data) ->
+    {backtrace} = debugClient.commands
+    backtrace {inlineRefs: true}, (err, data) ->
       callFrames = data?.callFrames ? []
       Debugger.emit_paused {callFrames, reason: 'exception', data: exception}
+
+  afterCompileQueue = []
+  nextQueueRun = null
+  processCompileQueue = ->
+    params =
+      ids: afterCompileQueue
+      includeSource: true
+      types: 4 # TODO: look for docs
+    afterCompileQueue = []
+    nextQueueRun = null
+
+    debugClient.commands.scripts params, (err, scripts) ->
+      Debugger.emit_scriptParsed(script) for script in scripts
+      null
+
+  handleAfterCompile = ({script}) ->
+    afterCompileQueue.push script.id
+    # at most fetch new scripts every 100 milliseconds
+    nextQueueRun ?= setTimeout(processCompileQueue, 100)
 
   # Tells whether enabling debugger causes scripts recompilation.
   #
@@ -35,8 +56,9 @@ module.exports = ({debugClient}) ->
   Debugger.enable = ({}, cb) ->
     debugClient.on 'break', handleBreakEvent
     debugClient.on 'exception', handleException
+    debugClient.on 'afterCompile', handleAfterCompile
 
-    debugClient.scripts {includeSource: true}, (err, scripts) ->
+    debugClient.commands.scripts {includeSource: true}, (err, scripts) ->
       handleBreakEvent() unless debugClient.running
 
       Debugger.emit_scriptParsed(script) for script in scripts
@@ -62,20 +84,12 @@ module.exports = ({debugClient}) ->
   # @returns breakpointId BreakpointId Id of the created breakpoint for further reference.
   # @returns locations Location[] List of the locations this breakpoint resolved into upon addition.
   Debugger.setBreakpointByUrl = ({lineNumber, url, urlRegex, columnNumber, condition}, cb) ->
-    breakpointDesc = { line: lineNumber, column: columnNumber, condition }
-    if urlRegex?
-      breakpointDesc.type = 'scriptRegExp'
-      breakpointDesc.target = urlRegex
-    else
-      breakpointDesc.type = 'script'
-      breakpointDesc.target = url.replace(/^file:\/\//, '')
+    {setbreakpoint} = debugClient.commands
+    breakpoint = {lineNumber, url, urlRegex, columnNumber, condition}
 
-    debugClient.setbreakpoint breakpointDesc, (err, data) ->
+    setbreakpoint breakpoint, (err, breakpointResponse) ->
       return cb(err) if err?
-      cb null,
-        breakpointId: data.breakpoint.toString()
-        locations: data.actual_locations.map (l) ->
-          { scriptId: l.script_id.toString(), lineNumber: l.line, columnNumber: l.column }
+      cb null, breakpointResponse
 
   # Sets JavaScript breakpoint at a given location.
   #
@@ -90,7 +104,9 @@ module.exports = ({debugClient}) ->
   #
   # @param breakpointId BreakpointId 
   Debugger.removeBreakpoint = ({breakpointId}, cb) ->
-    debugClient.clearbreakpoint {breakpoint: breakpointId}, (err, data) -> cb()
+    {clearbreakpoint} = debugClient.commands
+    clearbreakpoint breakpointId, (err, data) ->
+      cb err
 
   # Continues execution until specific location is reached.
   #
@@ -100,30 +116,30 @@ module.exports = ({debugClient}) ->
 
   # Steps over the statement.
   Debugger.stepOver = ({}, cb) ->
-    debugClient.continue {stepaction: 'next'}, ->
+    debugClient.commands.continue 'next', ->
       Debugger.emit_resumed()
       cb()
 
   # Steps into the function call.
   Debugger.stepInto = ({}, cb) ->
-    debugClient.continue {stepaction: 'in'}, ->
+    debugClient.commands.continue 'in', ->
       Debugger.emit_resumed()
       cb()
 
   # Steps out of the function call.
   Debugger.stepOut = ({}, cb) ->
-    debugClient.continue {stepaction: 'out'}, ->
+    debugClient.commands.continue 'out', ->
       Debugger.emit_resumed()
       cb()
 
   # Stops on the next JavaScript statement.
   Debugger.pause = ({}, cb) ->
     # Not implemented
-    debugClient.suspend {}, cb
+    debugClient.commands.suspend cb
 
   # Resumes JavaScript execution.
   Debugger.resume = ({}, cb) ->
-    debugClient.continue {}, ->
+    debugClient.commands.continue ->
       Debugger.emit_resumed()
       cb()
 
@@ -151,7 +167,14 @@ module.exports = ({debugClient}) ->
   # @returns callFrames CallFrame[]? New stack trace in case editing has happened while VM was stopped.
   # @returns result object? VM-specific description of the changes applied.
   Debugger.setScriptSource = ({scriptId, scriptSource, preview}, cb) ->
-    # Not implemented
+    {changelive} = debugClient.commands
+    changelive {scriptId, scriptSource, preview}, (err, summary) ->
+      return cb err if err?
+      sources[scriptId] = scriptSource
+      {change_log, result} = summary
+      if result?.stack_modified
+        do handleBreakEvent
+      cb()
 
   # Restarts particular call frame from the beginning.
   #
@@ -184,9 +207,10 @@ module.exports = ({debugClient}) ->
   #
   # @param state none|uncaught|all Pause on exceptions mode.
   Debugger.setPauseOnExceptions = ({state}, cb) ->
+    {setexceptionbreak} = debugClient.commands
     tasks = [
-      (cb) -> debugClient.setexceptionbreak {type: 'all', enabled: state is 'all'}
-      (cb) -> debugClient.setexceptionbreak {type: 'uncaught', enabled: state is 'uncaught'}
+      (cb) -> setexceptionbreak {type: 'all', enabled: state is 'all'}
+      (cb) -> setexceptionbreak {type: 'uncaught', enabled: state is 'uncaught'}
     ]
     parallel tasks, cb
 
@@ -202,13 +226,17 @@ module.exports = ({debugClient}) ->
   # @returns result Runtime.RemoteObject Object wrapper for the evaluation result.
   # @returns wasThrown boolean? True if the result was thrown during the evaluation.
   Debugger.evaluateOnCallFrame = ({callFrameId, expression, objectGroup, includeCommandLineAPI, doNotPauseOnExceptionsAndMuteConsole, returnByValue, generatePreview}, cb) ->
-    params = { expression, global: false, frame: callFrameId, disable_break: doNotPauseOnExceptionsAndMuteConsole }
-    debugClient.evaluate params, (err, res) ->
-      if err?
-        { message, stack } = err
-        return cb null, result: { type: 'string', value: message }, wasThrown: true
+    {evaluate} = debugClient.commands
+
+    objectId = debugClient.nextObjectId()
+
+    evaluate({doNotPauseOnExceptionsAndMuteConsole, includeCommandLineAPI})
+    .saveInObjectGroup(objectGroup, objectId)
+    .onCallFrame(callFrameId) expression, (err, result) ->
+      if err
+        cb null, { result: err, wasThrown: true }
       else
-        return cb null, result: res
+        cb null, { result, wasThrown: false }
 
   # Compiles expression.
   #

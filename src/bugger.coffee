@@ -2,6 +2,7 @@
 {EventEmitter} = require 'events'
 
 {parallel} = require 'async'
+{omit} = require 'underscore'
 
 bugScript = require './bug-script'
 domains = require './domains'
@@ -40,6 +41,12 @@ bugger = (debugBreak = true, webport = 8058, webhost = '127.0.0.1') ->
     # Make the Websocket <-> XAgent binding work
     inspector.on 'request', domains.handle
     domains.on 'notification', inspector.dispatchEvent
+
+    forked.on 'message', (message) ->
+      if message.method?
+        {method} = message
+        params = omit message, 'method'
+        domains.handle {method, params}
 
   wrapEmitter.run = run = (script, scriptArgs = []) ->
     tasks = [ startServer, startScript(script, scriptArgs, {debugBreak}) ]

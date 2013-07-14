@@ -6,6 +6,7 @@ module.exports = domains = new EventEmitter()
 
 agentContext =
   debugClient: null
+  forked: null
 
 loadDomainNames = ->
   readdirSync(__dirname)

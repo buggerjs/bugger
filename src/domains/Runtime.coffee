@@ -1,6 +1,8 @@
 # Domain bindings for Runtime
 {EventEmitter} = require 'events'
 
+simpleCounter = -50000
+
 module.exports = ({debugClient}) ->
   Runtime = new EventEmitter()
 
@@ -73,13 +75,15 @@ module.exports = ({debugClient}) ->
   # @returns result RemoteObject Evaluation result.
   # @returns wasThrown boolean? True if the result was thrown during the evaluation.
   Runtime.evaluate = ({expression, objectGroup, includeCommandLineAPI, doNotPauseOnExceptionsAndMuteConsole, contextId, returnByValue, generatePreview}, cb) ->
-    params = { expression, global: true, disable_break: doNotPauseOnExceptionsAndMuteConsole }
-    debugClient.evaluate params, (err, res) ->
+    params = { objectGroup, doNotPauseOnExceptionsAndMuteConsole }
+    if params.objectGroup
+      params.forceObjectId = simpleCounter++
+
+    debugClient.commands.evaluate(params) expression, (err, res) ->
       if err?
-        return cb null, result: { type: 'string', value: (err.stack ? err.message) }, wasThrown: true
+        return cb null, result: err, wasThrown: true
       else
-        {registerObject} = getObjectGroup objectGroup
-        return cb null, result: registerObject(res, params)
+        return cb null, result: res
 
   # Calls function with given declaration on the given object. Object group of the result is inherited from the target object.
   #
@@ -92,23 +96,24 @@ module.exports = ({debugClient}) ->
   # @returns result RemoteObject Call result.
   # @returns wasThrown boolean? True if the result was thrown during the evaluation.
   Runtime.callFunctionOn = ({objectId, functionDeclaration, doNotPauseOnExceptionsAndMuteConsole, returnByValue, generatePreview}, cb) ->
-    args = arguments[0].arguments ? []
-
-    additional_context = []
+    injectObjects = []
     argExpressions = []
 
-    if 0 < objectId.indexOf '::'
-      argExpressions.push resolveManagedObjectId(objectId).expression
-    else
-      additional_context.push { name: '$objectCtx', handle: parseInt(objectId) }
+    if objectId == '0'
+      argExpressions.push 'this'
+    else if /^\d+$/.test objectId
+      injectObjects.push { name: '$objectCtx', objectId: parseInt(objectId) }
       argExpressions.push '$objectCtx'
-    
+    else
+      [ objectGroup, forceObjectId ] = objectId.split ':'
+      argExpressions.push "root.__bugger__[#{JSON.stringify objectGroup}][#{JSON.stringify forceObjectId}]"
+
     expression = "(#{functionDeclaration}).call(#{argExpressions.join ', '});"
 
-    params = { expression, additional_context, global: true, disable_break: doNotPauseOnExceptionsAndMuteConsole }
-    debugClient.evaluate params, (err, res) ->
+    params = { doNotPauseOnExceptionsAndMuteConsole, generatePreview, returnByValue, injectObjects }
+    debugClient.commands.evaluate(params) expression, (err, res) ->
       if err?
-        return cb null, result: { type: 'string', value: (err.stack ? err.message) }, wasThrown: true
+        return cb null, result: err, wasThrown: true
       else
         return cb null, result: res
 
@@ -119,14 +124,24 @@ module.exports = ({debugClient}) ->
   # @returns result PropertyDescriptor[] Object properties.
   # @returns internalProperties InternalPropertyDescriptor[]? Internal object properties.
   Runtime.getProperties = ({objectId, ownProperties}, cb) ->
-    if 0 < objectId.indexOf '::'
-      properties = getManagedObjectProperties objectId
-      properties ?= []
-      cb null, result: properties
-    else
-      debugClient.lookup { handles: [objectId], includeSource: false, inlineRefs: true }, (err, objectMap) ->
+    if objectId.substr(0, 6) == 'scope:' || /^\d+$/.test objectId
+      params = { objectId, ownProperties }
+      debugClient.commands.lookup(params) objectId, (err, objectDescriptor) ->
         return cb(err) if err?
-        cb null, result: objectMap[objectId].properties
+        cb null, result: objectDescriptor.properties
+    else
+      [objectGroup, subId] = objectId.split ':'
+      if objectGroup? && subId?
+        {evaluate, lookup} = debugClient.commands
+        options =
+          returnByValue: true
+          doNotPauseOnExceptionsAndMuteConsole: true
+        expression = "root.__bugger__[#{JSON.stringify objectGroup}][#{JSON.stringify subId}]"
+
+        evaluate(options) expression, (err, remoteObject) ->
+          return cb err if err?
+          lookup(options) remoteObject.objectId, (err, objectDescriptor) ->
+            cb err, result: objectDescriptor.properties
 
   # Releases remote object with given id.
   #
