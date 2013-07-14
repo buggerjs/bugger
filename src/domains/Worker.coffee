@@ -20,6 +20,7 @@ module.exports = (agentContext) ->
   # @returns result boolean True if browser has workers support.
   Worker.canInspectWorkers = ({}, cb) ->
     # Not implemented
+    cb null, result: false
 
   # @param workerId integer 
   Worker.connectToWorker = ({workerId}, cb) ->

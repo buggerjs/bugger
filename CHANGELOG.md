@@ -2,6 +2,8 @@
 # v0.5.0-beta5
 * Internal improvements
 * Fixed coffee-script debugging, now uses filename.src for the source file
+* chrome://devtools -> chrome-devtools://devtools
+* Handling Worker.canInspectWorkers
 
 # v0.5.0-beta4
 * stdio forwarded to devtools

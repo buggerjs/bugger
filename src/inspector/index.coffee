@@ -75,7 +75,7 @@ module.exports = ->
   httpServer.on 'listening', ->
     {address, port} = @address()
     query = "ws=#{address}:#{port}/websocket"
-    httpServer.DEFAULT_URL = "chrome://devtools/devtools.html?#{query}"
+    httpServer.DEFAULT_URL = "chrome-devtools://devtools/devtools.html?#{query}"
     inspector.DEFAULT_URL = httpServer.DEFAULT_URL
     httpServer.BASE_URL = "http://#{address}:#{port}"
 
