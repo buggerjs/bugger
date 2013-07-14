@@ -5,7 +5,7 @@ LIB = $(SRC:src/%.coffee=lib/%.js)
 
 COFFEE = node_modules/.bin/coffee --js --bare
 MOCHA  = node_modules/.bin/mocha --timeout 3s --recursive --compilers coffee:coffee-script-redux -u tdd
-WACHS  = node_modules/.bin/wachs
+WACHS  = wachs
 GROC   = node_modules/.bin/groc
 
 all: build

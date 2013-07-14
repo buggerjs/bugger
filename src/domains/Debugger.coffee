@@ -24,6 +24,16 @@ module.exports = ({debugClient}) ->
       callFrames = data?.callFrames ? []
       Debugger.emit_paused {callFrames, reason: 'exception', data: exception}
 
+  handleAfterCompile = ({script}) ->
+    params =
+      ids: [script.id]
+      includeSource: true
+      types: 4 # TODO: look for docs
+
+    debugClient.commands.scripts params, (err, scripts) ->
+      Debugger.emit_scriptParsed(script) for script in scripts
+      null
+
   # Tells whether enabling debugger causes scripts recompilation.
   #
   # @returns result boolean True if enabling debugger causes scripts recompilation.
@@ -40,6 +50,7 @@ module.exports = ({debugClient}) ->
   Debugger.enable = ({}, cb) ->
     debugClient.on 'break', handleBreakEvent
     debugClient.on 'exception', handleException
+    debugClient.on 'afterCompile', handleAfterCompile
 
     debugClient.commands.scripts {includeSource: true}, (err, scripts) ->
       handleBreakEvent() unless debugClient.running
