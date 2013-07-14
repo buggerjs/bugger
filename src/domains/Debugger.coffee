@@ -24,15 +24,24 @@ module.exports = ({debugClient}) ->
       callFrames = data?.callFrames ? []
       Debugger.emit_paused {callFrames, reason: 'exception', data: exception}
 
-  handleAfterCompile = ({script}) ->
+  afterCompileQueue = []
+  nextQueueRun = null
+  processCompileQueue = ->
     params =
-      ids: [script.id]
+      ids: afterCompileQueue
       includeSource: true
       types: 4 # TODO: look for docs
+    afterCompileQueue = []
+    nextQueueRun = null
 
     debugClient.commands.scripts params, (err, scripts) ->
       Debugger.emit_scriptParsed(script) for script in scripts
       null
+
+  handleAfterCompile = ({script}) ->
+    afterCompileQueue.push script.id
+    # at most fetch new scripts every 100 milliseconds
+    nextQueueRun ?= setTimeout(processCompileQueue, 100)
 
   # Tells whether enabling debugger causes scripts recompilation.
   #
