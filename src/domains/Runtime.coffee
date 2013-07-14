@@ -130,7 +130,18 @@ module.exports = ({debugClient}) ->
         return cb(err) if err?
         cb null, result: objectDescriptor.properties
     else
-      cb new Error "Managed id not supported yet: #{objectId}"
+      [objectGroup, subId] = objectId.split ':'
+      if objectGroup? && subId?
+        {evaluate, lookup} = debugClient.commands
+        options =
+          returnByValue: true
+          doNotPauseOnExceptionsAndMuteConsole: true
+        expression = "root.__bugger__[#{JSON.stringify objectGroup}][#{JSON.stringify subId}]"
+
+        evaluate(options) expression, (err, remoteObject) ->
+          return cb err if err?
+          lookup(options) remoteObject.objectId, (err, objectDescriptor) ->
+            cb err, result: objectDescriptor.properties
 
   # Releases remote object with given id.
   #
