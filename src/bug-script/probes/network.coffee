@@ -112,7 +112,8 @@ patchProtocolLib = (protocolLib) ->
 
     patchedClientRequest(oldRequest options, patchedClientResponseCallback(cb))
 
-load = (scriptContext) ->
+load = (scriptContext, safe = false) ->
+  return if safe
   for protocolLib in [http, https]
     patchProtocolLib(protocolLib)
 

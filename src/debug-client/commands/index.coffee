@@ -11,4 +11,5 @@ module.exports = (debugClient) ->
     clearbreakpoint: require('./clearbreakpoint')(debugClient)
     setexceptionbreak: require('./setexceptionbreak')(debugClient)
     lookup: require('./lookup')(debugClient)
+    changelive: require('./changelive')(debugClient)
   }

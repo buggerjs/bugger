@@ -3,13 +3,10 @@
 
 {parallel} = require 'async'
 
-# DebugClient2 = require '../debug-client'
-
 module.exports = ({debugClient}) ->
   Debugger = new EventEmitter()
 
   sources = {}
-  # debugClient2 = DebugClient2(debugClient.debugConnection)
 
   handleBreakEvent = ->
     {backtrace} = debugClient.commands
@@ -170,7 +167,14 @@ module.exports = ({debugClient}) ->
   # @returns callFrames CallFrame[]? New stack trace in case editing has happened while VM was stopped.
   # @returns result object? VM-specific description of the changes applied.
   Debugger.setScriptSource = ({scriptId, scriptSource, preview}, cb) ->
-    # Not implemented
+    {changelive} = debugClient.commands
+    changelive {scriptId, scriptSource, preview}, (err, summary) ->
+      return cb err if err?
+      sources[scriptId] = scriptSource
+      {change_log, result} = summary
+      if result?.stack_modified
+        do handleBreakEvent
+      cb()
 
   # Restarts particular call frame from the beginning.
   #

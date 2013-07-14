@@ -7,18 +7,7 @@ Module = require 'module'
 Module._sourceMaps ?= {}
 {_nodeModulePaths, _sourceMaps} = Module
 
-compilers =
-  '.js':
-    compile: (filename, code, cb) -> cb(null, { code, map: null })
-    compileString: (input) -> input
-
-scriptContext = { compilers }
-
-knownProbes = ['./probes/coffee', './probes/network']
-
-knownProbes.forEach (probeModule) ->
-  {load} = require probeModule
-  load scriptContext
+{compilers} = require('./probes')(false)
 
 registerExtension = (extension, {compile}) ->
   Object.defineProperty require.extensions, extension, enumerable: true, get: ->
