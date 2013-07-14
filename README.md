@@ -23,7 +23,7 @@ Pass parameters: `bugger examples/server.js -- --port=3000`
 
 ### Open the devtools
 
-chrome://devtools/devtools.html?ws=127.0.0.1:8058/websocket
+chrome-devtools://devtools/devtools.html?ws=127.0.0.1:8058/websocket
 
 ## Options:
 
@@ -37,16 +37,14 @@ chrome://devtools/devtools.html?ws=127.0.0.1:8058/websocket
 * Step-by-step debugging
 * SourceMaps for coffee-script
 * Variable introspection
-* stdout of the process is forwarded to console.log (not in 0.5.x)
+* stdout of the process is forwarded to console.log
 * Evalute expressions in the console
-* Monitor outgoing http(s) requests your script does (Network tab) (not in 0.5.x)
+* Monitor outgoing http(s) requests your script does (Network tab)
 * Pressing "Record" on the Timeline-tab will record memory usage stats (for a gotcha see below) (not in 0.5.x)
 * Live edit the running JavaScript code (not in 0.5.x)
 
 ### What is missing
 * Profiling in general
-* Incoming network requests - should they appear in the Network-tab as well? Would that be
-  confusing when combined with outgoing requests?
 * Better usage of the Events/Timeline section
 * Decision whether the "Resources"-tab makes any sense
 * Support for cluster/fork - maybe consider those kind-of (web) workers..?
@@ -69,3 +67,9 @@ outdated and also I was on vacation and had way too much time.
 ### WebKit inspector
 
 bugger uses the Chrome developer tools as it's frontend.
+
+## Reference links
+
+- https://svn.webkit.org/repository/webkit/trunk/Source/WebCore/inspector
+- https://developers.google.com/chrome-developer-tools/docs/protocol/1.0
+- https://code.google.com/p/v8/wiki/DebuggerProtocol

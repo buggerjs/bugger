@@ -4,6 +4,8 @@
 module.exports = (agentContext) ->
   Network = new EventEmitter()
 
+  responseDataCache = {}
+
   # Enables network tracking, network events will now be delivered to the client.
   Network.enable = ({}, cb) ->
     # Not implemented
@@ -31,6 +33,7 @@ module.exports = (agentContext) ->
   # @returns base64Encoded boolean True, if content was sent as base64.
   Network.getResponseBody = ({requestId}, cb) ->
     # Not implemented
+    cb null, body: responseDataCache[requestId], base64Encoded: false
 
   # This method sends a new XMLHttpRequest which is identical to the original one. The following parameters should be identical: method, url, async, request body, extra headers, withCredentials attribute, user, password.
   #
@@ -63,6 +66,12 @@ module.exports = (agentContext) ->
   # @param cacheDisabled boolean Cache disabled state.
   Network.setCacheDisabled = ({cacheDisabled}, cb) ->
     # Not implemented
+
+  # [bugger] Cache response data from the child process
+  Network._cacheResponseContent = ({requestId, chunk}) ->
+    requestId = requestId.toString()
+    responseDataCache[requestId] ?= ''
+    responseDataCache[requestId] += chunk.toString()
 
   # Fired when page is about to send HTTP request.
   #

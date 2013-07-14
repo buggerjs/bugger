@@ -44,5 +44,6 @@ scriptArgs = argv._
 
 bugger.on 'error', (err) ->
   console.log '[bugger] [error]', err.message
+  console.log err.stack
 
 bugger.run script, scriptArgs
