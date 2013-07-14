@@ -23,7 +23,7 @@ Pass parameters: `bugger examples/server.js -- --port=3000`
 
 ### Open the devtools
 
-chrome://devtools/devtools.html?ws=127.0.0.1:8058/websocket
+chrome-devtools://devtools/devtools.html?ws=127.0.0.1:8058/websocket
 
 ## Options:
 
@@ -45,8 +45,6 @@ chrome://devtools/devtools.html?ws=127.0.0.1:8058/websocket
 
 ### What is missing
 * Profiling in general
-* Incoming network requests - should they appear in the Network-tab as well? Would that be
-  confusing when combined with outgoing requests?
 * Better usage of the Events/Timeline section
 * Decision whether the "Resources"-tab makes any sense
 * Support for cluster/fork - maybe consider those kind-of (web) workers..?
