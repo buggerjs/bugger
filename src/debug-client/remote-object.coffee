@@ -97,7 +97,7 @@ RemoteObject = ({returnByValue, generatePreview}) -> (refMap) ->
       obj.type = 'object'
       obj.subtype = 'null'
       obj.value = null
-    else if body.type in [ 'object', 'function', 'regexp' ]
+    else if body.type in [ 'object', 'function', 'regexp', 'error' ]
       obj.objectId = body.handle.toString()
       obj.subtype =
         switch body.className

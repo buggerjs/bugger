@@ -23,7 +23,7 @@ module.exports = (debugClient) ->
 
       reqParams = extend {expression}, {
         disable_break: !!options.doNotPauseOnExceptionsAndMuteConsole
-        global: !options.callFrameId
+        global: not options.callFrameId?
         frame: options.callFrameId
       }
 
@@ -35,14 +35,14 @@ module.exports = (debugClient) ->
           { name: injectObject.name, handle: parseInt(injectObject.objectId, 10) }
 
       debugClient.sendRequest 'evaluate', reqParams, (err, response) ->
-        {refs, body, success, message} = response
+        {refMap, body, success, message} = response
         if success
-          remoteObject = RemoteObject(options)(refs) body
+          remoteObject = RemoteObject(options)(refMap) body
           if forcedId? and remoteObject.objectId?
             remoteObject.objectId = forcedId
           cb null, remoteObject
         else
-          cb ErrorObjectFromMessage(options)(refs) message
+          cb ErrorObjectFromMessage(options)(refMap) message
 
     fn.withOptions = (overrides) ->
       evaluate extend({}, options, overrides)
