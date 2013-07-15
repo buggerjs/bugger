@@ -1,5 +1,5 @@
 
-module.exports = callbackWrapper = ({commands}) ->
+module.exports = callbackWrapper = ->
   callbackBySeq = {}
   lastSeq = 5000
 
@@ -12,4 +12,9 @@ module.exports = callbackWrapper = ({commands}) ->
     return unless cb?
     cb null, obj
 
-  {wrapCallback, unwrapCallback}
+  unwrapWrapped = (obj) ->
+    cb = callbackBySeq[obj.request_seq]
+    return unless cb?
+    cb obj.error, obj.data
+
+  {wrapCallback, unwrapCallback, unwrapWrapped}
