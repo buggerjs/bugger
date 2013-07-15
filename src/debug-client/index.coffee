@@ -2,7 +2,7 @@
 {EventEmitter} = require 'events'
 
 debugParser = require './parser'
-callbackWrapper = require './callback-wrapper'
+callbackWrapper = require '../callback-wrapper'
 commandsWith = require './commands'
 
 module.exports = (debugConnection) ->
