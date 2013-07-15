@@ -29,18 +29,15 @@ module.exports = ({debugClient, forked}) ->
     cb null, result: true
 
   # @returns headers ProfileHeader[] 
-  HeapProfiler.getProfileHeaders = ({}, cb) ->
-    # Not implemented
+  forwardMethod 'getProfileHeaders'
 
   # @param uid integer 
   forwardMethod 'getHeapSnapshot'
 
   # @param uid integer 
-  HeapProfiler.removeProfile = ({uid}, cb) ->
-    # Not implemented
+  forwardMethod 'removeProfile'
 
-  HeapProfiler.clearProfiles = ({}, cb) ->
-    # Not implemented
+  forwardMethod 'clearProfiles'
 
   # @param reportProgress boolean? If true 'reportHeapSnapshotProgress' events will be generated while snapshot is being taken.
   forwardMethod 'takeHeapSnapshot'

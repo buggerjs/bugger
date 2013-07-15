@@ -1,4 +1,8 @@
 
+# v0.5.0-beta6
+* Support for profiling (heap and cpu)
+* Minor bug fixes
+
 # v0.5.0-beta5
 * Internal improvements
 * Add script files as they are compiled

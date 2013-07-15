@@ -56,15 +56,26 @@ ProfilerProbe = ->
     cb()
 
   # @returns headers ProfileHeader[] 
+  HeapProfiler.getProfileHeaders = ({}, cb) ->
+    headers = []
+
+    for profileId, profile of profilesByType[HeapProfileType]
+      headers.push
+        title: profile.title
+        uid: profile.uid
+        typeId: HeapProfileType
+
+    cb null, {headers}
+
+  # @returns headers ProfileHeader[] 
   Profiler.getProfileHeaders = ({}, cb) ->
     headers = []
 
-    for type, profiles of profilesByType
-      for profileId, profile of profiles
-        headers.push
-          title: profile.title
-          uid: profile.uid
-          typeId: type
+    for profileId, profile of profilesByType[CPUProfileType]
+      headers.push
+        title: profile.title
+        uid: profile.uid
+        typeId: CPUProfileType
 
     cb null, {headers}
 
@@ -114,6 +125,16 @@ ProfilerProbe = ->
   Profiler.getHeapSnapshot = ({uid}, cb) ->
     console.log 'Profiler.getHeapSnapshot'
     # Not implemented
+
+  # @param uid integer 
+  HeapProfiler.removeProfile = ({uid}, cb) ->
+    if profilesByType[HeapProfileType][uid]?
+      delete profilesByType[HeapProfileType][uid]
+    cb()
+
+  HeapProfiler.clearProfiles = ({}, cb) ->
+    profilesByType.HEAP = {}
+    v8profiler.deleteAllSnapshots()
 
   # @param type string 
   # @param uid integer 
