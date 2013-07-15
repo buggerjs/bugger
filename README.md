@@ -40,11 +40,11 @@ chrome-devtools://devtools/devtools.html?ws=127.0.0.1:8058/websocket
 * stdout of the process is forwarded to console.log
 * Evalute expressions in the console
 * Monitor outgoing http(s) requests your script does (Network tab)
+* Heap snapshots and CPU profiles (Profiles tab)
 * Pressing "Record" on the Timeline-tab will record memory usage stats (for a gotcha see below) (not in 0.5.x)
 * Live edit the running JavaScript code (not in 0.5.x)
 
 ### What is missing
-* Profiling in general
 * Better usage of the Events/Timeline section
 * Decision whether the "Resources"-tab makes any sense
 * Support for cluster/fork - maybe consider those kind-of (web) workers..?
