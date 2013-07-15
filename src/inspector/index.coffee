@@ -74,7 +74,9 @@ module.exports = ->
 
   httpServer.on 'listening', ->
     {address, port} = @address()
-    query = "ws=#{address}:#{port}/websocket"
+    query  = "ws=#{address}:#{port}/websocket"
+    # These are the default colors in OSX - they may vary between platforms, but I like them this way
+    query += "&toolbarColor=rgba(230,230,230,1)&textColor=rgba(0,0,0,1)"
     httpServer.DEFAULT_URL = "chrome-devtools://devtools/devtools.html?#{query}"
     inspector.DEFAULT_URL = httpServer.DEFAULT_URL
     httpServer.BASE_URL = "http://#{address}:#{port}"
