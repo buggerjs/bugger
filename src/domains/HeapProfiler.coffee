@@ -1,20 +1,39 @@
 # Domain bindings for HeapProfiler
 {EventEmitter} = require 'events'
+callbackWrapper = require '../callback-wrapper'
 
-module.exports = (agentContext) ->
+module.exports = ({debugClient, forked}) ->
   HeapProfiler = new EventEmitter()
+
+  {wrapCallback, unwrapWrapped} = callbackWrapper()
+
+  forked.on 'message', (message) ->
+    if message.type is 'forward_res'
+      {command} = message
+      return unless command.substr(0, 13) == 'HeapProfiler.'
+      unwrapWrapped message
+
+  forwardMethod = (method) ->
+    HeapProfiler[method] = (params, cb) ->
+      message =
+        type: 'forward_req'
+        command: "HeapProfiler.#{method}"
+        params: params
+        seq: wrapCallback(cb)
+
+      forked.send message
 
   # @returns result boolean 
   HeapProfiler.hasHeapProfiler = ({}, cb) ->
-    # Not implemented
+    console.log 'HeapProfiler.hasHeapProfiler'
+    cb null, result: true
 
   # @returns headers ProfileHeader[] 
   HeapProfiler.getProfileHeaders = ({}, cb) ->
     # Not implemented
 
   # @param uid integer 
-  HeapProfiler.getHeapSnapshot = ({uid}, cb) ->
-    # Not implemented
+  forwardMethod 'getHeapSnapshot'
 
   # @param uid integer 
   HeapProfiler.removeProfile = ({uid}, cb) ->
@@ -24,8 +43,7 @@ module.exports = (agentContext) ->
     # Not implemented
 
   # @param reportProgress boolean? If true 'reportHeapSnapshotProgress' events will be generated while snapshot is being taken.
-  HeapProfiler.takeHeapSnapshot = ({reportProgress}, cb) ->
-    # Not implemented
+  forwardMethod 'takeHeapSnapshot'
 
   HeapProfiler.collectGarbage = ({}, cb) ->
     # Not implemented

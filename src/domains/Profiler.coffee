@@ -1,71 +1,84 @@
 # Domain bindings for Profiler
 {EventEmitter} = require 'events'
+callbackWrapper = require '../callback-wrapper'
 
-module.exports = (agentContext) ->
+module.exports = ({debugClient, forked}) ->
   Profiler = new EventEmitter()
+
+  {wrapCallback, unwrapWrapped} = callbackWrapper()
+
+  forked.on 'message', (message) ->
+    if message.type is 'forward_res'
+      {command} = message
+      return unless command.substr(0, 9) == 'Profiler.'
+      unwrapWrapped message
+
+  forwardMethod = (method) ->
+    Profiler[method] = (params, cb) ->
+      message =
+        type: 'forward_req'
+        command: "Profiler.#{method}"
+        params: params
+        seq: wrapCallback(cb)
+
+      forked.send message
 
   # @returns result boolean 
   Profiler.causesRecompilation = ({}, cb) ->
     cb null, result: false
 
-  # @returns result boolean 
-  Profiler.isSampling = ({}, cb) ->
-    cb null, result: false
+  # @returns result boolean
+  forwardMethod 'isSampling'
 
   # @returns result boolean 
   Profiler.hasHeapProfiler = ({}, cb) ->
-    cb null, result: false
+    console.log 'Profiler.hasHeapProfiler'
+    cb null, result: true
 
-  Profiler.enable = ({}, cb) ->
-    # Not implemented
+  # @returns result boolean
+  forwardMethod 'hasHeapProfiler'
 
-  Profiler.disable = ({}, cb) ->
-    # Not implemented
+  forwardMethod 'enable'
 
-  Profiler.start = ({}, cb) ->
-    # Not implemented
+  forwardMethod 'disable'
 
-  Profiler.stop = ({}, cb) ->
-    # Not implemented
+  forwardMethod 'start'
+
+  forwardMethod 'stop'
 
   # @returns headers ProfileHeader[] 
-  Profiler.getProfileHeaders = ({}, cb) ->
-    # Not implemented
+  forwardMethod 'getProfileHeaders'
 
   # @param uid integer 
   # @returns profile CPUProfile 
-  Profiler.getCPUProfile = ({uid}, cb) ->
-    # Not implemented
+  forwardMethod 'getCPUProfile'
 
   # @param uid integer 
-  Profiler.getHeapSnapshot = ({uid}, cb) ->
-    # Not implemented
+  forwardMethod 'getHeapSnapshot'
 
   # @param type string 
   # @param uid integer 
-  Profiler.removeProfile = ({type, uid}, cb) ->
-    # Not implemented
+  forwardMethod 'removeProfile'
 
-  Profiler.clearProfiles = ({}, cb) ->
-    # Not implemented
+  forwardMethod 'clearProfiles'
 
   # @param reportProgress boolean? If true 'reportHeapSnapshotProgress' events will be generated while snapshot is being taken.
+  forwardMethod 'takeHeapSnapshot'
   Profiler.takeHeapSnapshot = ({reportProgress}, cb) ->
-    # Not implemented
+    console.log 'takeHeapSnapshot', arguments[0]
 
   Profiler.collectGarbage = ({}, cb) ->
+    console.log 'Profiler.collectGarbage'
     # Not implemented
 
   # @param objectId HeapSnapshotObjectId 
   # @param objectGroup string? Symbolic group name that can be used to release multiple objects.
   # @returns result Runtime.RemoteObject Evaluation result.
-  Profiler.getObjectByHeapObjectId = ({objectId, objectGroup}, cb) ->
-    # Not implemented
+  forwardMethod 'getObjectByHeapObjectId'
 
   # @param objectId Runtime.RemoteObjectId Identifier of the object to get heap object id for.
   # @returns heapSnapshotObjectId HeapSnapshotObjectId Id of the heap snapshot object corresponding to the passed remote object id.
-  Profiler.getHeapObjectId = ({objectId}, cb) ->
-    # Not implemented
+  forwardMethod 'getHeapObjectId'
 
   # @param header ProfileHeader 
   Profiler.emit_addProfileHeader = (params) ->
