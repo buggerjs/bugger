@@ -4,7 +4,7 @@ knownProbes = ['./coffee', './network', './profiler']
 module.exports = (safe = false) ->
   compilers =
     '.js':
-      compile: (filename, code, cb) -> cb(null, { code, map: null })
+      compile: (filename, code) -> { code, map: null }
       compileString: (input) -> input
 
   scriptContext = { compilers }
