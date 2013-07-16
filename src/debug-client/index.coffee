@@ -11,7 +11,7 @@ module.exports = (debugConnection) ->
   client.debugConnection = debugConnection
 
   nextObjectId = 0
-  client.nextObjectId = -> ++nextObjectId
+  client.nextObjectId = -> (++nextObjectId).toString()
 
   client.commands = commandsWith client
 
