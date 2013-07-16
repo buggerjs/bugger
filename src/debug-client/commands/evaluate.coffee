@@ -15,17 +15,19 @@ safeInObjectGroup = (objectGroup, objectId, expr) ->
 module.exports = (debugClient) ->
   evaluate = (options) ->
     fn = (expression, cb) ->
-      forcedId = null
-      if options.objectGroup and options.forceObjectId
-        {objectGroup, forceObjectId} = options
-        expression = safeInObjectGroup objectGroup, forceObjectId, expression
-        forcedId = "#{objectGroup}:#{forceObjectId}"
+      expression = 'false' if expression.trim() == ''
 
       reqParams = extend {expression}, {
         disable_break: !!options.doNotPauseOnExceptionsAndMuteConsole
         global: not options.callFrameId?
         frame: options.callFrameId
       }
+
+      forcedId = null
+      if reqParams.global and options.objectGroup and options.forceObjectId
+        {objectGroup, forceObjectId} = options
+        expression = safeInObjectGroup objectGroup, forceObjectId, expression
+        forcedId = "#{objectGroup}:#{forceObjectId}"
 
       if options.returnByValue
         reqParams.inline_refs = true

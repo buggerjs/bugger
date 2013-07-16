@@ -1,4 +1,7 @@
 
+# v0.5.0-beta7
+* Fix for "Add watch"-button
+
 # v0.5.0-beta6
 * Support for profiling (heap and cpu)
 * Minor bug fixes

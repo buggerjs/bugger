@@ -26,10 +26,14 @@ domains.handle = (request) ->
     return domains.emit 'error', error
 
   unless typeof agent[command] is 'function'
-    paramHint = Object.keys(params ? {}).join(', ')
+    paramHint = Object.keys(params).join(', ')
     error = new Error "Unknown command: #{domain}.#{command}(#{paramHint})"
     return domains.emit 'error', error
 
+  if process.env.TRACE_BUGGER_CALLS
+    paramHint = Object.keys(params).join(', ')
+    console.log "Command: #{domain}.#{command}(#{paramHint})"
+    console.log '> ', JSON.stringify params
   agent[command] params, callback
 
 domains.unload = ->
