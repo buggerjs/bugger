@@ -2,6 +2,8 @@
 # v0.5.0-beta7
 * Fix for "Add watch"-button
 * Fixed JavaScript entry files
+* console.profile/console.profileEnd are available, as described in:
+  https://developers.google.com/chrome-developer-tools/docs/console-api#consoleprofilelabel
 
 # v0.5.0-beta6
 * Support for profiling (heap and cpu)
