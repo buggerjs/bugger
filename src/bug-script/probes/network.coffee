@@ -4,6 +4,7 @@ https = require 'https'
 url = require 'url'
 
 _ = require 'underscore'
+toTimeline = require './to_timeline'
 
 lastRequestId = 0
 
@@ -80,12 +81,7 @@ patchProtocolLib = (protocolLib) ->
         stackTrace = makeStackTrace()
         initiator = { stackTrace, type: 'script' }
         sendMessage 'Network.emit_requestWillBeSent', { requestId, loaderId, documentURL, request, stackTrace, initiator }
-        sendMessage 'Timeline.emit_eventRecorded',
-          record:
-            type: 'ResourceSendRequest',
-            startTime: cReqStartTime,
-            endTime: Date.now()
-            data: { requestId, url: documentURL, requestMethod: cReq.method }
+        toTimeline 'ResourceSendRequest', startTime: cReqStartTime, data: { requestId, url: documentURL, requestMethod: cReq.method }
         _end.apply this, arguments
 
       cReq
@@ -112,21 +108,11 @@ patchProtocolLib = (protocolLib) ->
 
         cRes.on 'end', ->
           sendMessage 'Network.emit_loadingFinished', { requestId }
-          sendMessage 'Timeline.emit_eventRecorded',
-            record:
-              type: 'ResourceReceiveResponse',
-              startTime: cResStartTime,
-              endTime: Date.now(),
-              data: { requestId, mimeType, statusCode: cRes.statusCode }
+          toTimeline 'ResourceReceiveResponse', startTime: cResStartTime, data: { requestId, mimeType, statusCode: cRes.statusCode }
 
         cRes.on 'error', (err) ->
           sendMessage 'Network.emit_loadingFailed', { requestId, errorText: err.message }
-          sendMessage 'Timeline.emit_eventRecorded',
-            record:
-              type: 'ResourceReceiveResponse',
-              startTime: cResStartTime,
-              endTime: Date.now(),
-              data: { requestId, mimeType, statusCode: cRes.statusCode }
+          toTimeline 'ResourceReceiveResponse', startTime: cResStartTime, data: { requestId, mimeType, statusCode: cRes.statusCode }
 
         cb(cRes)
 

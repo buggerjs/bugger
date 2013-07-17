@@ -1,35 +1,18 @@
 
 TimelineProbe = ->
-  timerStarts = {}
+  toTimeline = require './to_timeline'
 
   console.timeStamp = (message = 'console.timeStamp') ->
-    process.send
-      method: 'Timeline.emit_eventRecorded'
-      record:
-        type: 'TimeStamp'
-        startTime: Date.now()
-        data: {message}
+    toTimeline 'TimeStamp', data: {message}
 
   __time = console.time
   console.time = (message) ->
-    startTime = timerStarts[message] = Date.now()
-    process.send
-      method: 'Timeline.emit_eventRecorded'
-      record:
-        type: 'Time'
-        startTime: startTime
-        data: {message}
+    toTimeline 'Time', data: {message}
     __time.apply console, arguments
 
   __timeEnd = console.timeEnd
   console.timeEnd = (message) ->
-    startTime = timerStarts[message]
-    process.send
-      method: 'Timeline.emit_eventRecorded'
-      record:
-        type: 'TimeEnd'
-        startTime: Date.now()
-        data: {message}
+    toTimeline 'TimeEnd', data: {message}
     __timeEnd.apply console, arguments
 
 load = (scriptContext, safe = false) ->
