@@ -27,6 +27,8 @@ var port = argv.port;
     port || (port = process.env.PORT);
     port || (port = 0);
 
+console.time('[SERVER.JS] Startup');
+
 var httpServer = http.createServer(function(req, res) {
   console.log('[SERVER.JS]', req.method, req.url);
   res.write('OK');
@@ -36,6 +38,8 @@ var httpServer = http.createServer(function(req, res) {
 httpServer.listen(port, function() {
   var ref = this.address(), port = ref.port, host = ref.address;
   console.log('[SERVER.JS]', 'http://' + host + ':' + port);
+  console.timeEnd('[SERVER.JS] Startup');
 }).on('error', function(e) {
   console.log(e);
+  console.timeEnd('[SERVER.JS] Startup');
 });
