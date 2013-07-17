@@ -26,8 +26,8 @@ ProfilerProbe = ->
   Profiler.disable = ({}, cb) ->
     cb()
 
-  Profiler.start = ({}, cb) ->
-    v8profiler.startProfiling()
+  Profiler.start = ({name}, cb) ->
+    v8profiler.startProfiling(name ? '')
 
     isSampling = true
     process.send
@@ -36,9 +36,9 @@ ProfilerProbe = ->
 
     cb()
 
-  Profiler.stop = ({}, cb) ->
+  Profiler.stop = ({name}, cb) ->
     isSampling = false
-    profile = v8profiler.stopProfiling()
+    profile = v8profiler.stopProfiling(name ? '')
 
     profilesByType[CPUProfileType][profile.uid] = profile
 
@@ -190,6 +190,12 @@ ProfilerProbe = ->
 load = (scriptContext, safe = false) ->
   return if safe
   agents = ProfilerProbe()
+
+  root.profile ?= console.profile ?= (name) ->
+    agents['Profiler'].start {name}, ->
+
+  root.profileEnd ?= console.profileEnd ?= (name) ->
+    agents['Profiler'].stop {name}, ->
 
   process.on 'message', (message) ->
     if message.type == 'forward_req'
