@@ -4,7 +4,7 @@ http = require 'http'
 console.error 'Use mkReq (global) to make requests'
 
 root.mkReq = ->
-  http.get('http://www.google.com/?ncd=1', (res) ->
+  http.get('http://www.google.de/?gws_rd=cr', (res) ->
     console.log "Got response: #{res.statusCode}"
   ).on('error', (e) ->
     console.log "Got error: #{e.message}"
