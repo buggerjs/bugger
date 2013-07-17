@@ -4,6 +4,8 @@
 * Fixed JavaScript entry files
 * console.profile/console.profileEnd are available, as described in:
   https://developers.google.com/chrome-developer-tools/docs/console-api#consoleprofilelabel
+* Network requests now also appear in the Timeline tab
+* console.timeStamp, console.time and console.timeEnd are appearing in the Timeline tab
 
 # v0.5.0-beta6
 * Support for profiling (heap and cpu)
