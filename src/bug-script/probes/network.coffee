@@ -74,11 +74,18 @@ patchProtocolLib = (protocolLib) ->
         sendMessage 'Network.emit_loadingFailed', { requestId, errorText: err.message }
 
       _end = cReq.end
+      cReqStartTime = Date.now()
       cReq.end = ->
         request = { headers: _renderHeaders.apply(cReq), method: cReq.method, postData: '', url: documentURL }
         stackTrace = makeStackTrace()
         initiator = { stackTrace, type: 'script' }
         sendMessage 'Network.emit_requestWillBeSent', { requestId, loaderId, documentURL, request, stackTrace, initiator }
+        sendMessage 'Timeline.emit_eventRecorded',
+          record:
+            type: 'ResourceSendRequest',
+            startTime: cReqStartTime,
+            endTime: Date.now()
+            data: { requestId, url: documentURL, requestMethod: cReq.method }
         _end.apply this, arguments
 
       cReq
@@ -87,6 +94,7 @@ patchProtocolLib = (protocolLib) ->
       (cRes) ->
         mimeType = cRes.headers['content-type']?.split(';')[0] ? 'text/plain'
         type = mimeTypeToResponseType(mimeType)
+        cResStartTime = Date.now()
         response = {
           connectionId: requestId
           connectionReused: false
@@ -104,9 +112,21 @@ patchProtocolLib = (protocolLib) ->
 
         cRes.on 'end', ->
           sendMessage 'Network.emit_loadingFinished', { requestId }
+          sendMessage 'Timeline.emit_eventRecorded',
+            record:
+              type: 'ResourceReceiveResponse',
+              startTime: cResStartTime,
+              endTime: Date.now(),
+              data: { requestId, mimeType, statusCode: cRes.statusCode }
 
         cRes.on 'error', (err) ->
           sendMessage 'Network.emit_loadingFailed', { requestId, errorText: err.message }
+          sendMessage 'Timeline.emit_eventRecorded',
+            record:
+              type: 'ResourceReceiveResponse',
+              startTime: cResStartTime,
+              endTime: Date.now(),
+              data: { requestId, mimeType, statusCode: cRes.statusCode }
 
         cb(cRes)
 
