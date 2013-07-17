@@ -41,7 +41,7 @@ chrome-devtools://devtools/devtools.html?ws=127.0.0.1:8058/websocket
 * Evalute expressions in the console
 * Monitor outgoing http(s) requests your script does (Network tab)
 * Heap snapshots and CPU profiles (Profiles tab)
-* Pressing "Record" on the Timeline-tab will record memory usage stats (for a gotcha see below) (not in 0.5.x)
+* Use console.{time, timeEnd, timeStamp}, network request and heap usage reporting (Timeline tab)
 * Live edit the running JavaScript code (not in 0.5.x)
 
 ### What is missing
@@ -53,8 +53,6 @@ chrome-devtools://devtools/devtools.html?ws=127.0.0.1:8058/websocket
 * `require` doesn't work in the console, it maybe should be more repl-like
 * LiveEdit is only working for the compiled javascripts, not for the source mapped files. This
   appears to be a limitation of the WebKit developer tools.
-* Memory usage monitoring is running inside of the script thread. Maybe it would be better to
-  externalize this (memory stats should be available to the debug/bugger process).
 
 ## Kudos to...
 
