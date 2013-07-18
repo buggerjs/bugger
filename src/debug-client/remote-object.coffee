@@ -129,8 +129,6 @@ RemoteObject = ({returnByValue, generatePreview}) -> (refMap) ->
 
       if generatePreview and obj.type is 'object'
         obj.preview = _generatePreview()
-    else
-      obj.objectId = body.handle
 
     obj
 
