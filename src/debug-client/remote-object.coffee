@@ -26,24 +26,12 @@ RemoteObject = ({returnByValue, generatePreview}) -> (refMap) ->
       if !!fn.inferredName then fn.inferredName
       else fn.name
 
-    _constructorName = ->
+    _constructorName = (body) ->
       byCtor = _functionName _resolveReffed body.constructorFunction
       byCtor ? body.text?.replace(/^#<(.*)>$/, '$1')
 
     _toString = (obj) ->
       obj.className
-
-    _extractLength = (body) ->
-      return body.length if body.length?
-      for prop in body.properties
-        if prop.name is 'length'
-          console.log prop
-          return prop.value if prop.value?
-          return refMap[prop.ref.toString()]?.value if prop.ref?
-          return null
-        else
-          continue
-      return null
 
     _describe = (obj) ->
       # Type is object, get subtype.
@@ -53,8 +41,6 @@ RemoteObject = ({returnByValue, generatePreview}) -> (refMap) ->
         when 'regexp' then _toString obj
         when 'date' then _toString obj
         when 'array'
-          # body.length = _extractLength body
-
           if body.length? then "#{className}[#{body.length}]"
           else className
         else className
@@ -79,49 +65,67 @@ RemoteObject = ({returnByValue, generatePreview}) -> (refMap) ->
 
       return preview
 
-    _resolveReffed body
+    _baseObject = (body) ->
+      _resolveReffed body
 
-    obj =
-      type: body.type
+      obj =
+        type: body.type
 
-    if isPrimitiveValue obj
-      if obj.type isnt 'undefined'
-        obj.value = body.value
+      if isPrimitiveValue obj
+        if obj.type isnt 'undefined'
+          obj.value = body.value
 
-      if obj.type is 'number'
-        obj.description =
-          if obj.value? then obj.value.toString()
-          else
-            'NaN or Infinity'
-    else if body.type is 'null'
-      obj.type = 'object'
-      obj.subtype = 'null'
-      obj.value = null
-    else if body.type in [ 'object', 'function', 'regexp', 'error' ]
-      obj.objectId = body.handle.toString()
-      obj.subtype =
-        switch body.className
-          when 'Date' then 'date'
-          when 'RegExp' then 'regexp'
-          when 'Array' then 'array'
-      obj.type = 'object' unless obj.type is 'function'
-      obj.className = _constructorName()
-      obj.description = _describe(obj)
-      obj.value = null
+        if obj.type is 'number'
+          obj.description =
+            if obj.value? then obj.value.toString()
+            else
+              'NaN or Infinity'
+      else if body.type is 'null'
+        obj.type = 'object'
+        obj.subtype = 'null'
+        obj.value = null
+      else if body.type in [ 'object', 'function', 'regexp', 'error' ]
+        obj.objectId = body.handle.toString()
+        obj.subtype =
+          switch body.className
+            when 'Date' then 'date'
+            when 'RegExp' then 'regexp'
+            when 'Array' then 'array'
+        obj.type = 'object' unless obj.type is 'function'
+        obj.className = _constructorName body
+        obj.description = _describe(obj)
+        obj.value = null
 
-      if obj.subtype == 'array' and body.properties?
-        for property in body.properties
-          if property.name is 'length' and property.value?
-            obj.description = "Array[#{property.value.value}]"
-            break
+        if obj.subtype == 'array' and body.properties?
+          for property in body.properties
+            if property.name is 'length' and property.value?
+              length =
+                if typeof property.value == 'object'
+                  property.value.value
+                else
+                  property.value
+              obj.description = "Array[#{length}]"
+              break
+      obj
 
+    obj = _baseObject body
+
+    if obj.type in ['object', 'function']
       if returnByValue
-        obj.value = (body.properties ? []).reduce ((acc, propDescriptor) ->
+        unnamedPropIndex = 0
+        obj.properties = (body.properties ? []).map (propDescriptor) ->
           {name} = propDescriptor
-          propObj = parseBody propDescriptor
-          acc[name] = propObj.value
+          name = (unnamedPropIndex++).toString() if name is ''
+          value = _baseObject propDescriptor
+          { name, value }
+
+        obj.value = obj.properties.reduce ((acc, {name, value}) ->
+          acc[name] = value.value
           acc
         ), {}
+
+        if obj.subtype == 'array'
+          obj.properties = obj.properties.filter (prop) -> prop.name != 'length'
 
       if generatePreview and obj.type is 'object'
         obj.preview = _generatePreview()
@@ -138,6 +142,6 @@ ErrorObjectFromMessage = ({returnByValue, generatePreview}) -> (refMap) -> (msg)
     objectId = "const::#{JSON.stringify { message, type: className }}"
     { type: 'object', description: msg, className, objectId }
   else
-    { type: 'string', value: message }
+    { type: 'string', value: msg }
 
 module.exports = {RemoteObject, ErrorObjectFromMessage}

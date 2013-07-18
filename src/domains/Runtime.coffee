@@ -130,18 +130,44 @@ module.exports = ({debugClient}) ->
         return cb(err) if err?
         cb null, result: objectDescriptor.properties
     else
-      [objectGroup, subId] = objectId.split ':'
+      objIdParts = objectId.split ':'
+      objectGroup = objIdParts.shift()
+      subId = objIdParts.shift()
       if objectGroup? && subId?
         {evaluate, lookup} = debugClient.commands
         options =
           returnByValue: true
           doNotPauseOnExceptionsAndMuteConsole: true
         expression = "root.__bugger__[#{JSON.stringify objectGroup}][#{JSON.stringify subId}]"
+        propertyPath =
+          if objIdParts.length > 0
+            JSON.parse objIdParts.join(':')
+          else
+            []
+
+        for propName in propertyPath
+          expression += "[#{JSON.stringify propName}]"
+
+        patchedProperties = (properties) ->
+          baseObjectId = "#{objectGroup}:#{subId}:"
+          propObjectId = (name) ->
+            baseObjectId + (JSON.stringify propertyPath.concat [name])
+
+          properties.forEach (property) ->
+            if property.value?.objectId?
+              property.value.objectId = propObjectId property.name
+            property
+
+          cb null, result: properties
 
         evaluate(options) expression, (err, remoteObject) ->
           return cb err if err?
+          if remoteObject.properties?
+            return cb null, result: patchedProperties remoteObject.properties
+
           lookup(options) remoteObject.objectId, (err, objectDescriptor) ->
-            cb err, result: objectDescriptor.properties
+            return cb err if err?
+            cb null, result: patchedProperties objectDescriptor.properties
 
   # Releases remote object with given id.
   #
