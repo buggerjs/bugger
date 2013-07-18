@@ -25,7 +25,7 @@ getObjectProperties = (refMap) -> (rawObj) ->
 module.exports = (debugClient) ->
   lookup = (options) ->
     fromNativeId = (objectId, cb) ->
-      reqParams = { handles: [objectId], includeSource: false }
+      reqParams = { handles: [parseInt objectId, 10], includeSource: false }
       debugClient.sendRequest 'lookup', reqParams, (err, response) ->
         {refMap, body, success, message} = response
         if success
@@ -59,10 +59,12 @@ module.exports = (debugClient) ->
           cb ErrorObjectFromMessage(options)(refMap) message
 
     fn = (objectId, cb) ->
-      if objectId.substr(0, 6) == 'scope:'
+      if objectId?.substr(0, 6) == 'scope:'
         fromScope objectId, cb
-      else
+      else if objectId?
         fromNativeId objectId, cb
+      else
+        cb null, []
 
     return fn
 
