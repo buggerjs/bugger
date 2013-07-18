@@ -13,8 +13,23 @@ module.exports = ({debugClient, forked}) ->
     }
 
   processStdOutData = (data) ->
+    rawText = data.toString()
+    parameters = []
+    parsedText = rawText.replace /\x1B\[(\d+)m/g, (_, code) ->
+      color = switch code
+        when '0', '39' then 'black'
+        when '31' then 'maroon'
+        when '32' then 'green'
+        when '33' then 'olive'
+        when '34' then 'navy'
+        when '35' then 'purple'
+        when '36' then 'teal'
+        when '37' then 'silver'
+      parameters.push type: 'string', value: "color: #{color}"
+      '%c'
+
     Console.emit_messageAdded message: ConsoleMessage {
-      text: data.toString()
+      parameters: [ { type: 'string', value: parsedText } ].concat parameters
     }
 
   processStdErrData = (data) ->
