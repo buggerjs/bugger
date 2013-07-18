@@ -17,17 +17,17 @@ module.exports = (debugClient) ->
     fn = (expression, cb) ->
       expression = 'false' if expression.trim() == ''
 
-      reqParams = extend {expression}, {
+      reqParams =
         disable_break: !!options.doNotPauseOnExceptionsAndMuteConsole
         global: not options.callFrameId?
         frame: options.callFrameId
-      }
 
       forcedId = null
       if reqParams.global and options.objectGroup and options.forceObjectId
         {objectGroup, forceObjectId} = options
-        expression = safeInObjectGroup objectGroup, forceObjectId, expression
+        expression = safeInObjectGroup objectGroup, forceObjectId.toString(), expression
         forcedId = "#{objectGroup}:#{forceObjectId}"
+      extend reqParams, {expression}
 
       if options.returnByValue
         reqParams.inline_refs = true
