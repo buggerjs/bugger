@@ -7,6 +7,8 @@
 * Network requests now also appear in the Timeline tab
 * console.timeStamp, console.time and console.timeEnd are appearing in the Timeline tab
 * ANSI color support on stdout
+* Inspecting objects that were returned from evaluated expressions in the console tab
+  isn't breaking everything
 
 # v0.5.0-beta6
 * Support for profiling (heap and cpu)
