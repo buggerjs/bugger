@@ -8,7 +8,7 @@ bugScript = require './bug-script'
 domains = require './domains'
 inspectorServer = require './inspector'
 
-bugger = (debugBreak = true, webport = 8058, webhost = '127.0.0.1', hang = true, stfu = false) ->
+bugger = (debugBreak = true, webport = 8058, webhost = '127.0.0.1', hang = true, stfu = false, language = null) ->
   buggerLog =
     if stfu then ->
     else (message) -> console.error message
@@ -59,7 +59,7 @@ bugger = (debugBreak = true, webport = 8058, webhost = '127.0.0.1', hang = true,
         domains.handle {method, params}
 
   wrapEmitter.run = run = (script, scriptArgs = []) ->
-    tasks = [ startServer, startScript(script, scriptArgs, {debugBreak}) ]
+    tasks = [ startServer, startScript(script, scriptArgs, {debugBreak, language}) ]
     parallel tasks, (err, [inspector, forked]) ->
       throw err if err?
       forked.on 'debugClient', (debugClient) ->

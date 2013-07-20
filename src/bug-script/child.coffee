@@ -42,6 +42,9 @@ realpath process.argv[1], (err, filename) ->
   extension = extname mainModule.filename
   prependDebugBreak = process.env.ENABLE_DEBUG_BREAK?
 
+  if process.env.BUGGER_LANGUAGE
+    extension = ".#{process.env.BUGGER_LANGUAGE}"
+
   readFile filename, 'utf8', (err, input) ->
     throw err if err?
 

@@ -27,6 +27,8 @@ argvParser = require('optimist')
   stfu:
     default: false
     describe: 'bugger itself will not print anything anywhere'
+  language:
+    describe: 'Force detection of entry script language. Supported: "js" and "coffee"'
 )
 
 argv = argvParser.argv
@@ -45,7 +47,7 @@ unless argv._.length
   process.exit 1
 
 # debugBreak = true, webport = 8058, webhost = '127.0.0.1'
-bugger = require('./bugger')(argv.brk, argv.webport, argv.webhost, argv.hang, argv.stfu)
+bugger = require('./bugger')(argv.brk, argv.webport, argv.webhost, argv.hang, argv.stfu, argv.language)
 script = argv._.shift()
 scriptArgs = argv._
 
