@@ -123,7 +123,6 @@ ProfilerProbe = ->
 
   # @param uid integer 
   Profiler.getHeapSnapshot = ({uid}, cb) ->
-    console.log 'Profiler.getHeapSnapshot'
     # Not implemented
 
   # @param uid integer 
@@ -169,20 +168,17 @@ ProfilerProbe = ->
 
   # @param reportProgress boolean? If true 'reportHeapSnapshotProgress' events will be generated while snapshot is being taken.
   Profiler.takeHeapSnapshot = ({reportProgress}, cb) ->
-    console.log 'Profiler.takeHeapSnapshot'
     # Not implemented
 
   # @param objectId HeapSnapshotObjectId 
   # @param objectGroup string? Symbolic group name that can be used to release multiple objects.
   # @returns result Runtime.RemoteObject Evaluation result.
   Profiler.getObjectByHeapObjectId = ({objectId, objectGroup}, cb) ->
-    console.log 'Profiler.getObjectByHeapObjectId'
     # Not implemented
 
   # @param objectId Runtime.RemoteObjectId Identifier of the object to get heap object id for.
   # @returns heapSnapshotObjectId HeapSnapshotObjectId Id of the heap snapshot object corresponding to the passed remote object id.
   Profiler.getHeapObjectId = ({objectId}, cb) ->
-    console.log 'Profiler.getHeapObjectId'
     # Not implemented
 
   {Profiler, HeapProfiler}

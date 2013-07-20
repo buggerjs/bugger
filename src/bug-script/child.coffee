@@ -40,12 +40,24 @@ realpath process.argv[1], (err, filename) ->
 
   # Extract extension
   extension = extname mainModule.filename
-
-  {compile} = compilers[extension] ? compilers['.js']
   prependDebugBreak = process.env.ENABLE_DEBUG_BREAK?
 
   readFile filename, 'utf8', (err, input) ->
     throw err if err?
+
+    compiler = compilers[extension]
+    if not compiler? and '#!' == input.substr(0, 2)
+      firstNL = input.indexOf '\n'
+      # look at every segment (sep by whitespace), starting with last one
+      firstLine = input.substr(0, firstNL).split(/\s+/g).reverse()
+      input = input.substr firstNL
+
+      for segment in firstLine
+        if /coffee$/.test segment
+          compiler = compilers['.coffee']; break
+
+    {compile} = compiler ? compilers['.js']
+
     {code, map} = compile mainModule.filename, input
     if process.env.ENABLE_DEBUG_BREAK?
       code = "debugger; " + code

@@ -8,7 +8,11 @@ bugScript = require './bug-script'
 domains = require './domains'
 inspectorServer = require './inspector'
 
-bugger = (debugBreak = true, webport = 8058, webhost = '127.0.0.1') ->
+bugger = (debugBreak = true, webport = 8058, webhost = '127.0.0.1', hang = true, stfu = false) ->
+  buggerLog =
+    if stfu then ->
+    else (message) -> console.error message
+
   startServer = (cb) ->
     inspector = inspectorServer()
     inspector.listen webport, webhost, ->
@@ -42,6 +46,12 @@ bugger = (debugBreak = true, webport = 8058, webhost = '127.0.0.1') ->
     inspector.on 'request', domains.handle
     domains.on 'notification', inspector.dispatchEvent
 
+    forked.on 'exit', (exitCode) ->
+      if hang
+        buggerLog "[bugger] Process exit with status #{exitCode}"
+      else
+        process.exit exitCode
+
     forked.on 'message', (message) ->
       if message.method?
         {method} = message
@@ -51,11 +61,12 @@ bugger = (debugBreak = true, webport = 8058, webhost = '127.0.0.1') ->
   wrapEmitter.run = run = (script, scriptArgs = []) ->
     tasks = [ startServer, startScript(script, scriptArgs, {debugBreak}) ]
     parallel tasks, (err, [inspector, forked]) ->
+      throw err if err?
       forked.on 'debugClient', (debugClient) ->
         wire {inspector, forked, debugClient, domains}
         argString = scriptArgs.map( (arg) -> JSON.stringify(arg) ).join(' ')
-        console.log "[bugger] Debugging #{script} #{argString}"
-        console.log "[bugger] #{inspector.DEFAULT_URL}"
+        buggerLog "[bugger] Debugging #{script} #{argString}"
+        buggerLog "[bugger] #{inspector.DEFAULT_URL}"
 
   wrapEmitter
 
