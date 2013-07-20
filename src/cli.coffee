@@ -13,7 +13,7 @@ argvParser = require('optimist')
     boolean: true
   brk:
     describe: 'Break on first line of script'
-    boolean: true,
+    boolean: true
     default: true
   webhost:
     default: '127.0.0.1'
@@ -24,11 +24,15 @@ argvParser = require('optimist')
   hang:
     default: false
     describe: 'Keep running after the script terminated'
+    boolean: true
   stfu:
     default: false
     describe: 'bugger itself will not print anything anywhere'
+    boolean: true
   language:
     describe: 'Force detection of entry script language. Supported: "js" and "coffee"'
+  probes:
+    describe: 'Comma separated list of probes to enable, defaults to all of \'em'
 )
 
 argv = argvParser.argv
