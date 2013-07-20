@@ -6,9 +6,11 @@
   processes that explicitly exit via `process.exit` - otherwise the TCP socket
   to bugger will keep the process alive. The old behavior (keep running after
   the process exited) has to be enabled explicitly via `--hang`.
-* Support for detecting hashbangs in files, see `examples/hashbang`
+* Support for detecting hashbangs in files, see `examples/hashbang` - #25
 * Clean-up of what is written to stdout/stderr by bugger itself. It will no
   longer polute stdout, so `2>/dev/null` now works.
+* Complex objects that were logged via console.log can now in inspected - #22
+* Fixed some randomness in how CLI arguments were interpreted
 
 # v0.5.0-beta7
 * Fix for "Add watch"-button
