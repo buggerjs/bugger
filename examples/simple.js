@@ -1,2 +1,3 @@
-console.log('Log to stdout');
-console.error('Log to stderr');
+console.log('[simple.js] Log to stdout');
+console.error('[simple.js] Log to stderr');
+process.exit(0);

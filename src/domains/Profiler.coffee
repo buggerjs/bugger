@@ -32,7 +32,6 @@ module.exports = ({debugClient, forked}) ->
 
   # @returns result boolean 
   Profiler.hasHeapProfiler = ({}, cb) ->
-    console.log 'Profiler.hasHeapProfiler'
     cb null, result: true
 
   # @returns result boolean
@@ -64,11 +63,8 @@ module.exports = ({debugClient, forked}) ->
 
   # @param reportProgress boolean? If true 'reportHeapSnapshotProgress' events will be generated while snapshot is being taken.
   forwardMethod 'takeHeapSnapshot'
-  Profiler.takeHeapSnapshot = ({reportProgress}, cb) ->
-    console.log 'takeHeapSnapshot', arguments[0]
 
   Profiler.collectGarbage = ({}, cb) ->
-    console.log 'Profiler.collectGarbage'
     # Not implemented
 
   # @param objectId HeapSnapshotObjectId 

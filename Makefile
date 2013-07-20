@@ -4,7 +4,7 @@ SRC = $(shell find src -name "*.coffee" -type f | sort)
 LIB = $(SRC:src/%.coffee=lib/%.js)
 
 COFFEE = node_modules/.bin/coffee --js --bare
-MOCHA  = node_modules/.bin/mocha --timeout 3s --recursive --compilers coffee:coffee-script-redux -u tdd
+MOCHA  = node_modules/.bin/mocha --timeout 3s --recursive --compilers coffee:coffee-script-redux/register -u tdd
 WACHS  = wachs
 GROC   = node_modules/.bin/groc
 
@@ -29,9 +29,12 @@ lib/%.js: src/%.coffee
 	@dirname "$@" | xargs mkdir -p
 	@$(COFFEE) -i "$<" >"$(@:%=%.tmp)" && mv "$(@:%=%.tmp)" "$@"
 
-.PHONY : test
-test: build
-	NODE_ENV=test ${MOCHA} -R spec -r test/setup.js --recursive test/unit
+.PHONY : test test-unit test-functional
+test: test-unit test-functional
+test-unit: build
+	NODE_ENV=test ${MOCHA} -R spec --recursive test/unit
+test-functional: build
+	NODE_ENV=test ${MOCHA} -R spec --recursive test/functional
 
 .PHONY: release release-patch release-minor release-major
 

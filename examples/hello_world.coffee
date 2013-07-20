@@ -4,6 +4,7 @@ sayHelloWorld = ->
   setTimeout ->
     msg = 'Hello World'
     console.log msg
+    process.exit 0
 
 unless module.parent?
   do sayHelloWorld

@@ -1,0 +1,4 @@
+#!./node_modules/.bin/coffee --debug
+notValidNode = ->
+console.log 'ok'
+process.exit 42

@@ -25,7 +25,6 @@ module.exports = ({debugClient, forked}) ->
 
   # @returns result boolean 
   HeapProfiler.hasHeapProfiler = ({}, cb) ->
-    console.log 'HeapProfiler.hasHeapProfiler'
     cb null, result: true
 
   # @returns headers ProfileHeader[] 
