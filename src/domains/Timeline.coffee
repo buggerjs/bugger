@@ -1,7 +1,7 @@
 # Domain bindings for Timeline
 {EventEmitter} = require 'events'
 
-module.exports = (agentContext) ->
+module.exports = ({debugClient}) ->
   Timeline = new EventEmitter()
 
   # Starts capturing instrumentation events.
