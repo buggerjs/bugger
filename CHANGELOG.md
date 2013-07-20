@@ -11,6 +11,12 @@
   longer polute stdout, so `2>/dev/null` now works.
 * Complex objects that were logged via console.log can now in inspected - #22
 * Fixed some randomness in how CLI arguments were interpreted
+* You can specifiy which probes you'd want to use with  --probes=a,b,c`
+  - coffee: coffee-script support
+  - console: console.log inspection of objects
+  - network: network request in Network tab
+  - profiler: HeapProfiler/CPUProfiler, console.profile{,End}
+  - timeline: console.time{,End,Stamp}
 
 # v0.5.0-beta7
 * Fix for "Add watch"-button

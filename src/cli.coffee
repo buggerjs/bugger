@@ -50,8 +50,12 @@ unless argv._.length
   argvParser.showHelp()
   process.exit 1
 
+{pick} = require 'underscore'
+buggerOptions = pick argv, 'webport', 'webhost', 'hang', 'stfu', 'language', 'probes'
+buggerOptions.debugBreak = argv.brk
+
 # debugBreak = true, webport = 8058, webhost = '127.0.0.1'
-bugger = require('./bugger')(argv.brk, argv.webport, argv.webhost, argv.hang, argv.stfu, argv.language)
+bugger = require('./bugger') buggerOptions
 script = argv._.shift()
 scriptArgs = argv._
 
