@@ -17,6 +17,8 @@
   - network: network request in Network tab
   - profiler: HeapProfiler/CPUProfiler, console.profile{,End}
   - timeline: console.time{,End,Stamp}
+* Timeline events now get stack traces attached to them
+* {set,clear}{Timeout,Interval} are now part of the Timeline tab
 
 # v0.5.0-beta7
 * Fix for "Add watch"-button
