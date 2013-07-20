@@ -7,7 +7,7 @@ Module = require 'module'
 Module._sourceMaps ?= {}
 {_nodeModulePaths, _sourceMaps} = Module
 
-{compilers} = require('./probes')(false)
+{compilers} = require('./probes')(false, process.env.BUGGER_PROBES)
 
 registerExtension = (extension, {compile}) ->
   Object.defineProperty require.extensions, extension, enumerable: true, get: ->

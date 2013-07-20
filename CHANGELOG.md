@@ -6,9 +6,17 @@
   processes that explicitly exit via `process.exit` - otherwise the TCP socket
   to bugger will keep the process alive. The old behavior (keep running after
   the process exited) has to be enabled explicitly via `--hang`.
-* Support for detecting hashbangs in files, see `examples/hashbang`
+* Support for detecting hashbangs in files, see `examples/hashbang` - #25
 * Clean-up of what is written to stdout/stderr by bugger itself. It will no
   longer polute stdout, so `2>/dev/null` now works.
+* Complex objects that were logged via console.log can now in inspected - #22
+* Fixed some randomness in how CLI arguments were interpreted
+* You can specifiy which probes you'd want to use with  --probes=a,b,c`
+  - coffee: coffee-script support
+  - console: console.log inspection of objects
+  - network: network request in Network tab
+  - profiler: HeapProfiler/CPUProfiler, console.profile{,End}
+  - timeline: console.time{,End,Stamp}
 
 # v0.5.0-beta7
 * Fix for "Add watch"-button
