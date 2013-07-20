@@ -32,8 +32,8 @@ domains.handle = (request) ->
 
   if process.env.TRACE_BUGGER_CALLS
     paramHint = Object.keys(params).join(', ')
-    console.log "Command: #{domain}.#{command}(#{paramHint})"
-    console.log '> ', JSON.stringify params
+    console.error "Command: #{domain}.#{command}(#{paramHint})"
+    console.error '> ', JSON.stringify params
   agent[command] params, callback
 
 domains.unload = ->

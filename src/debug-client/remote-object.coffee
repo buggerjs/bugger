@@ -46,7 +46,7 @@ RemoteObject = ({returnByValue, generatePreview}) -> (refMap) ->
         else className
 
     _generateProtoPreview = (obj, preview, propertiesThreshold) ->
-      console.log obj, preview, propertiesThreshold
+      '<_generateProtoPreview not implemented>'
 
     _generatePreview = (obj) ->
       preview =

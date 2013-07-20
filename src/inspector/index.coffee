@@ -89,4 +89,4 @@ module.exports = ->
 unless module.parent
   inspector = module.exports()
   inspector.listen 8058, ->
-    console.log "Open Devtools:\n#{@DEFAULT_URL}"
+    console.error "Open Devtools:\n#{@DEFAULT_URL}"

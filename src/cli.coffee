@@ -21,12 +21,21 @@ argvParser = require('optimist')
   webport:
     default: 8058
     describe: 'Web port used by node-inspector'
+  hang:
+    default: false
+    describe: 'Keep running after the script terminated'
+  stfu:
+    default: false
+    describe: 'bugger itself will not print anything anywhere'
+  language:
+    describe: 'Force detection of entry script language. Supported: "js" and "coffee"'
 )
 
 argv = argvParser.argv
 
 if argv.version
-  console.log require('../package.json').version
+  version = require('../package.json').version
+  process.stdout.write "#{version}\n"
   process.exit 0
 
 if argv.help
@@ -38,12 +47,13 @@ unless argv._.length
   process.exit 1
 
 # debugBreak = true, webport = 8058, webhost = '127.0.0.1'
-bugger = require('./bugger')(argv.brk, argv.webport, argv.webhost)
+bugger = require('./bugger')(argv.brk, argv.webport, argv.webhost, argv.hang, argv.stfu, argv.language)
 script = argv._.shift()
 scriptArgs = argv._
 
 bugger.on 'error', (err) ->
-  console.log '[bugger] [error]', err.message
-  console.log err.stack
+  return if argv.stfu
+  console.error '[bugger] [error]', err.message
+  console.error err.stack
 
 bugger.run script, scriptArgs

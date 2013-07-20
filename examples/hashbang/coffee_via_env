@@ -1,0 +1,4 @@
+#!/usr/bin/env coffee
+notValidNode = ->
+console.log 'ok'
+process.exit 0

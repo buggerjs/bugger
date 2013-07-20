@@ -1,4 +1,15 @@
 
+# v0.5.0-beta8
+* Support for --stfu (surpress any output by bugger itself)
+* By default bugger will now exit with the same exit code as the debugged
+  process as soon as the debugged process is done. Note that this only affects
+  processes that explicitly exit via `process.exit` - otherwise the TCP socket
+  to bugger will keep the process alive. The old behavior (keep running after
+  the process exited) has to be enabled explicitly via `--hang`.
+* Support for detecting hashbangs in files, see `examples/hashbang`
+* Clean-up of what is written to stdout/stderr by bugger itself. It will no
+  longer polute stdout, so `2>/dev/null` now works.
+
 # v0.5.0-beta7
 * Fix for "Add watch"-button
 * Fixed JavaScript entry files

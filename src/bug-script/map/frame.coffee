@@ -33,7 +33,7 @@
    [ { type: 1, index: 0 },
      { type: 3, index: 1 },
      { type: 0, index: 2 } ],
-  text: '#01 #<Module>._compile(content=console.error(\'[bugger] Execution stopped at first line\'); debugger; console.log... (length: 131), filename=/Users/jankrems/Projects/bugger/examples/simple.js) module.js line 449 column 26 (position 12610)' }
+  text: '#01 #<Module>._compile(content=foo(\'[bugger] Execution stopped at first line\'); debugger; ... (length: 131), filename=/Users/jankrems/Projects/bugger/examples/simple.js) module.js line 449 column 26 (position 12610)' }
 ###
 
 ###
