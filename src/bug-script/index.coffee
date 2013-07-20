@@ -24,7 +24,7 @@ openDebugConnection = (childProcess) ->
 
   childProcess.stderr.on 'data', waitForDebugger
 
-bugScript = (moduleName, childArgs, {debugBreak, language}, cb) ->
+bugScript = (moduleName, childArgs, {debugBreak, language, probes}, cb) ->
   moduleName = "./#{moduleName}" unless moduleName[0] is '/'
   try
     moduleName = _resolveFilename moduleName
@@ -52,6 +52,9 @@ bugScript = (moduleName, childArgs, {debugBreak, language}, cb) ->
 
       if language
         options.env.BUGGER_LANGUAGE = language
+
+      if probes
+        options.env.BUGGER_PROBES = probes
 
       forked = spawn process.argv[0], childArgs, options
       forked.debugPort = debugPort

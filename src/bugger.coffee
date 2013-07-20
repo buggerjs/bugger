@@ -2,13 +2,25 @@
 {EventEmitter} = require 'events'
 
 {parallel} = require 'async'
-{omit} = require 'underscore'
+{omit, defaults} = require 'underscore'
 
 bugScript = require './bug-script'
 domains = require './domains'
 inspectorServer = require './inspector'
 
-bugger = (debugBreak = true, webport = 8058, webhost = '127.0.0.1', hang = true, stfu = false, language = null) ->
+buggerDefaults =
+  debugBreak: true
+  webport: 8058
+  webhost: '127.0.0.1'
+  hang: true
+  stfu: false
+  language: null
+  propes: null
+
+bugger = (buggerOpts = {}) ->
+  defaults buggerOpts, buggerDefaults
+  {debugBreak, webport, webhost, hang, stfu, language, probes} = buggerOpts
+
   buggerLog =
     if stfu then ->
     else (message) -> console.error message
@@ -59,7 +71,7 @@ bugger = (debugBreak = true, webport = 8058, webhost = '127.0.0.1', hang = true,
         domains.handle {method, params}
 
   wrapEmitter.run = run = (script, scriptArgs = []) ->
-    tasks = [ startServer, startScript(script, scriptArgs, {debugBreak, language}) ]
+    tasks = [ startServer, startScript(script, scriptArgs, buggerOpts) ]
     parallel tasks, (err, [inspector, forked]) ->
       throw err if err?
       forked.on 'debugClient', (debugClient) ->
