@@ -1,0 +1,44 @@
+[bugger] Debugging examples/complex_console_log.coffee 
+[bugger] chrome-devtools://devtools/devtools.html?ws=127.0.0.1:8058/websocket&toolbarColor=rgba(230,230,230,1)&textColor=rgba(0,0,0,1)
+Command: Page.canShowFPSCounter()
+>  {}
+Command: Page.canContinuouslyPaint()
+>  {}
+Command: Worker.canInspectWorkers()
+>  {}
+Command: CSS.getSupportedCSSProperties()
+>  {}
+Command: Network.enable()
+>  {}
+Command: Page.enable()
+>  {}
+Command: Network.enable()
+>  {}
+Command: Page.getResourceTree()
+>  {}
+Command: Debugger.canSetScriptSource()
+>  {}
+Command: Debugger.enable()
+>  {}
+Command: CSS.enable()
+>  {}
+Command: Console.enable()
+>  {}
+Command: Inspector.enable()
+>  {}
+Command: Database.enable()
+>  {}
+Command: DOMStorage.enable()
+>  {}
+Command: Profiler.enable()
+>  {}
+Command: Page.setTouchEmulationEnabled(enabled)
+>  {"enabled":false}
+Command: Debugger.setPauseOnExceptions(state)
+>  {"state":"none"}
+Command: Runtime.releaseObjectGroup(objectGroup)
+>  {"objectGroup":"watch-group"}
+Command: Runtime.getProperties(objectId, ownProperties)
+>  {"objectId":"scope:0:0","ownProperties":false}
+Command: Debugger.setOverlayMessage(message)
+>  {"message":"Paused in debugger"}

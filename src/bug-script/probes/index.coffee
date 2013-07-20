@@ -1,5 +1,5 @@
 
-knownProbes = ['./coffee', './network', './profiler', './timeline']
+knownProbes = ['./coffee', './network', './profiler', './timeline', './console']
 
 module.exports = (safe = false) ->
   compilers =
