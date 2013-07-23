@@ -21,7 +21,13 @@ module.exports = ->
       scriptId = req.url.replace(/\/source-map\/(\d+)/, '$1')
       res.write sourceMaps[scriptId]
     else
-      res.write httpServer.DEFAULT_URL + "\n"
+      res.setHeader 'Content-Type', 'application/json'
+      res.write JSON.stringify {
+        url: httpServer.DEFAULT_URL,
+        pid: inspector.forkedPID ? 'unknown',
+        title: inspector.forkedTitle,
+        pwd: process.cwd()
+      }
     res.end()
 
   websocket = inspector.websocket = new webSocket.server {
