@@ -19,6 +19,7 @@
   - timeline: console.time{,End,Stamp}
 * Timeline events now get stack traces attached to them
 * {set,clear}{Timeout,Interval} are now part of the Timeline tab
+* GET :8058/ now gets a nice JSON description of the debug session
 
 # v0.5.0-beta7
 * Fix for "Add watch"-button

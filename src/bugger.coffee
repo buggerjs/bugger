@@ -77,6 +77,8 @@ bugger = (buggerOpts = {}) ->
       forked.on 'debugClient', (debugClient) ->
         wire {inspector, forked, debugClient, domains}
         argString = scriptArgs.map( (arg) -> JSON.stringify(arg) ).join(' ')
+        inspector.forkedTitle = "#{script} #{argString}"
+        inspector.forkedPID = forked.pid
         buggerLog "[bugger] Debugging #{script} #{argString}"
         buggerLog "[bugger] #{inspector.DEFAULT_URL}"
 
