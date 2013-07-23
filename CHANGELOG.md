@@ -1,4 +1,3 @@
-
 # v0.5.0-beta8
 * Support for --stfu (surpress any output by bugger itself)
 * By default bugger will now exit with the same exit code as the debugged
@@ -9,7 +8,7 @@
 * Support for detecting hashbangs in files, see `examples/hashbang` - #25
 * Clean-up of what is written to stdout/stderr by bugger itself. It will no
   longer polute stdout, so `2>/dev/null` now works.
-* Complex objects that were logged via console.log can now in inspected - #22
+* Complex objects that were logged via console.log can now be inspected - #22
 * Fixed some randomness in how CLI arguments were interpreted
 * You can specifiy which probes you'd want to use with  --probes=a,b,c`
   - coffee: coffee-script support
