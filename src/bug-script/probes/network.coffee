@@ -65,6 +65,8 @@ patchProtocolLib = (protocolLib) ->
   protocolLib.request = (options, cb) ->
     if typeof options is 'string'
       options = url.parse options
+    if typeof cb != 'function'
+      cb = ->
 
     requestId = (++lastRequestId).toString()
     loaderId = requestId

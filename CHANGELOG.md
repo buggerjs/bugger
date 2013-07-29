@@ -1,3 +1,6 @@
+# v0.5.1
+* Fixed bug where the network probe wasn't handling http.get(url) without callback
+
 # v0.5.0-beta8
 * Support for --stfu (surpress any output by bugger itself)
 * By default bugger will now exit with the same exit code as the debugged
