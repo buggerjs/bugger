@@ -233,6 +233,10 @@ module.exports = (agentContext) ->
   Page.handleJavaScriptDialog = ({accept, promptText}, cb) ->
     # Not implemented
 
+  # Introduced in Chrome >= 29
+  Page.setShowViewportSizeOnResize = ({show, showGrid}, cb) ->
+    # Not implemented
+
   # @param timestamp number 
   Page.emit_domContentEventFired = (params) ->
     notification = {params, method: 'Page.domContentEventFired'}
