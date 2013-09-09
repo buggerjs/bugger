@@ -25,7 +25,7 @@
     "various, see LICNESE file"
   ],
   "dependencies": {
-    "coffee-script-redux": "~2.0.0-beta6",
+    "coffee-script-redux": "~2.0.0-beta7",
     "escodegen": "0.0.23",
     "esmangle": "0.0.14",
     "source-map": "~0.1.20",
