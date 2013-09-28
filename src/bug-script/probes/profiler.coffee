@@ -8,6 +8,8 @@ ProfilerProbe = ->
   Profiler = {}
   HeapProfiler = {}
 
+  profileStarts = {}
+
   isSampling = false
   profilesByType =
     HEAP: {}
@@ -27,7 +29,10 @@ ProfilerProbe = ->
     cb()
 
   Profiler.start = ({name}, cb) ->
-    v8profiler.startProfiling(name ? '')
+    name ?= ''
+
+    profileStarts[name] = Date.now() / 1000
+    v8profiler.startProfiling name
 
     isSampling = true
     process.send
@@ -37,8 +42,13 @@ ProfilerProbe = ->
     cb()
 
   Profiler.stop = ({name}, cb) ->
+    name ?= ''
     isSampling = false
-    profile = v8profiler.stopProfiling(name ? '')
+    profile = v8profiler.stopProfiling name
+
+    profile.startTime = profileStarts[name]
+    delete profileStarts[name]
+    profile.endTime = Date.now() / 1000
 
     profilesByType[CPUProfileType][profile.uid] = profile
 
@@ -85,12 +95,20 @@ ProfilerProbe = ->
     profile = profilesByType[CPUProfileType][uid]
     profile.typeId = CPUProfileType
 
+    withHitCounts = (node) ->
+      node.hitCount = node.selfTime
+      for child in node.children
+        withHitCounts child
+      node
+
     cb null, profile: {
       title: profile.title
       uid: profile.uid
       typeId: CPUProfileType
-      head: profile.getTopDownRoot()
-      bottomUpHead: profile.getBottomUpRoot()
+      head: withHitCounts profile.getTopDownRoot()
+      bottomUpHead: withHitCounts profile.getBottomUpRoot()
+      startTime: profile.startTime
+      endTime: profile.endTime
     }
 
   # @param uid integer 
