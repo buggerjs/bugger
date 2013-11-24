@@ -23,7 +23,9 @@ Pass parameters: `bugger examples/server.js -- --port=3000`
 
 ### Open the devtools
 
-chrome-devtools://devtools/devtools.html?ws=127.0.0.1:8058/websocket
+The correct URL will be written to the output. It should look similar to this:
+
+chrome-devtools://devtools/bundled/devtools.html?ws=127.0.0.1:8058/websocket
 
 ## Options:
 
