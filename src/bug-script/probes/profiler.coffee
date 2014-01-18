@@ -35,9 +35,6 @@ ProfilerProbe = ->
     v8profiler.startProfiling name
 
     isSampling = true
-    process.send
-      method: 'Profiler.emit_setRecordingProfile'
-      isProfiling: true
 
     cb()
 
@@ -52,18 +49,21 @@ ProfilerProbe = ->
 
     profilesByType[CPUProfileType][profile.uid] = profile
 
-    process.send
-      method: 'Profiler.emit_addProfileHeader'
-      header:
-        title: profile.title
-        uid: profile.uid
-        typeId: CPUProfileType
+    withHitCounts = (node) ->
+      node.hitCount = node.selfTime
+      for child in node.children
+        withHitCounts child
+      node
 
-    process.send
-      method: 'Profiler.emit_setRecordingProfile'
-      isProfiling: false
-
-    cb()
+    cb null, profile: {
+      title: profile.title
+      uid: profile.uid
+      typeId: CPUProfileType
+      head: withHitCounts profile.getTopDownRoot()
+      bottomUpHead: withHitCounts profile.getBottomUpRoot()
+      startTime: profile.startTime
+      endTime: profile.endTime
+    }
 
   # @returns headers ProfileHeader[] 
   HeapProfiler.getProfileHeaders = ({}, cb) ->
@@ -126,10 +126,6 @@ ProfilerProbe = ->
           method: 'HeapProfiler.emit_addHeapSnapshotChunk'
           uid: snapshot.uid
           chunk: chunk
-
-      process.send
-        method: 'HeapProfiler.emit_finishHeapSnapshot'
-        uid: snapshot.uid
 
       cb null, profile: {
         title: snapshot.title

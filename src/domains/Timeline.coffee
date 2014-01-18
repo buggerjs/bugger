@@ -4,6 +4,9 @@
 module.exports = ({debugClient}) ->
   Timeline = new EventEmitter()
 
+  Timeline.enable = ({}, cb) ->
+    cb null, result: true
+
   # Starts capturing instrumentation events.
   #
   # @param maxCallStackDepth integer? Samples JavaScript stack traces up to <code>maxCallStackDepth</code>, defaults to 5.

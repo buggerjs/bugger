@@ -55,6 +55,15 @@ module.exports = ({debugClient, forked}) ->
   HeapProfiler.getHeapObjectId = ({objectId}, cb) ->
     # Not implemented
 
+  HeapProfiler.enable = ({}, cb) ->
+    cb null, result: true
+
+  HeapProfiler.startTrackingHeapObjects = ({}, cb) ->
+    cb()
+
+  HeapProfiler.stopTrackingHeapObjects = ({reportProgress}, cb) ->
+    cb()
+
   # @param header ProfileHeader 
   HeapProfiler.emit_addProfileHeader = (params) ->
     notification = {params, method: 'HeapProfiler.addProfileHeader'}

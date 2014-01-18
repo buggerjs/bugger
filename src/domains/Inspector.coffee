@@ -6,7 +6,7 @@ module.exports = (agentContext) ->
 
   # Enables inspector domain notifications.
   Inspector.enable = ({}, cb) ->
-    # Not implemented
+    cb()
 
   # Disables inspector domain notifications.
   Inspector.disable = ({}, cb) ->

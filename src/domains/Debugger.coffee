@@ -275,6 +275,9 @@ module.exports = ({debugClient}) ->
   Debugger.setVariableValue = ({scopeNumber, variableName, newValue, callFrameId, functionObjectId}, cb) ->
     # Not implemented
 
+  Debugger.setAsyncCallStackDepth = ({maxDepth}, cb) ->
+    cb null, result: true
+
   # Called when global has been cleared and debugger client should reset its state. Happens upon navigation or reload.
   Debugger.emit_globalObjectCleared = (params) ->
     notification = {params, method: 'Debugger.globalObjectCleared'}

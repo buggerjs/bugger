@@ -1,5 +1,6 @@
 # Domain bindings for Network
 {EventEmitter} = require 'events'
+Request = require 'request'
 
 module.exports = (agentContext) ->
   Network = new EventEmitter()
@@ -8,7 +9,7 @@ module.exports = (agentContext) ->
 
   # Enables network tracking, network events will now be delivered to the client.
   Network.enable = ({}, cb) ->
-    # Not implemented
+    cb null, result: true
 
   # Disables network tracking, prevents network events from being sent to the client.
   Network.disable = ({}, cb) ->
@@ -72,6 +73,15 @@ module.exports = (agentContext) ->
     requestId = requestId.toString()
     responseDataCache[requestId] ?= ''
     responseDataCache[requestId] += chunk.toString()
+
+  # @param frameId
+  # @param url
+  # @param requestHeaders (optional)
+  # @returns ["statusCode", "responseHeaders", "content"]
+  Network.loadResourceForFrontend = ({frameId, url, requestHeaders}, cb) ->
+    Request url, {headers: requestHeaders}, (err, res, content) ->
+      return cb(err) if err?
+      cb null, result: { statusCode: res.statusCode, responseHeaders: res.headers, content }
 
   # Fired when page is about to send HTTP request.
   #
