@@ -67,6 +67,9 @@ module.exports = ({debugClient, forked}) ->
   Profiler.collectGarbage = ({}, cb) ->
     # Not implemented
 
+  Profiler.setSamplingInterval = ({interval}, cb) ->
+    cb()
+
   # @param objectId HeapSnapshotObjectId 
   # @param objectGroup string? Symbolic group name that can be used to release multiple objects.
   # @returns result Runtime.RemoteObject Evaluation result.

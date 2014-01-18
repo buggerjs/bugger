@@ -4,9 +4,21 @@
 module.exports = (agentContext) ->
   Page = new EventEmitter()
 
+  fakeMainFrameId = 'bugger-main-frame'
+  fakeLoaderId = 'bugger-loader-id'
+
   # Enables page domain notifications.
   Page.enable = ({}, cb) ->
-    # Not implemented
+    # {"name":"securityOrigin","type":"string","description":"Frame document's security origin."},{"name":"mimeType","type":"string","description":"Frame document's mimeType as determined by the browser."}],"hidden":true}
+    frame = {
+      id: fakeMainFrameId
+      loaderId: fakeLoaderId
+      url: '/'
+      securityOrigin: '/'
+      mimeType: 'text/javascript'
+    }
+    Page.emit_frameNavigated {frame}
+    cb null, result: true
 
   # Disables page domain notifications.
   Page.disable = ({}, cb) ->
@@ -90,6 +102,9 @@ module.exports = (agentContext) ->
   # @param html string HTML content to set.
   Page.setDocumentContent = ({frameId, html}, cb) ->
     # Not implemented
+
+  Page.canScreencast = ({}, cb) ->
+    cb null, result: false
 
   # Checks whether <code>setDeviceMetricsOverride</code> can be invoked.
   #

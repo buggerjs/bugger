@@ -35,7 +35,8 @@
     "async": "~0.2.8",
     "json-stringify-safe": "~4.0.0",
     "lodash": "~1.2.1",
-    "v8-profiler": "https://github.com/c4milo/v8-profiler/archive/v4.0.0.tar.gz"
+    "v8-profiler": "https://github.com/c4milo/v8-profiler/archive/v4.0.0.tar.gz",
+    "request": "~2.33.0"
   },
   "devDependencies": {
     "groc": "~0.3.2",
