@@ -1,0 +1,24 @@
+{
+  "name": "embedded-agents",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/buggerjs/embedded-agents.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/buggerjs/embedded-agents/issues"
+  },
+  "homepage": "https://github.com/buggerjs/embedded-agents",
+  "dependencies": {
+    "bindings": "^1.2.1",
+    "debug-module": "^1.0.0",
+    "nan": "^2.0.8"
+  }
+}
