@@ -76,7 +76,7 @@ void InitAdaptor(Isolate* isolate, Local<v8::Context> context) {
 void WorkerRun() {
     // TODO: Derive this from an argument instead of depending
     // on the current working directory.
-    static const char* argv[] = { "node", "io-thread/index.js" };
+    static const char* argv[] = { "node", "lib/io-thread/index.js" };
     Isolate* isolate = Isolate::New();
     {
         v8::Locker locker(isolate);

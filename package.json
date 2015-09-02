@@ -18,7 +18,9 @@
   "homepage": "https://github.com/buggerjs/embedded-agents",
   "dependencies": {
     "bindings": "^1.2.1",
+    "bluebird": "^2.9.34",
     "debug-module": "^1.0.0",
+    "lodash": "^3.10.1",
     "nan": "^2.0.8",
     "ws": "^0.8.0"
   }
