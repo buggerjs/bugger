@@ -18,9 +18,10 @@ using Nan::Utf8String;
 using node::Environment;
 
 uv_loop_t child_loop_;
-uv_async_t child_signal_;
-uv_mutex_t message_mutex_;
 uv_thread_t thread_;
+uv_sem_t start_sem_;
+uv_mutex_t message_mutex_;
+uv_async_t child_signal_;
 
 Environment* parent_env_;
 Environment* child_env_;
@@ -36,7 +37,6 @@ Environment* GetCurrentEnvironment(v8::Local<v8::Context> context) {
 }
 
 void EnqueueMessage(Utf8String* message) {
-    printf("EnqueueMessage\n");
     uv_mutex_lock(&message_mutex_);
     messages_.push_back(message);
     uv_mutex_unlock(&message_mutex_);
@@ -45,7 +45,6 @@ void EnqueueMessage(Utf8String* message) {
 }
 
 void MessageHandler(const Debug::Message& message) {
-    printf("MessageHandler\n");
     HandleScope scope;
     Local<String> json = message.GetJSON();
     Utf8String* utf8 = new Utf8String(json);
@@ -53,13 +52,19 @@ void MessageHandler(const Debug::Message& message) {
     EnqueueMessage(utf8);
 }
 
+NAN_METHOD(NotifyReady) {
+  // Notify other thread that we are ready to process events
+  uv_sem_post(&start_sem_);
+}
+
 void InitAdaptor(Isolate* isolate, Local<v8::Context> context) {
     HandleScope scope;
-    printf("InitAdaptor\n");
 
     v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>();
     tpl->SetClassName(Nan::New("EmbeddedAgents").ToLocalChecked());
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
+
+    Nan::SetPrototypeMethod(tpl, "notifyReady", NotifyReady);
 
     Local<v8::Object> api = tpl->GetFunction()->NewInstance();
     api_.Reset(api);
@@ -71,7 +76,7 @@ void InitAdaptor(Isolate* isolate, Local<v8::Context> context) {
 void WorkerRun() {
     // TODO: Derive this from an argument instead of depending
     // on the current working directory.
-    static const char* argv[] = { "node", "_index.js" };
+    static const char* argv[] = { "node", "io-thread/index.js" };
     Isolate* isolate = Isolate::New();
     {
         v8::Locker locker(isolate);
@@ -94,7 +99,6 @@ void WorkerRun() {
         
         // Expose API
         InitAdaptor(isolate, context);
-        printf("Run _index.js\n");
         LoadEnvironment(env);
 
         // CHECK_EQ(&child_loop_, env->event_loop());
@@ -113,21 +117,18 @@ void WorkerRun() {
 }
 
 void ThreadCb(void* arg) {
-    printf("Thread callback\n");
     WorkerRun();
 }
 
 void ChildSignalCb(uv_async_t* signal) {
     HandleScope scope;
 
-    printf("Child signal received\n");
     uv_mutex_lock(&message_mutex_);
     while (messages_.size() > 0) {
         Utf8String* message = messages_.front();
-        printf("Use message!\n");
         Local<v8::Value> json[] = { New<String>(**message).ToLocalChecked() };
         Local<v8::Object> api = New(api_);
-        Nan::MakeCallback(api, "onMessage", 1, json);
+        Nan::MakeCallback(api, "onDebugEvent", 1, json);
         delete message;
         messages_.pop_front();
     }
@@ -135,7 +136,6 @@ void ChildSignalCb(uv_async_t* signal) {
 }
 
 bool InitAgentThread() {
-    printf("Start a new thread!\n");
     int err;
 
     err = uv_loop_init(&child_loop_);
@@ -157,6 +157,8 @@ bool InitAgentThread() {
         goto thread_create_failed;
     }
 
+    uv_sem_wait(&start_sem_);
+
     Debug::SetMessageHandler(MessageHandler);
 
     return true;
@@ -173,6 +175,7 @@ loop_init_failed:
 
 NAN_METHOD(Start) {
     uv_mutex_init(&message_mutex_);
+    uv_sem_init(&start_sem_, 0);
 
     parent_env_ = GetCurrentEnvironment(Nan::GetCurrentContext());
     info.GetReturnValue().Set(InitAgentThread());
