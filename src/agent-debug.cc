@@ -20,28 +20,114 @@ using node::Environment;
 uv_loop_t child_loop_;
 uv_thread_t thread_;
 uv_sem_t start_sem_;
-uv_mutex_t message_mutex_;
-uv_async_t child_signal_;
 
+Isolate* parent_isolate_;
 Environment* parent_env_;
 Environment* child_env_;
 
-std::deque<Utf8String*> messages_;
-
 Nan::Persistent<v8::Object> api_;
 
+template<class ChannelClass>
+class MessageChannel {
+public:
+    MessageChannel() {
+        uv_mutex_init(&mutex);
+    }
+
+    void EnqueueMessage(Utf8String* message) {
+        uv_mutex_lock(&mutex);
+        messages.push_back(message);
+        uv_mutex_unlock(&mutex);
+
+        uv_async_send(&message_signal);
+    }
+
+protected:
+    static void ProcessMessagesCb(uv_async_t* sig) {
+        HandleScope scope;
+        ChannelClass* channel = reinterpret_cast<ChannelClass*>(sig);
+
+        uv_mutex_lock(&channel->mutex);
+        while (channel->messages.size() > 0) {
+            Utf8String* message = channel->messages.front();
+            channel->ProcessMessage(message);
+            delete message;
+            channel->messages.pop_front();
+        }
+        uv_mutex_unlock(&channel->mutex);
+    }
+
+    void InitSignal(uv_loop_t* loop) {
+        uv_async_init(loop, &message_signal, ProcessMessagesCb);
+        uv_unref(reinterpret_cast<uv_handle_t*>(&message_signal));
+    }
+
+    void ProcessMessage(Utf8String* message);
+
+private:
+    uv_async_t message_signal; // Important this is first
+    uv_mutex_t mutex;
+    std::deque<Utf8String*> messages;
+};
+
+class TargetMethodMessageChannel : public MessageChannel<TargetMethodMessageChannel> {
+public:
+    void Init(uv_loop_t* loop, Local<v8::Object> target, const char* method) {
+        HandleScope scope;
+        this->InitSignal(loop);
+
+        this->target.Reset(target);
+        this->method = method;
+    }
+
+protected:
+    friend class MessageChannel;
+
+    void ProcessMessage(Utf8String* message) {
+        Local<v8::Value> json[] = { New<String>(**message).ToLocalChecked() };
+        Local<v8::Object> obj = New(target);
+        Nan::MakeCallback(obj, method.c_str(), 1, json);
+    }
+
+private:
+    std::string method;
+    Nan::Persistent<v8::Object> target;
+};
+
+class DebugCallMessageChannel : public MessageChannel<DebugCallMessageChannel> {
+public:
+    void Init(uv_loop_t* loop,
+              Local<v8::Function> func) {
+        HandleScope scope;
+        this->InitSignal(loop);
+
+        this->func.Reset(func);
+    }
+
+protected:
+    friend class MessageChannel;
+
+    void ProcessMessage(Utf8String* message) {
+        printf("Creating scope\n");
+        HandleScope scope;
+        printf("ProcessMessage via Debug::Call\n");
+        Local<v8::Function> fun = New(func);
+        Local<v8::Value> data = New<String>(**message).ToLocalChecked();
+        printf("Making Debug::Call\n");
+        Local<v8::Value> result = Debug::Call(fun, data);
+        printf("Made Debug::Call\nstr:%d\n", result->IsString());
+    }
+
+private:
+    Nan::Persistent<v8::Function> func;
+};
+
+TargetMethodMessageChannel from_parent_;
+DebugCallMessageChannel to_parent_;
 
 Environment* GetCurrentEnvironment(v8::Local<v8::Context> context) {
   return static_cast<Environment*>(
       context->GetAlignedPointerFromEmbedderData(v8::internal::Internals::kContextEmbedderDataIndex));
-}
-
-void EnqueueMessage(Utf8String* message) {
-    uv_mutex_lock(&message_mutex_);
-    messages_.push_back(message);
-    uv_mutex_unlock(&message_mutex_);
-    // After enqueing the message, wake up child thread.
-    uv_async_send(&child_signal_);
 }
 
 void MessageHandler(const Debug::Message& message) {
@@ -49,12 +135,21 @@ void MessageHandler(const Debug::Message& message) {
     Local<String> json = message.GetJSON();
     Utf8String* utf8 = new Utf8String(json);
 
-    EnqueueMessage(utf8);
+    printf("Send message to child thread\n");
+    from_parent_.EnqueueMessage(utf8);
 }
 
 NAN_METHOD(NotifyReady) {
-  // Notify other thread that we are ready to process events
-  uv_sem_post(&start_sem_);
+    // Notify other thread that we are ready to process events
+    uv_sem_post(&start_sem_);
+}
+
+NAN_METHOD(SendMessageToParent) {
+    printf("Send message to target thread\n");
+    // Utf8String* utf8 = new Utf8String(info[0]);
+    // to_parent_.EnqueueMessage(utf8);
+    String::Value v(info[0]);
+    v8::Debug::SendCommand(parent_isolate_, *v, v.length());
 }
 
 void InitAdaptor(Isolate* isolate, Local<v8::Context> context) {
@@ -65,9 +160,13 @@ void InitAdaptor(Isolate* isolate, Local<v8::Context> context) {
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
     Nan::SetPrototypeMethod(tpl, "notifyReady", NotifyReady);
+    Nan::SetPrototypeMethod(tpl, "sendMessage", SendMessageToParent);
 
     Local<v8::Object> api = tpl->GetFunction()->NewInstance();
     api_.Reset(api);
+
+    // Create debug event channel
+    from_parent_.Init(&child_loop_, api, "onMessage");
 
     Local<v8::Object> global = context->Global();
     Nan::Set(global, Nan::New<String>("embeddedAgents").ToLocalChecked(), api);
@@ -120,22 +219,13 @@ void ThreadCb(void* arg) {
     WorkerRun();
 }
 
-void ChildSignalCb(uv_async_t* signal) {
+void ParentSignalCb(uv_async_t* signal) {
     HandleScope scope;
-
-    uv_mutex_lock(&message_mutex_);
-    while (messages_.size() > 0) {
-        Utf8String* message = messages_.front();
-        Local<v8::Value> json[] = { New<String>(**message).ToLocalChecked() };
-        Local<v8::Object> api = New(api_);
-        Nan::MakeCallback(api, "onDebugEvent", 1, json);
-        delete message;
-        messages_.pop_front();
-    }
-    uv_mutex_unlock(&message_mutex_);
 }
 
-bool InitAgentThread() {
+bool InitAgentThread(Local<v8::Function> cb) {
+    HandleScope scope;
+
     int err;
 
     err = uv_loop_init(&child_loop_);
@@ -143,12 +233,7 @@ bool InitAgentThread() {
         goto loop_init_failed;
     }
 
-    // Interruption signal handler
-    err = uv_async_init(&child_loop_, &child_signal_, ChildSignalCb);
-    if (err != 0) {
-        goto async_init_failed;
-    }
-    uv_unref(reinterpret_cast<uv_handle_t*>(&child_signal_));
+    to_parent_.Init(&child_loop_, cb);
 
     err = uv_thread_create(&thread_,
                            reinterpret_cast<uv_thread_cb>(ThreadCb),
@@ -164,9 +249,6 @@ bool InitAgentThread() {
     return true;
 
 thread_create_failed:
-    uv_close(reinterpret_cast<uv_handle_t*>(&child_signal_), nullptr);
-
-async_init_failed:
     uv_loop_close(&child_loop_);
 
 loop_init_failed:
@@ -174,17 +256,16 @@ loop_init_failed:
 }
 
 NAN_METHOD(Start) {
-    uv_mutex_init(&message_mutex_);
     uv_sem_init(&start_sem_, 0);
 
+    parent_isolate_ = Isolate::GetCurrent();
     parent_env_ = GetCurrentEnvironment(Nan::GetCurrentContext());
-    info.GetReturnValue().Set(InitAgentThread());
+    info.GetReturnValue().Set(InitAgentThread(info[0].As<v8::Function>()));
 }
 
 NAN_METHOD(SendCommand) {
     String::Value v(info[0]);
     Debug::SendCommand(Isolate::GetCurrent(), *v, v.length());
-    // TODO: process debug commands
     Debug::ProcessDebugMessages();
 }
 

@@ -2,6 +2,10 @@
 
 var AgentDebug = require('bindings')('AgentDebug');
 
+AgentDebug.onMessage = function onMessage(message) {
+  console.log('Parent got message', message);
+}
+
 AgentDebug.start();
 debugger;
 
