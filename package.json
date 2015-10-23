@@ -4,11 +4,15 @@
   "description": "Debug everything",
   "main": "lib/bugger.js",
   "scripts": {
-    "test": "make test"
+    "test": "mocha"
   },
   "bin": {
     "bugger": "bin/bugger.js"
   },
+  "files": [
+    "bin",
+    "lib"
+  ],
   "repository": {
     "type": "git",
     "url": "git://github.com/jkrems/bugger.git"
@@ -21,25 +25,15 @@
     "chrome"
   ],
   "author": "Jan Krems <jan.krems@groupon.com>",
-  "license": [
-    "various, see LICNESE file"
-  ],
+  "license": "MIT",
   "dependencies": {
-    "coffee-script-redux": "~2.0.0-beta7",
-    "escodegen": "0.0.23",
-    "esmangle": "0.0.14",
-    "source-map": "~0.1.20",
-    "websocket": "~1.0.8",
-    "optimist": "~0.3.5",
-    "underscore": "~1.4.4",
-    "async": "~0.2.8",
-    "json-stringify-safe": "~4.0.0",
-    "lodash": "~1.2.1",
-    "v8-profiler": "https://github.com/c4milo/v8-profiler/archive/v4.0.0.tar.gz"
+    "bugger-agents": "^1.0.0",
+    "lodash": "^3.10.1",
+    "minimist": "^1.2.0",
+    "ws": "~0.8.0"
   },
   "devDependencies": {
-    "groc": "~0.3.2",
-    "mocha": "~1.9.0",
-    "expect.js": "~0.2.0"
+    "assertive": "~2.0.2",
+    "mocha": "~2.3.3"
   }
 }

@@ -1,14 +1,13 @@
 # bugger
 
-[![Build Status](https://travis-ci.org/jkrems/bugger.png)](https://travis-ci.org/jkrems/bugger) 
-[![NPM version](https://badge.fury.io/js/bugger.png)](https://npmjs.org/package/bugger)
+[![Build Status](https://travis-ci.org/buggerjs/bugger.png)](https://travis-ci.org/buggerjs/bugger)
 
 **Warning: Experimental**
 
 ## Installation
 
-```
-(sudo) npm install -g bugger
+```bash
+npm install -g bugger
 ```
 
 ## Usage
@@ -17,9 +16,7 @@
 
 Debug runner for nodejs modules: `bugger examples/simple.js`
 
-Load coffee-script modules: `bugger examples/http_network.coffee`
-
-Pass parameters: `bugger examples/server.js -- --port=3000`
+Pass parameters: `bugger examples/server.js --port=3000`
 
 ### Open the devtools
 
@@ -37,14 +34,13 @@ chrome-devtools://devtools/bundled/devtools.html?ws=127.0.0.1:8058/websocket
 
 ### What is working
 * Step-by-step debugging
-* SourceMaps for coffee-script
 * Variable introspection
 * stdout of the process is forwarded to console.log
 * Evalute expressions in the console
 * Monitor outgoing http(s) requests your script does (Network tab)
 * Heap snapshots and CPU profiles (Profiles tab)
 * Use console.{time, timeEnd, timeStamp}, network request and heap usage reporting (Timeline tab)
-* Live edit the running JavaScript code (not in 0.5.x)
+* Live edit the running JavaScript code
 
 ### What is missing
 * Better usage of the Events/Timeline section
@@ -52,21 +48,19 @@ chrome-devtools://devtools/bundled/devtools.html?ws=127.0.0.1:8058/websocket
 * Support for cluster/fork - maybe consider those kind-of (web) workers..?
 
 ### What is hacked and/or broken
-* `require` doesn't work in the console, it maybe should be more repl-like
-* LiveEdit is only working for the compiled javascripts, not for the source mapped files. This
-  appears to be a limitation of the WebKit developer tools.
+* LiveEdit is only working for the compiled javascripts, not for the source mapped files.
+  This appears to be a limitation of the WebKit developer tools.
 
 ## Kudos to...
 
 ### ...the original projects
 
 bugger was heavily inspired by [node-inspector](https://github.com/dannycoates/node-inspector) and
-[nodebug](https://github.com/billyzkid/nodebug). Unfortunately both those projects are pretty
-outdated and also I was on vacation and had way too much time.
+[nodebug](https://github.com/billyzkid/nodebug).
 
 ### WebKit inspector
 
-bugger uses the Chrome developer tools as it's frontend.
+bugger uses the Chrome developer tools as its frontend.
 
 ## Reference links
 

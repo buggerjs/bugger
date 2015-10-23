@@ -1,7 +1,2 @@
-/ChromeProfile
-/test.*
-/node_modules
-/src.old
-.svn/
-
-reference/
+npm-debug.log
+node_modules
