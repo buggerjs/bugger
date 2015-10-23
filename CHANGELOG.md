@@ -1,3 +1,8 @@
+1.0.0
+-----
+* Switch to bugger-agents
+  https://github.com/buggerjs/bugger/pull/43
+
 # v0.5.1
 * Fixed bug where the network probe wasn't handling http.get(url) without callback
 
