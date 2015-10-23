@@ -4,7 +4,8 @@
   "description": "Debug everything",
   "main": "lib/bugger.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "posttest": "npub verify"
   },
   "bin": {
     "bugger": "bin/bugger.js"
@@ -16,6 +17,12 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/jkrems/bugger.git"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "license": {
+      "exclude": "."
+    }
   },
   "homepage": "https://github.com/jkrems/bugger",
   "bugs": "https://github.com/jkrems/bugger/issues",
@@ -34,6 +41,7 @@
   },
   "devDependencies": {
     "assertive": "~2.0.2",
-    "mocha": "~2.3.3"
+    "mocha": "~2.3.3",
+    "npub": "~2.2.0"
   }
 }
