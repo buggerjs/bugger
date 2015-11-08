@@ -1,3 +1,8 @@
+1.1.0
+-----
+* Support v8 flags
+  https://github.com/buggerjs/bugger/pull/44
+
 1.0.0
 -----
 * Switch to bugger-agents
