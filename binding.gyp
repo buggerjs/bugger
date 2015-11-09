@@ -1,9 +1,9 @@
 {
   "targets": [
     {
-      "target_name": "AgentDebug",
+      "target_name": "DebugThread",
       "sources": [
-        "src/agent-debug.cc",
+        "src/debug-thread.cc",
       ],
       "include_dirs": ["<!(node -e \"require('nan')\")"]
     }
