@@ -1,3 +1,7 @@
+1.2.0
+-----
+* Use latest devtools frontend
+
 1.1.0
 -----
 * Support v8 flags
