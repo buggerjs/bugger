@@ -14,6 +14,7 @@ public:
 
   void Start();
   MessageContents *ReadOrNull();
+  MessageContents *ReadOrBlock();
 
   void EnqueueMessage(MessageContents *contents);
 
@@ -32,6 +33,7 @@ private:
 
   uv_thread_t handle_;
   uv_sem_t ready_sem_;
+  uv_sem_t outbox_sem_;
   uv_loop_t loop_;
 
   fuq_queue_t incoming_;

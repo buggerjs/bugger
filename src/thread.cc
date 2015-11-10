@@ -15,6 +15,7 @@ public:
 Thread::Thread(const char* filename, uv_async_t *outbox)
 : filename_(filename), outbox_(outbox) {
   uv_sem_init(&ready_sem_, 0);
+  uv_sem_init(&outbox_sem_, 0);
 
   fuq_init(&incoming_);
   fuq_init(&outgoing_);
@@ -83,10 +84,27 @@ NAN_METHOD(Thread::SendMessageToProxy) {
 
   Thread *thread = Unwrap<Thread>(info.This());
   fuq_enqueue(&thread->outgoing_, (void*) contents);
+  uv_sem_post(&thread->outbox_sem_);
   uv_async_send(thread->outbox_);
 }
 
+MessageContents *Thread::ReadOrBlock() {
+  // Block until we have a message.
+  MessageContents *contents;
+  do {
+    uv_sem_wait(&outbox_sem_);
+    contents = static_cast<MessageContents*>(fuq_dequeue(&outgoing_));
+  } while (contents == nullptr);
+
+  return contents;
+}
+
 MessageContents *Thread::ReadOrNull() {
+  int err = uv_sem_trywait(&outbox_sem_);
+  if (err != 0) {
+    return nullptr;
+  }
+  // We are allowed to take something from the queue
   return static_cast<MessageContents*>(fuq_dequeue(&outgoing_));
 }
 

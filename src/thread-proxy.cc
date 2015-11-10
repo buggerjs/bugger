@@ -15,7 +15,6 @@ ThreadProxy::ThreadProxy(const char* filename,
 ThreadProxy::~ThreadProxy() {
 }
 
-
 void ThreadProxy::ProcessMessages(uv_async_t *handle) {
   HandleScope handleScope;
   ThreadProxy *proxy = static_cast<ThreadProxy*>(handle->data);
@@ -76,5 +75,12 @@ NAN_METHOD(ThreadProxy::SendMessageToThread) {
 
 NAN_METHOD(ThreadProxy::Poll) {
   ThreadProxy *proxy = Unwrap<ThreadProxy>(info.This());
-  info.GetReturnValue().Set(proxy == nullptr);
+  auto contents = proxy->thread_.ReadOrBlock();
+
+  char *charData = static_cast<char*>(contents->Data());
+  v8::Local<v8::Object> buffer(
+    NewBuffer(charData, contents->ByteLength())
+      .ToLocalChecked());
+
+  info.GetReturnValue().Set(buffer);
 }
