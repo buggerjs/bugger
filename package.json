@@ -11,7 +11,7 @@
     "deps",
     "lib",
     "src",
-    "binding.gyp",
+    "binding.gyp"
   ],
   "repository": {
     "type": "git",
