@@ -40,6 +40,10 @@ function formatType(obj) {
   return typename + optMarker;
 }
 
+function removeTrailingSpaces(string) {
+  return string.replace(/\s+\n/g, '\n');
+}
+
 function formatCommand(command) {
   function formatParameters(parameters) {
     if (!Array.isArray(parameters)) return '';
@@ -67,7 +71,7 @@ function formatCommand(command) {
     return '   * ' + commentLines(description) + '\n';
   }
 
-  return (
+  return removeTrailingSpaces(
     '  /**\n' +
     formatDescription(command.description) +
     formatParameters(command.parameters || command.properties) +
@@ -134,7 +138,7 @@ protocol.domains.forEach(domain => {
   const methodsFound = [];
   let fixed = source.replace(methodPattern,
     (text, oldComment, cmd, paramsOpt) => {
-      if (cmd === 'constructor') {
+      if (cmd === 'constructor' || cmd[0] === '_') {
         return text;
       }
       const params = paramsOpt || '';
@@ -186,11 +190,13 @@ protocol.domains.forEach(domain => {
     switch (typeSpec.type) {
     case 'object':
       const argList = typeSpec.properties && typeSpec.properties.length ?
-        '(props) {\n  ' : '() {\n  ';
-      return prefix + '\nfunction ' + typeSpec.id +
-        argList + (typeSpec.properties || []).map(prop => {
-          return 'this.' + prop.name + ' = props.' + prop.name + ';';
-        }).join('\n  ') + '\n};\n';
+        '(props) {' : '() {';
+      const ctorLines = (typeSpec.properties || []).map(prop => {
+        return 'this.' + prop.name + ' = props.' + prop.name + ';';
+      });
+      const ctorBody = ctorLines.length ?
+        '\n  ' + ctorLines.join('\n  ') : '';
+      return prefix + '\nfunction ' + typeSpec.id + argList + ctorBody + '\n};\n';
 
     case 'array':
       return prefix + ' function ' + typeSpec.id + '(arr) { return arr; };\n';
