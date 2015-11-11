@@ -4,7 +4,7 @@
   "description": "",
   "main": "lib/embedded-agents.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "eslint bin lib scripts"
   },
   "files": [
     "bin",
@@ -23,13 +23,17 @@
     "url": "https://github.com/buggerjs/embedded-agents/issues"
   },
   "homepage": "https://github.com/buggerjs/embedded-agents",
+  "devDependencies": {
+    "eslint": "^1.9.0",
+    "eslint-config-airbnb": "^1.0.0"
+  },
   "dependencies": {
     "bindings": "^1.2.1",
     "bluebird": "^2.9.34",
-    "debug": "~2.2.0",
+    "debug": "^2.2.0",
     "debug-module": "^1.0.0",
     "lodash": "^3.10.1",
     "nan": "^2.0.8",
-    "ws": "^0.8.0"
+    "ws": "~0.8.0"
   }
 }
