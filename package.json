@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "",
   "main": "lib/embedded-agents.js",
+  "bin": "bin/embedded-agents.js",
   "scripts": {
     "test": "eslint bin lib scripts"
   },
