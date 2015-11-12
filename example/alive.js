@@ -1,5 +1,6 @@
-'use strict';
+'use strict'; /* eslint no-console: 0 */
 setInterval(() => {
   let myVar = 100;
-  process.stdout.write(`Ping: ${myVar * 2}\n`);
+  myVar = myVar + 30;
+  console.log('Ping:', myVar * 2);
 }, 2 * 1000);
