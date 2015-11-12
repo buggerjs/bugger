@@ -1,4 +1,5 @@
 'use strict';
 setInterval(() => {
-  process.stdout.write('Ping\n');
+  const myVar = 100;
+  process.stdout.write(`Ping: ${myVar * 2}\n`);
 }, 2 * 1000);
