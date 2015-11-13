@@ -26,7 +26,8 @@
   "homepage": "https://github.com/buggerjs/embedded-agents",
   "devDependencies": {
     "eslint": "^1.9.0",
-    "eslint-config-airbnb": "^1.0.0"
+    "eslint-config-airbnb": "^1.0.0",
+    "request": "~2.65.0"
   },
   "dependencies": {
     "bindings": "^1.2.1",
