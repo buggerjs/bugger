@@ -34,6 +34,7 @@
     "bluebird": "^2.9.34",
     "debug": "^2.2.0",
     "debug-module": "^1.0.0",
+    "gc-stats": "^1.0.0",
     "lodash": "^3.10.1",
     "nan": "^2.0.8",
     "v8-profiler": "~5.3.2",
