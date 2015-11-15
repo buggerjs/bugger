@@ -27,7 +27,7 @@
   "devDependencies": {
     "eslint": "^1.9.0",
     "eslint-config-airbnb": "^1.0.0",
-    "request": "~2.65.0"
+    "request": "^2.65.0"
   },
   "dependencies": {
     "bindings": "^1.2.1",
@@ -36,8 +36,10 @@
     "debug-module": "^1.0.0",
     "gc-stats": "^1.0.0",
     "lodash": "^3.10.1",
+    "minimist": "^1.2.0",
     "nan": "^2.0.8",
-    "v8-profiler": "~5.3.2",
+    "rc": "^1.1.5",
+    "v8-profiler": "^5.3.2",
     "ws": "~0.8.0"
   }
 }
