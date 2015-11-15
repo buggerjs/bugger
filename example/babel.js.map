@@ -1,0 +1,1 @@
+{"version":3,"sources":["babel.es6"],"names":[],"mappings":";;;IACQ,CAAC,GAAU,EAAE;IAAV,CAAC,GAAW,EAAE;;AACzB,OAAO,CAAC,GAAG,CAAC,qBAAqB,EAAE,CAAC,GAAG,CAAC,CAAC,CAAC","file":"babel.js","sourcesContent":["/* eslint strict:0 no-console:0 */\nconst [ a, b ] = [ 10, 20 ];\nconsole.log('babel: 10 + 20 = %d', a + b);\n"]}
