@@ -4,6 +4,12 @@
 
 **Warning: Experimental**
 
+`bugger` provides Chrome Devtools bindings for node.
+It integrates tightly with Chrome which means two things:
+
+* It attempts to fully support the usual Devtools experience, including workspaces and profiling tools.
+* It may break at any moment because Chrome moves fast.
+
 ## Installation
 
 ```bash
@@ -14,10 +20,10 @@ npm install -g bugger
 
 ### Start the script process
 
-Debug runner for nodejs modules:
+Start `example/alive.js` in debug mode:
 
 ```sh
-bugger examples/alive.js
+bugger example/alive.js
 ```
 
 Pass parameters to the script:
@@ -50,3 +56,55 @@ The process should pop up on that page almost immediately.
 * `-h, --help`: Show usage help
 * `-p, --port`: The devtools protocol port to use, default: 8058
 * `-b, --brk`: Pause on the first line of the script
+
+## Features
+
+### Console Tab
+
+- Basic support for console API
+- Evalute expressions in the console
+- Fully featured repl when not paused (including require)
+
+### Sources Tab
+
+- Step-by-step debugging
+- Variable introspection
+- Live edit the running JavaScript code and persist it using workspaces (really just a Devtools feature)
+- Break on [uncaught] exception
+- Uses existing source maps (e.g. created via `babel --source-maps` or `coffee --map`)
+
+#### Known Issues
+
+- For `babel-core/register` and `coffee-script/register`, editing the files doesn't work (potentially a won't fix)
+
+### Network Tab
+
+- Monitor outgoing http(s) requests your script does
+- Timing of requests, including connect times etc.
+
+### Timeline Tab
+
+- GC events
+- Basic heap usage graphs
+
+#### Known Issues
+
+- The timeline tab doesn't do anything useful right now (e.g. `console.{time, timeEnd, timeStamp}`, network request and heap usage reporting aren't working). Profiling data is collected but not really displayed.
+
+### Profiles Tab
+
+- Heap snapshots and CPU profiles (Profiles tab)
+- Track heap allocations
+
+## Kudos to...
+
+### ...the original projects
+
+bugger was heavily inspired by [node-inspector](https://github.com/dannycoates/node-inspector) and
+[nodebug](https://github.com/billyzkid/nodebug).
+
+## Reference links
+
+- https://chromium.googlesource.com/chromium/blink.git
+- http://chromedevtools.github.io/debugger-protocol-viewer/Debugger/
+- https://github.com/nodejs/node
