@@ -1,9 +1,9 @@
 {
-  "name": "embedded-agents",
+  "name": "bugger",
   "version": "0.0.0",
   "description": "",
-  "main": "lib/embedded-agents.js",
-  "bin": "bin/embedded-agents.js",
+  "main": "lib/bugger.js",
+  "bin": "bin/bugger.js",
   "scripts": {
     "test": "eslint bin lib scripts"
   },
@@ -16,14 +16,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/buggerjs/embedded-agents.git"
+    "url": "https://github.com/buggerjs/bugger.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/buggerjs/embedded-agents/issues"
+    "url": "https://github.com/buggerjs/bugger/issues"
   },
-  "homepage": "https://github.com/buggerjs/embedded-agents",
+  "homepage": "https://github.com/buggerjs/bugger",
   "devDependencies": {
     "babel-core": "^6.1.21",
     "babel-preset-es2015": "^6.1.18",
