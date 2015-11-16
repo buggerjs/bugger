@@ -93,8 +93,10 @@ The process should pop up on that page almost immediately.
 
 ### Profiles Tab
 
-- Heap snapshots and CPU profiles (Profiles tab)
+- Heap snapshots
+- CPU profiles
 - Track heap allocations
+- [Inspect heap objects in the console via `$0..$4`](https://developers.google.com/web/tools/chrome-devtools/debug/command-line/command-line-reference#section-1)
 
 ## Kudos to...
 
