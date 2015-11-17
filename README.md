@@ -72,6 +72,7 @@ The process should pop up on that page almost immediately.
 - Live edit the running JavaScript code and persist it using workspaces (really just a Devtools feature)
 - Break on [uncaught] exception
 - Uses existing source maps (e.g. created via `babel --source-maps` or `coffee --map`)
+- [Forked modules](https://nodejs.org/api/child_process.html#child_process_child_process_fork_modulepath_args_options) show up as worker threads. This includes modules forked via `cluster`.
 
 #### Known Issues
 

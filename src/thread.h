@@ -9,7 +9,9 @@
 
 class Thread : public Nan::ObjectWrap {
 public:
-  Thread(const char* filename, uv_async_t *outbox);
+  Thread(const char* filename,
+         std::vector<std::string> args,
+         uv_async_t *outbox);
   ~Thread();
 
   void Start();
@@ -30,6 +32,7 @@ private:
   MessageContents *ReadIncoming();
 
   std::string filename_;
+  std::vector<std::string> args_;
 
   uv_thread_t handle_;
   uv_sem_t ready_sem_;

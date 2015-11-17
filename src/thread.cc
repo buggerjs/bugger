@@ -12,8 +12,10 @@ public:
   virtual void Free(void* data, size_t) { free(data); }
 };
 
-Thread::Thread(const char* filename, uv_async_t *outbox)
-: filename_(filename), outbox_(outbox) {
+Thread::Thread(const char* filename,
+               std::vector<std::string> args,
+               uv_async_t *outbox)
+: filename_(filename), args_(args), outbox_(outbox) {
   uv_sem_init(&ready_sem_, 0);
   uv_sem_init(&outbox_sem_, 0);
 
@@ -144,7 +146,12 @@ void Thread::Run() {
   using v8::Local;
   using v8::Locker;
 
-  const char* argv[] = { "node", filename_.c_str() };
+  std::vector<const char*> argv;
+  argv.push_back("node");
+  argv.push_back(filename_.c_str());
+  for (size_t idx = 0; idx < args_.size(); ++idx) {
+    argv.push_back(args_[idx].c_str());
+  }
 
   Isolate::CreateParams params;
   ArrayBufferAllocator array_buffer_allocator;
@@ -161,8 +168,8 @@ void Thread::Run() {
     Context::Scope context_scope(context);
     env_ = node::CreateEnvironment(
         isolate, &loop_, context,
-        2, argv,
-        2, argv);
+        argv.size(), argv.data(),
+        argv.size(), argv.data());
 
     Expose(isolate, context);
     LoadEnvironment(env_);

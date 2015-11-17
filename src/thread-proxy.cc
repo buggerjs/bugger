@@ -3,9 +3,10 @@
 using namespace Nan;
 
 ThreadProxy::ThreadProxy(const char* filename,
+                         std::vector<std::string> args,
                          const v8::Local<v8::Function> &handle_message) :
                          handle_message_from_thread_(handle_message),
-                         thread_(filename, &inbox_) {
+                         thread_(filename, args, &inbox_) {
   uv_async_init(uv_default_loop(), &inbox_, ProcessMessages);
   inbox_.data = (void*) this;
 
@@ -48,13 +49,22 @@ NAN_MODULE_INIT(ThreadProxy::Init) {
 }
 
 NAN_METHOD(ThreadProxy::NewInstance) {
+  using v8::Array;
   using v8::Function;
   using v8::Local;
   using v8::String;
 
   assert(info.IsConstructCall());
 
-  ThreadProxy *proxy = new ThreadProxy(*Utf8String(info[0]), info[1].As<Function>());
+  Local<Array> argsArray(info[1].As<Array>());
+  int argc = argsArray->Length();
+  std::vector<std::string> args(argc);
+  for (int idx = 0; idx < argc; ++idx) {
+    args[idx] = *Utf8String(argsArray->Get(idx));
+  }
+
+  ThreadProxy *proxy = new ThreadProxy(
+    *Utf8String(info[0]), args, info[2].As<Function>());
   proxy->Wrap(info.This());
   info.GetReturnValue().Set(info.This());
 }

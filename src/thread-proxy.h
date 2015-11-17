@@ -11,6 +11,7 @@ public:
 
 private:
   ThreadProxy(const char* filename,
+              std::vector<std::string> args,
               const v8::Local<v8::Function> &handle_message);
   ~ThreadProxy();
 
