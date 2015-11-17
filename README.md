@@ -76,7 +76,8 @@ The process should pop up on that page almost immediately.
 
 #### Known Issues
 
-- For `babel-core/register` and `coffee-script/register`, editing the files doesn't work (potentially a won't fix)
+- For `babel-core/register` and `coffee-script/register`, editing the files doesn't work [#48](https://github.com/buggerjs/bugger/issues/48)
+- Worker disconnects aren't detected [#49](https://github.com/buggerjs/bugger/issues/49)
 
 ### Network Tab
 
@@ -90,7 +91,11 @@ The process should pop up on that page almost immediately.
 
 #### Known Issues
 
-- The timeline tab doesn't do anything useful right now (e.g. `console.{time, timeEnd, timeStamp}`, network request and heap usage reporting aren't working). Profiling data is collected but not really displayed.
+- The timeline tab doesn't do anything useful right now. In future it should show ([#47](https://github.com/buggerjs/bugger/issues/47)):
+  * `console.{time, timeEnd, timeStamp}`
+  * Network request
+  * Heap usage over time
+  * Profiling data
 
 ### Profiles Tab
 
