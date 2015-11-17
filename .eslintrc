@@ -1,5 +1,5 @@
 {
-  "extends": [ "airbnb/base" ],
+  "extends": [ "groupon/base" ],
   "rules": {
     "strict": [ 2, "global" ]
   },
