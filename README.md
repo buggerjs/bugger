@@ -77,7 +77,6 @@ The process should pop up on that page almost immediately.
 #### Known Issues
 
 - For `babel-core/register` and `coffee-script/register`, editing the files doesn't work [#48](https://github.com/buggerjs/bugger/issues/48)
-- Worker disconnects aren't detected [#49](https://github.com/buggerjs/bugger/issues/49)
 
 ### Network Tab
 
