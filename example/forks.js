@@ -10,6 +10,7 @@ if (cluster.isMaster) {
   console.log('Master setup done');
 } else {
   const server = http.createServer((req, res) => {
+    console.log('Got request:\n%s %s', req.method, req.url);
     res.end('ok');
   });
   server.listen(process.env.PORT || 3000, () => {
