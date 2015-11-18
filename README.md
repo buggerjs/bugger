@@ -64,6 +64,7 @@ The process should pop up on that page almost immediately.
 - Basic support for console API
 - Evalute expressions in the console
 - Fully featured repl when not paused (including require)
+- Parts of the [Command Line API](https://developers.google.com/web/tools/chrome-devtools/debug/command-line/command-line-reference) supported
 
 ### Sources Tab
 
