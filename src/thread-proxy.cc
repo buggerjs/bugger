@@ -1,4 +1,5 @@
 #include "thread-proxy.h"
+#include "v8-profiler.h"
 
 using namespace Nan;
 
@@ -31,6 +32,15 @@ void ThreadProxy::ProcessMessages(uv_async_t *handle) {
   }
 }
 
+/**
+ * This is a terrible hack.
+ */
+NAN_METHOD(SetCPUProfilerSamplingInterval) {
+  v8::Isolate::GetCurrent()
+    ->GetCpuProfiler()
+    ->SetSamplingInterval(info[0]->Uint32Value());
+}
+
 NAN_MODULE_INIT(ThreadProxy::Init) {
   using v8::FunctionTemplate;
   using v8::Local;
@@ -46,6 +56,10 @@ NAN_MODULE_INIT(ThreadProxy::Init) {
   SetPrototypeMethod(tpl, "postMessage", SendMessageToThread);
 
   Set(target, className, tpl->GetFunction());
+
+  // This is a terrible hack
+  Set(target, New("setSamplingInterval").ToLocalChecked(),
+    GetFunction(New<FunctionTemplate>(SetCPUProfilerSamplingInterval)).ToLocalChecked());
 }
 
 NAN_METHOD(ThreadProxy::NewInstance) {
