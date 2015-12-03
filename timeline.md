@@ -1,10 +1,23 @@
-## The Timeline Tab
+# The Timeline Tab
 
 This documents tries to capture what data is shown in the timeline tab.
 
 ##### References
 
 * [Trace Event Format](https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview)
+
+## The Flamechart
+
+### JSFrame
+
+*These are (or can be) extracted from a JavaScript profile.*
+
+JSFrame events will show up if:
+
+* They have a parent event.
+* The immediate parent is either a `FunctionCall` or `EvaluateScript`.
+
+## Events
 
 ### Duration Events
 
