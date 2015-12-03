@@ -7,6 +7,9 @@
   "scripts": {
     "test": "eslint bin lib scripts"
   },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
   "files": [
     "bin",
     "deps",
@@ -18,8 +21,11 @@
     "type": "git",
     "url": "https://github.com/buggerjs/bugger.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": {
+    "name": "Jan Krems",
+    "email": "jan.krems@gmail.com"
+  },
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/buggerjs/bugger/issues"
   },
