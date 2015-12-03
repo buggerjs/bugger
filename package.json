@@ -1,6 +1,6 @@
 {
   "name": "bugger",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Chrome Devtools Agents for node.js",
   "main": "lib/bugger.js",
   "bin": "bin/bugger.js",
