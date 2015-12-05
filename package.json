@@ -35,9 +35,11 @@
     "coffee-script": "^1.10.0",
     "eslint": "^1.9.0",
     "eslint-config-groupon": "^1.1.0",
+    "express": "^4.13.3",
     "request": "^2.65.0"
   },
   "dependencies": {
+    "async-listener": "^0.5.6",
     "bindings": "^1.2.1",
     "bluebird": "^2.9.34",
     "convert-source-map": "^1.1.2",
