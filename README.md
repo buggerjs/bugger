@@ -108,7 +108,7 @@ The process should pop up on that page almost immediately.
 
 ### ...the original projects
 
-bugger was heavily inspired by [node-inspector](https://github.com/dannycoates/node-inspector) and
+bugger was heavily inspired by [node-inspector](https://github.com/node-inspector/node-inspector) and
 [nodebug](https://github.com/billyzkid/nodebug).
 
 ## Reference links
