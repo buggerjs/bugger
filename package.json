@@ -50,6 +50,7 @@
     "nan": "^2.0.8",
     "node-uuid": "^1.4.7",
     "rc": "^1.1.5",
+    "safe-json-stringify": "^1.0.3",
     "v8-profiler": "^5.3.2",
     "ws": "~0.8.0"
   }
