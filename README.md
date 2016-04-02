@@ -57,6 +57,23 @@ The process should pop up on that page almost immediately.
 * `-p, --port`: The devtools protocol port to use, default: 8058
 * `-b, --brk`: Pause on the first line of the script
 
+## Examples:
+Using bugger with popular frameworks is easy and it is a lot faster then using node-inspector.
+
+### Jest:
+Run `node` with bugger and jest:
+```bash
+node --harmony $(which bugger) ./node_modules/jest-cli/bin/jest.js --runInBand
+```
+A chrome devtools URL will appear in console, just copy and paste it into chrome.
+
+### Mocha:
+Run bugger it with `_mocha`:
+```bash
+bugger --brk $(which _mocha)
+```
+A chrome devtools URL will appear in console, just copy and paste it into chrome.
+
 ## Features
 
 ### Console Tab
